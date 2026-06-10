@@ -72,19 +72,10 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ success: false, error: 'API Endpoint Not Found' });
 });
 
-// Serve frontend in production mode
-const path = require('path');
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-  });
-} else {
-  // Catch all for any other unknown routes in development
-  app.use('*', (req, res) => {
-    res.status(404).json({ success: false, error: 'Route Not Found' });
-  });
-}
+// Catch all for any other unknown routes
+app.use('*', (req, res) => {
+  res.status(404).json({ success: false, error: 'Route Not Found' });
+});
 
 // Global Error handler
 app.use(errorHandler);
