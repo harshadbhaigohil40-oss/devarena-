@@ -9,9 +9,12 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('devarena_token'));
 
   useEffect(() => {
+    // Artificial 2-second delay so the beautiful loader animation plays
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
+    
     if (token) {
-      authService.getMe()
-        .then(res => {
+      Promise.all([authService.getMe(), minLoadTime])
+        .then(([res]) => {
           setUser(res.data.data.user);
         })
         .catch(() => {
@@ -20,7 +23,7 @@ export function AuthProvider({ children }) {
         })
         .finally(() => setLoading(false));
     } else {
-      setLoading(false);
+      minLoadTime.then(() => setLoading(false));
     }
   }, [token]);
 

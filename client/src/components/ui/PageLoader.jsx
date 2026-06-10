@@ -6,7 +6,7 @@ export default function PageLoader() {
       initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
       animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
       exit={{ opacity: 0, backdropFilter: 'blur(0px)', scale: 1.1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
       style={{ 
         display: 'flex', 
         flexDirection: 'column',
