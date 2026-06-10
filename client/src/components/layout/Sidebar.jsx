@@ -16,7 +16,7 @@ const recruiterLinks = [
   { to: '/recruiter/talent', icon: '🔍', label: 'Talent Search' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuth();
   const location = useLocation();
   const hiddenPaths = ['/', '/login', '/register'];
@@ -28,7 +28,7 @@ export default function Sidebar() {
   return (
     <motion.aside
       initial={{ x: -260 }}
-      animate={{ x: 0 }}
+      animate={{ x: isOpen ? 0 : (window.innerWidth <= 768 ? -260 : 0) }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       style={{
         position: 'fixed', top: 'var(--navbar-height)', left: 0, bottom: 0,
@@ -46,6 +46,9 @@ export default function Sidebar() {
           <NavLink
             key={link.to}
             to={link.to}
+            onClick={() => {
+              if (window.innerWidth <= 768 && onClose) onClose();
+            }}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '0.75rem',
               padding: '0.625rem 0.75rem', borderRadius: 10,

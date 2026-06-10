@@ -806,4 +806,15 @@ select.input {
   h3 { font-size: 1.25rem; }
   
   .page-header { margin-bottom: var(--space-lg); }
+  
+  .mobile-only {
+    display: inherit !important;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+.mobile-only {
+  display: none !important;
 }

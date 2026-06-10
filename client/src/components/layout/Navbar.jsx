@@ -4,7 +4,7 @@ import { useThemeStore } from '../../features/theme/useThemeStore';
 import { motion } from 'framer-motion';
 import { formatNumber } from '../../utils/helpers';
 
-export default function Navbar() {
+export default function Navbar({ onMenuClick }) {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useThemeStore();
   const location = useLocation();
@@ -23,34 +23,45 @@ export default function Navbar() {
         justifyContent: 'space-between',
       }}
     >
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: 'var(--level-gradient)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-          fontWeight: 900, fontSize: '0.75rem', color: 'white',
-        }}>DA</div>
-        <span style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>
-          DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
-        </span>
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {onMenuClick && (
+          <button 
+            className="mobile-only btn btn-icon" 
+            onClick={onMenuClick}
+            style={{ fontSize: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-primary)' }}
+          >
+            ☰
+          </button>
+        )}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: 'var(--level-gradient)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            fontWeight: 900, fontSize: '0.75rem', color: 'white',
+          }}>DA</div>
+          <span className="desktop-only" style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>
+            DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
+          </span>
+        </Link>
+      </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <button 
           onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-          className="btn btn-ghost btn-sm flex items-center gap-sm" 
+          className="desktop-only btn btn-ghost btn-sm flex items-center gap-sm" 
           style={{ color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', borderRadius: '20px', padding: '0.25rem 0.75rem' }}
         >
           <span>🔍 Search...</span>
           <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem', background: 'var(--bg-secondary)', borderRadius: '4px', border: '1px solid var(--border-primary)' }}>Ctrl K</span>
         </button>
-        <button onClick={toggleTheme} className="btn btn-icon" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle theme">
+        <button onClick={toggleTheme} className="desktop-only btn btn-icon" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle theme">
           {theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight' ? '☀️' : '🌙'}
         </button>
         {isAuthenticated ? (
           <>
             {user?.role === 'developer' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div className="level-badge" style={{ width: 28, height: 28, fontSize: '0.7rem' }}>
                   {user.level}
                 </div>
@@ -59,7 +70,7 @@ export default function Navbar() {
                 </span>
               </div>
             )}
-            <Link to="/dashboard" className="btn btn-ghost btn-sm">Dashboard</Link>
+            <Link to="/dashboard" className="desktop-only btn btn-ghost btn-sm">Dashboard</Link>
             <div style={{ position: 'relative' }}>
               <Link to={`/profile/${user._id}`} style={{
                 width: 32, height: 32, borderRadius: '50%',
@@ -71,7 +82,7 @@ export default function Navbar() {
                 {user.username?.charAt(0).toUpperCase()}
               </Link>
             </div>
-            <button onClick={logout} className="btn btn-ghost btn-sm" style={{ color: 'var(--text-secondary)' }}>
+            <button onClick={logout} className="desktop-only btn btn-ghost btn-sm" style={{ color: 'var(--text-secondary)' }}>
               Logout
             </button>
           </>
