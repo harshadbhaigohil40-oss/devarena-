@@ -4,7 +4,7 @@ export default function PageLoader() {
   return (
     <motion.div 
       initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-      animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
+      animate={{ opacity: 1, backdropFilter: 'blur(10px)' }}
       exit={{ opacity: 0, backdropFilter: 'blur(0px)', scale: 1.1 }}
       transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
       style={{ 
@@ -37,7 +37,7 @@ export default function PageLoader() {
           height: '60vw',
           background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 60%)',
           borderRadius: '50%',
-          filter: 'blur(100px)',
+          filter: 'blur(50px)',
           opacity: 0.15,
           zIndex: 0,
           mixBlendMode: 'screen'
@@ -57,7 +57,7 @@ export default function PageLoader() {
           height: '50vw',
           background: 'radial-gradient(circle, var(--accent-secondary) 0%, transparent 60%)',
           borderRadius: '50%',
-          filter: 'blur(100px)',
+          filter: 'blur(50px)',
           opacity: 0.1,
           zIndex: 0,
           mixBlendMode: 'screen'
