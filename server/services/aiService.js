@@ -211,4 +211,21 @@ Provide your roadmap STRICTLY in the following JSON format, do not use markdown 
   }
 };
 
-module.exports = { getCareerAdvice, getSkillRecommendation, getCodeReview, analyzeResume, generateRoadmap };
+const generalChat = async (prompt) => {
+  if (!isAvailable()) {
+    return "Hi there! I am DevArena AI. Configure your Gemini API key to chat with me!";
+  }
+
+  try {
+    const model = getModel();
+    const systemPrompt = `You are DevArena AI, a helpful, encouraging, and highly skilled software engineering assistant. You guide users on the DevArena platform to level up their coding skills. Answer concisely and use markdown formatting.\n\nUser says: ${prompt}`;
+
+    const result = await model.generateContent(systemPrompt);
+    return result.response.text();
+  } catch (error) {
+    console.error('Gemini API error:', error.message);
+    return "Oops, I'm experiencing some network interference. Try again later.";
+  }
+};
+
+module.exports = { getCareerAdvice, getSkillRecommendation, getCodeReview, analyzeResume, generateRoadmap, generalChat };

@@ -58,3 +58,13 @@ exports.generateRoadmap = async (req, res, next) => {
     success(res, { roadmap });
   } catch (err) { next(err); }
 };
+
+exports.generalChat = async (req, res, next) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) return error(res, 'Prompt is required.', 400);
+
+    const reply = await aiService.generalChat(prompt);
+    success(res, { reply });
+  } catch (err) { next(err); }
+};
