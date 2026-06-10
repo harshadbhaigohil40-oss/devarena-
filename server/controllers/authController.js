@@ -40,8 +40,8 @@ exports.register = async (req, res, next) => {
       await leaderboardService.updateEntry(user._id);
     }
 
-    // Send verification email
-    await emailService.sendVerificationEmail(user.email, verificationToken);
+    // Send verification email in the background to improve response time
+    emailService.sendVerificationEmail(user.email, verificationToken).catch(e => console.error('Email failed to send', e));
 
     success(res, {
       message: 'Registration successful. Please check your email to verify your account.',
