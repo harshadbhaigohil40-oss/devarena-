@@ -20,7 +20,8 @@ export default function Register() {
         navigate('/login');
       }
     } catch (err) {
-      toast.error('Registration failed.');
+      const errorMsg = err.response?.data?.error || err.message || 'Registration failed.';
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

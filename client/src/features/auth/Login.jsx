@@ -21,7 +21,8 @@ export default function Login() {
         navigate('/dashboard');
       }
     } catch (err) {
-      toast.error('Invalid credentials or account locked.');
+      const errorMsg = err.response?.data?.error || err.message || 'Invalid credentials or account locked.';
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
