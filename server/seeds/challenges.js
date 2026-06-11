@@ -127,7 +127,60 @@ const challenges = [
       { input: '[1,2,3,4]', expectedOutput: '[24,12,8,6]', isHidden: false },
       { input: '[-1,1,0,-3,3]', expectedOutput: '[0,0,9,0,0]', isHidden: false }
     ],
-    hints: ['Calculate left products and right products separately']
+  },
+  
+  // Frontend Challenges
+  {
+    title: 'Build a Counter Component', slug: 'build-counter-component',
+    description: '## Build a Counter Component\n\nCreate a React counter component with increment, decrement, and reset buttons. Style it with CSS.\n\n### Requirements\n- Display current count\n- Increment button (+)\n- Decrement button (-)\n- Reset button\n- Prevent count from going below 0',
+    difficulty: 'intermediate', category: 'frontend', tags: ['react', 'components', 'state'], xpReward: 100,
+    starterCode: { javascript: 'function Counter() {\n  // Your code here\n  return <div>Counter</div>;\n}' },
+    testCases: [{ input: 'render', expectedOutput: 'Counter displays 0', isHidden: false }],
+    hints: ['Use useState hook', 'Add onClick handlers']
+  },
+  {
+    title: 'Promise.all Implementation', slug: 'promise-all',
+    description: '## Promise.all Implementation\n\nImplement your own version of `Promise.all()`.\n\n### Requirements\n- Accept an array of promises\n- Resolve when all promises resolve\n- Reject if any promise rejects\n- Maintain order of results',
+    difficulty: 'advanced', category: 'frontend', tags: ['promises', 'async', 'javascript'], xpReward: 200,
+    starterCode: { javascript: 'function promiseAll(promises) {\n  // Your code here\n}' },
+    testCases: [{ input: '[Promise.resolve(1), Promise.resolve(2)]', expectedOutput: '[1, 2]', isHidden: false }],
+    hints: ['Track resolved count', 'Use an array to maintain order']
+  },
+  
+  // Backend Challenges
+  {
+    title: 'REST API Design', slug: 'rest-api-design',
+    description: '## REST API Design\n\nDesign a REST API for a blog platform with posts, comments, and users.\n\n### Requirements\n- CRUD operations for posts\n- Authentication endpoints\n- Comment system\n- Proper HTTP methods and status codes',
+    difficulty: 'intermediate', category: 'backend', tags: ['api-design', 'rest', 'express'], xpReward: 100,
+    starterCode: { javascript: '// Design your API routes\nconst express = require("express");\nconst router = express.Router();\n\n// Your routes here' },
+    testCases: [{ input: 'design', expectedOutput: 'Valid REST API', isHidden: false }],
+    hints: ['Follow REST conventions', 'Use proper HTTP verbs']
+  },
+  
+  // System Design Challenges
+  {
+    title: 'Rate Limiter', slug: 'rate-limiter',
+    description: '## Rate Limiter\n\nImplement a rate limiter that allows N requests per time window.\n\n### Requirements\n- Sliding window algorithm\n- Support multiple clients\n- Return true/false for each request\n- O(1) average time complexity',
+    difficulty: 'advanced', category: 'system-design', tags: ['system-design', 'algorithms'], xpReward: 200,
+    starterCode: { javascript: 'class RateLimiter {\n  constructor(maxRequests, windowMs) {\n    // Your code here\n  }\n  \n  isAllowed(clientId) {\n    // Your code here\n  }\n}' },
+    testCases: [{ input: 'maxRequests=3, window=1000ms', expectedOutput: 'true, true, true, false', isHidden: false }],
+    hints: ['Use a sliding window approach', 'Store timestamps per client']
+  },
+  {
+    title: 'Design a URL Shortener', slug: 'url-shortener',
+    description: '## Design a URL Shortener\n\nDesign and implement a URL shortening service like bit.ly.\n\n### Requirements\n- Generate short URLs from long URLs\n- Redirect short URLs to original URLs\n- Handle collisions\n- Support analytics (click count)\n- Scale to millions of URLs',
+    difficulty: 'expert', category: 'system-design', tags: ['system-design', 'hashing', 'database'], xpReward: 400,
+    starterCode: { javascript: 'class URLShortener {\n  constructor() {\n    // Your code here\n  }\n  \n  shorten(longUrl) {\n    // Your code here\n  }\n  \n  resolve(shortCode) {\n    // Your code here\n  }\n}' },
+    testCases: [{ input: '"https://example.com/very/long/url"', expectedOutput: 'short code (6 chars)', isHidden: false }],
+    hints: ['Use base62 encoding', 'Consider hash collisions']
+  },
+  {
+    title: 'Real-time Chat System', slug: 'realtime-chat',
+    description: '## Real-time Chat System\n\nDesign a real-time chat system architecture.\n\n### Requirements\n- 1-on-1 and group messaging\n- Message persistence\n- Online/offline status\n- Read receipts\n- Message delivery guarantees',
+    difficulty: 'expert', category: 'system-design', tags: ['websockets', 'system-design', 'architecture'], xpReward: 400,
+    starterCode: { javascript: '// Design your chat system architecture\n// Include: data models, API design, WebSocket events' },
+    testCases: [{ input: 'design', expectedOutput: 'Valid system design', isHidden: false }],
+    hints: ['Consider WebSocket for real-time', 'Think about message ordering']
   }
 ];
 
