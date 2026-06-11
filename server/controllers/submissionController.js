@@ -12,8 +12,8 @@ const path = require('path');
 
 // Real sandboxed code evaluation using 'vm' module and local python
 const evaluateCode = (code, testCases, language, category) => {
-  // Use mock evaluation for system-design/frontend challenges or unsupported languages
-  if (!['javascript', 'python'].includes(language) || !['algorithms', 'data-structures'].includes(category)) {
+  // Use mock evaluation for unsupported languages only
+  if (!['javascript', 'python'].includes(language)) {
     return testCases.map((tc, index) => {
       try {
         const containsLogic = code.length > 20 && !code.match(/^\s*$/);
