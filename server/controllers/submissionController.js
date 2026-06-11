@@ -147,9 +147,7 @@ print(json.dumps(result) if result is not None else 'undefined')
       
       let resultStr;
       if (rawResult === undefined) resultStr = 'undefined';
-      else if (rawResult === null) resultStr = 'null';
-      else if (typeof rawResult === 'object') resultStr = JSON.stringify(rawResult);
-      else resultStr = rawResult.toString();
+      else resultStr = JSON.stringify(rawResult);
       
       const normalizedResult = resultStr.replace(/\s+/g, '');
       const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
