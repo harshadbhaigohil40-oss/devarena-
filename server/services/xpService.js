@@ -52,18 +52,18 @@ const updateStreak = async (userId) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  let diffDays = 0;
   if (user.lastActiveDate) {
     const lastActive = new Date(user.lastActiveDate);
     lastActive.setHours(0, 0, 0, 0);
 
-    const diffDays = Math.floor((today - lastActive) / (1000 * 60 * 60 * 24));
+    diffDays = Math.floor((today - lastActive) / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) {
       user.streak += 1;
     } else if (diffDays > 1) {
       user.streak = 1;
     }
-    // diffDays === 0 means same day, don't change streak
   } else {
     user.streak = 1;
   }
@@ -72,12 +72,9 @@ const updateStreak = async (userId) => {
   await user.save();
 
   // Award daily login XP
-  await XPEvent.create({
-    userId,
-    amount: XP_REWARDS.daily_login,
-    source: 'daily_login',
-    description: 'Daily login bonus',
-  });
+  if (diffDays === 1 || diffDays > 1 || !user.lastActiveDate) {
+    await module.exports.awardXP(userId, XP_REWARDS.daily_login, 'daily_login', null, 'Daily login bonus');
+  }
 
   return user.streak;
 };

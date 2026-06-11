@@ -28,8 +28,31 @@ const seedDB = async () => {
     const badges = await Badge.insertMany(badgeData);
     console.log(`✅ Seeded ${badges.length} badges`);
 
+    // Map challenges to skill trees based on category
+    const getChallengesByCategory = (category) => challenges.filter(c => c.category === category).map(c => c._id);
+    
+    const mappedSkillTreeData = skillTreeData.map(tree => {
+      let category = 'algorithms';
+      if (tree.name.includes('Frontend')) category = 'frontend';
+      else if (tree.name.includes('Backend')) category = 'backend';
+      else if (tree.name.includes('System Design')) category = 'system-design';
+
+      const availableChallenges = getChallengesByCategory(category);
+      
+      const newNodes = tree.nodes.map((node, index) => {
+        // Distribute 1 or 2 challenges to each node if available
+        const nodeChallengeIds = [];
+        if (availableChallenges.length > 0) {
+          nodeChallengeIds.push(availableChallenges[index % availableChallenges.length]);
+        }
+        return { ...node, challengeIds: nodeChallengeIds };
+      });
+      
+      return { ...tree, nodes: newNodes };
+    });
+
     // Seed skill trees
-    const skillTrees = await SkillTree.insertMany(skillTreeData);
+    const skillTrees = await SkillTree.insertMany(mappedSkillTreeData);
     console.log(`✅ Seeded ${skillTrees.length} skill trees`);
 
     console.log('\n🎉 Database seeded successfully!');

@@ -1,27 +1,32 @@
-import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { userService, badgeService } from '../services';
 import { formatNumber, progressToNextLevel } from '../utils/helpers';
 
 export default function Profile() {
   const { id } = useParams();
-  const [profile, setProfile] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [badges, setBadges] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    Promise.all([
-      userService.getProfile(id),
-      userService.getStats(id),
-      badgeService.getUserBadges(id),
-    ]).then(([p, s, b]) => {
-      setProfile(p.data.data.user);
-      setStats(s.data.data);
-      setBadges(b.data.data.badges);
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, [id]);
+  const { data: profileData, isLoading: loading } = useQuery({
+    queryKey: ['profile', id],
+    queryFn: async () => {
+      const [pRes, sRes, bRes] = await Promise.all([
+        userService.getProfile(id),
+        userService.getStats(id),
+        badgeService.getUserBadges(id),
+      ]);
+      return {
+        profile: pRes.data.data.user,
+        stats: sRes.data.data,
+        badges: bRes.data.data.badges,
+      };
+    },
+    enabled: !!id,
+  });
+
+  const profile = profileData?.profile;
+  const stats = profileData?.stats;
+  const badges = profileData?.badges || [];
 
   if (loading) return <div className="page-container"><div className="skeleton" style={{ height: 400 }} /></div>;
   if (!profile) return <div className="page-container"><div className="empty-state"><h3>User not found</h3></div></div>;

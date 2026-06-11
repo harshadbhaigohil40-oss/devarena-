@@ -1,29 +1,47 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { challengeService } from '../services';
-import { useAuth } from '../context/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { challengeService } from '../../services';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 
 export default function ChallengeDetail() {
   const { slug } = useParams();
   const { user } = useAuth();
-  const [challenge, setChallenge] = useState(null);
   const [code, setCode] = useState('');
+  const [language, setLanguage] = useState('javascript');
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
+
+  const { data: challenge, isLoading: loading } = useQuery({
+    queryKey: ['challenge', slug],
+    queryFn: async () => {
+      const res = await challengeService.get(slug);
+      return res.data.data.challenge;
+    },
+    onSuccess: (data) => {
+      setCode(data.starterCode?.[language] || '// Write your solution here');
+    },
+    onError: () => toast.error('Challenge not found'),
+  });
 
   useEffect(() => {
-    challengeService.get(slug)
-      .then(r => {
-        setChallenge(r.data.data.challenge);
-        setCode(r.data.data.challenge.starterCode?.javascript || '// Write your solution here');
-      })
-      .catch(() => toast.error('Challenge not found'))
-      .finally(() => setLoading(false));
-  }, [slug]);
+    if (challenge && !code) {
+      setCode(challenge.starterCode?.[language] || '// Write your solution here');
+    }
+  }, [challenge]);
+
+  const handleLanguageChange = (e) => {
+    const newLang = e.target.value;
+    setLanguage(newLang);
+    if (challenge && challenge.starterCode && challenge.starterCode[newLang]) {
+      setCode(challenge.starterCode[newLang]);
+    } else {
+      setCode(newLang === 'python' ? '# Write your solution here' : '// Write your solution here');
+    }
+  };
 
   const handleSubmit = async () => {
     if (!user) return toast.error('Please sign in to submit');
@@ -31,7 +49,7 @@ export default function ChallengeDetail() {
     setSubmitting(true);
     setResult(null);
     try {
-      const res = await challengeService.submit(challenge._id, { code, language: 'javascript' });
+      const res = await challengeService.submit(challenge._id, { code, language });
       setResult(res.data.data);
       if (res.data.data.allPassed) {
         toast.success(`Challenge solved! +${res.data.data.xpResult?.xpEarned || challenge.xpReward} XP 🎉`);
@@ -92,7 +110,15 @@ export default function ChallengeDetail() {
           <div className="card" style={{ flex: 1 }}>
             <div className="flex justify-between items-center mb-md">
               <h3>💻 Code Editor</h3>
-              <span className="badge badge-info">JavaScript</span>
+              <select 
+                value={language} 
+                onChange={handleLanguageChange}
+                className="input"
+                style={{ width: '150px', padding: '0.4rem', fontSize: '0.875rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+              >
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+              </select>
             </div>
             <textarea value={code} onChange={e => setCode(e.target.value)}
               style={{
@@ -119,10 +145,17 @@ export default function ChallengeDetail() {
                 <p style={{ color: 'var(--xp-gold)', fontWeight: 700 }}>+{result.xpResult.xpEarned} XP earned!</p>
               )}
               {result.submission?.testResults?.map((tr, i) => (
-                <div key={i} className="flex items-center gap-sm mt-sm">
-                  <span>{tr.passed ? '✅' : '❌'}</span>
-                  <span className="text-sm">Test {i + 1}: {tr.passed ? 'Passed' : 'Failed'}</span>
-                  <span className="text-xs text-muted">({tr.executionTime}ms)</span>
+                <div key={i} className="flex items-center gap-sm mt-sm" style={{ flexWrap: 'wrap' }}>
+                  <div className="flex items-center gap-sm w-full">
+                    <span>{tr.passed ? '✅' : '❌'}</span>
+                    <span className="text-sm">Test {i + 1}: {tr.passed ? 'Passed' : 'Failed'}</span>
+                    <span className="text-xs text-muted">({tr.executionTime}ms)</span>
+                  </div>
+                  {!tr.passed && (
+                    <div className="w-full mt-xs" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--color-danger)' }}>
+                      Output: {tr.output}
+                    </div>
+                  )}
                 </div>
               ))}
             </motion.div>

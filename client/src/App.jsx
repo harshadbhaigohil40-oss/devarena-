@@ -22,6 +22,7 @@ const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 // Placeholders for migrating features
 const Challenges = React.lazy(() => import('@/features/challenges/Challenges'));
+const ChallengeDetail = React.lazy(() => import('@/features/challenges/ChallengeDetail'));
 const RecruiterDashboard = React.lazy(() => import('@/features/recruiter/RecruiterDashboard'));
 const AIAdvisor = React.lazy(() => import('@/features/ai/AIAdvisor'));
 const Projects = React.lazy(() => import('@/pages/Projects'));
@@ -69,6 +70,7 @@ export default function App() {
                 <Route path="/profile/:id" element={<Suspense fallback={<ProfileSkeleton />}><Profile /></Suspense>} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/challenges" element={<Suspense fallback={<ChallengeSkeleton />}><Challenges /></Suspense>} />
+                <Route path="/challenges/:slug" element={<Suspense fallback={<ChallengeSkeleton />}><ChallengeDetail /></Suspense>} />
                 <Route path="/ai-advisor" element={<AIAdvisor />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/skill-trees" element={<SkillTrees />} />

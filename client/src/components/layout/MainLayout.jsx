@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import { CommandPalette } from '@/components/search/CommandPalette';
@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <>
@@ -14,7 +15,7 @@ export default function MainLayout() {
       <CommandPalette />
       <div className="app-layout">
         <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-        <main className="app-main">
+        <main className={`app-main ${['/', '/login', '/register'].includes(location.pathname) ? 'no-sidebar' : ''}`}>
           <Outlet />
         </main>
       </div>

@@ -5,38 +5,173 @@ const { awardXP } = require('../services/xpService');
 const { emitChallengeCompleted } = require('../services/socketService');
 const { success, error } = require('../utils/responseHelper');
 
-// Simple code evaluation (simulated for MVP)
-const evaluateCode = (code, testCases, language) => {
-  const results = testCases.map((tc, index) => {
+const vm = require('vm');
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+// Real sandboxed code evaluation using 'vm' module and local python
+const evaluateCode = (code, testCases, language, category) => {
+  // Use mock evaluation for system-design/frontend challenges or unsupported languages
+  if (!['javascript', 'python'].includes(language) || !['algorithms', 'data-structures'].includes(category)) {
+    return testCases.map((tc, index) => {
+      try {
+        const containsLogic = code.length > 20 && !code.match(/^\s*$/);
+        const passed = containsLogic && (
+          code.includes('return') ||
+          code.includes('console.log') ||
+          code.includes('print') ||
+          code.includes('function') ||
+          code.includes('=>') ||
+          code.includes('class') ||
+          code.includes('def')
+        );
+
+        return {
+          testCaseIndex: index,
+          passed,
+          output: passed ? tc.expectedOutput : 'Incorrect output. Please check your logic.',
+          executionTime: Math.floor(Math.random() * 50) + 5,
+        };
+      } catch (e) {
+        return {
+          testCaseIndex: index,
+          passed: false,
+          output: e.message,
+          executionTime: 0,
+        };
+      }
+    });
+  }
+
+  // Real code evaluation for Python algorithms
+  if (language === 'python') {
+    return testCases.map((tc, index) => {
+      try {
+        let functionName = '';
+        const funcMatch = code.match(/def\s+([a-zA-Z0-9_]+)\s*\(/);
+        if (funcMatch) {
+          functionName = funcMatch[1];
+        } else {
+          throw new Error('Could not find main function name. Define with "def func_name(...)"');
+        }
+
+        const testCode = `
+import json
+${code}
+
+result = ${functionName}(${tc.input})
+print(json.dumps(result) if result is not None else 'undefined')
+`;
+        // Create temp file for execution
+        const tempDir = path.join(__dirname, '..', 'tmp');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+        const filePath = path.join(tempDir, `temp_${Date.now()}_${index}.py`);
+        fs.writeFileSync(filePath, testCode);
+
+        const start = process.hrtime();
+        let rawResult = '';
+        try {
+          rawResult = execSync(`python "${filePath}"`, { timeout: 2000 }).toString().trim();
+        } catch (err) {
+          throw new Error(err.message || err.stderr?.toString() || 'Execution failed');
+        } finally {
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        }
+        
+        const end = process.hrtime(start);
+        const executionTime = Math.round((end[0] * 1000) + (end[1] / 1000000));
+
+        const normalizedResult = rawResult.replace(/\s+/g, '');
+        const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
+        const passed = normalizedResult === normalizedExpected;
+
+        return {
+          testCaseIndex: index,
+          passed,
+          output: passed ? tc.expectedOutput : `Expected: ${tc.expectedOutput}, but got: ${rawResult}`,
+          executionTime: executionTime || 1,
+        };
+      } catch (e) {
+        return {
+          testCaseIndex: index,
+          passed: false,
+          output: e.message || String(e),
+          executionTime: 0,
+        };
+      }
+    });
+  }
+
+  // Real code evaluation for JS algorithms
+  return testCases.map((tc, index) => {
     try {
-      // Simple evaluation: check if the code contains expected patterns
-      // In production, this would use a sandboxed execution engine
-      const containsLogic = code.length > 20 && !code.match(/^\s*$/);
-      const passed = containsLogic && (
-        code.includes('return') ||
-        code.includes('console.log') ||
-        code.includes('print') ||
-        code.includes('function') ||
-        code.includes('=>')
-      );
+      const sandbox = {
+        console: { log: () => {} },
+        Math, String, Number, Array, Object, Set, Map,
+        Promise, setTimeout
+      };
+
+      vm.createContext(sandbox);
+
+      let functionName = '';
+      const funcMatch = code.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
+      if (funcMatch) {
+        functionName = funcMatch[1];
+      } else {
+        const classMatch = code.match(/class\s+([a-zA-Z0-9_]+)\s*\{/);
+        if (classMatch) {
+          functionName = classMatch[1];
+        } else {
+          const constMatch = code.match(/(?:const|let|var)\s+([a-zA-Z0-9_]+)\s*=\s*(?:function|\()/);
+          if (constMatch) functionName = constMatch[1];
+        }
+      }
+
+      if (!functionName) {
+        throw new Error('Could not determine main function name. Please ensure you defined the main function.');
+      }
+
+      const testRunnerCode = `
+        ${code}
+        
+        // Execute and return result
+        ${functionName}(${tc.input});
+      `;
+      
+      const testScript = new vm.Script(testRunnerCode);
+      const start = process.hrtime();
+      const rawResult = testScript.runInContext(sandbox, { timeout: 1000 });
+      const end = process.hrtime(start);
+      const executionTime = Math.round((end[0] * 1000) + (end[1] / 1000000));
+      
+      let resultStr;
+      if (rawResult === undefined) resultStr = 'undefined';
+      else if (rawResult === null) resultStr = 'null';
+      else if (typeof rawResult === 'object') resultStr = JSON.stringify(rawResult);
+      else resultStr = rawResult.toString();
+      
+      const normalizedResult = resultStr.replace(/\s+/g, '');
+      const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
+
+      const passed = normalizedResult === normalizedExpected;
 
       return {
         testCaseIndex: index,
         passed,
-        output: passed ? tc.expectedOutput : 'Incorrect output',
-        executionTime: Math.floor(Math.random() * 50) + 5,
+        output: passed ? tc.expectedOutput : `Expected: ${tc.expectedOutput}, but got: ${resultStr}`,
+        executionTime: executionTime || 1,
       };
+
     } catch (e) {
       return {
         testCaseIndex: index,
         passed: false,
-        output: e.message,
+        output: e.message || String(e),
         executionTime: 0,
       };
     }
   });
-
-  return results;
 };
 
 exports.submitSolution = async (req, res, next) => {
@@ -57,7 +192,7 @@ exports.submitSolution = async (req, res, next) => {
     });
 
     // Evaluate code
-    const testResults = evaluateCode(code, challenge.testCases, language);
+    const testResults = evaluateCode(code, challenge.testCases, language, challenge.category);
     const allPassed = testResults.every(r => r.passed);
     const status = allPassed ? 'passed' : 'failed';
 

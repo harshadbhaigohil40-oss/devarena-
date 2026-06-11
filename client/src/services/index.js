@@ -58,3 +58,9 @@ export const aiService = {
   },
   generateRoadmap: (data) => api.post('/ai/generate-roadmap', data),
 };
+
+export const recruiterService = {
+  searchTalent: (params) => api.get('/recruiter/talent', { params }),
+  viewCandidate: (id) => api.get(`/recruiter/talent/${id}`),
+  getAnalytics: () => api.get('/recruiter/analytics'),
+};

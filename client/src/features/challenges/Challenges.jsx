@@ -1,30 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { challengeService } from '../../services';
 import toast from 'react-hot-toast';
 
 export default function Challenges() {
-  const [challenges, setChallenges] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  useEffect(() => {
-    fetchChallenges();
-  }, [filter]);
-
-  const fetchChallenges = async () => {
-    setLoading(true);
-    try {
+  const { data: challenges = [], isLoading: loading, isError } = useQuery({
+    queryKey: ['challenges', filter],
+    queryFn: async () => {
       const params = filter !== 'all' ? { difficulty: filter } : {};
       const res = await challengeService.list(params);
-      setChallenges(res.data.data.challenges || []);
-    } catch (err) {
-      toast.error('Failed to load challenges');
-    } finally {
-      setLoading(false);
-    }
-  };
+      const fetchedData = res.data.data;
+      return Array.isArray(fetchedData) ? fetchedData : fetchedData.challenges || [];
+    },
+    onError: () => toast.error('Failed to load challenges'),
+  });
 
   const difficultyColors = {
     beginner: 'var(--color-success)',

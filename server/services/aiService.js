@@ -69,7 +69,12 @@ User Profile:
 
 User Question: ${question}
 
-Provide detailed, actionable career advice. Include specific recommendations, salary insights, and learning roadmap. Format using markdown.`;
+Provide detailed, actionable career advice tailored to their exact level and skills. Include:
+1. A realistic, immediate career next step.
+2. Salary insights for their market.
+3. 3 highly specific technical areas they MUST master.
+4. A clear short-term goal to achieve on the platform (e.g., reaching the next level, earning a specific badge).
+Use an encouraging, professional tone. Format beautifully using markdown headers, bullet points, and bold text.`;
 
     const result = await model.generateContent(prompt);
     return result.response.text();
@@ -93,7 +98,10 @@ User Profile:
 - Current Skills: ${userProfile.topSkills?.map(s => `${s.name} (Level ${s.level})`).join(', ') || 'Beginner'}
 - Challenges Solved: ${userProfile.challengesSolved || 0}
 
-Recommend 5 skills they should learn next, with explanation of why each is valuable and how to start learning. Format using markdown.`;
+Recommend 5 specific skills or technologies they should learn next. For each skill provide:
+1. **Why it's valuable**: The industry demand and relevance to their current stack.
+2. **How to start**: A concrete project idea or platform challenge they can build to practice it.
+Format the output using clear markdown with emojis to make it engaging and readable.`;
 
     const result = await model.generateContent(prompt);
     return result.response.text();
@@ -116,14 +124,13 @@ const getCodeReview = async (code, language) => {
 ${code}
 \`\`\`
 
-Provide:
-1. Overall quality score (1-10)
-2. Good practices noticed
-3. Issues found (bugs, performance, security)
-4. Suggestions for improvement
-5. Refactored version if applicable
-
-Format using markdown.`;
+Provide a comprehensive and rigorous review:
+1. **Overall Quality Score** (1-10) with a one-sentence summary.
+2. **Security & Performance**: Identify any vulnerabilities, memory leaks, or Big-O inefficiencies.
+3. **Good Practices**: Highlight exactly what they did right.
+4. **Actionable Improvements**: Suggest refactoring for clean code, DRY principles, and modern syntax.
+5. **Refactored Version**: Provide a polished, refactored version of the most critical section.
+Format using clean markdown.`;
 
     const result = await model.generateContent(prompt);
     return result.response.text();

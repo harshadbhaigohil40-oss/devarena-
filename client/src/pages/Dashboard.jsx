@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services';
 import { formatNumber, progressToNextLevel, xpForLevel } from '../utils/helpers';
@@ -13,13 +14,20 @@ import { ActivityHeatmap } from '../components/charts/ActivityHeatmap';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState(null);
   const { conversations, fetchConversations } = useChatStore();
   const [activeChatUser, setActiveChatUser] = useState(null);
 
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['userStats', user?._id],
+    queryFn: async () => {
+      const res = await userService.getStats(user._id);
+      return res.data.data;
+    },
+    enabled: !!user?._id,
+  });
+
   useEffect(() => {
     if (user?._id) {
-      userService.getStats(user._id).then(r => setStats(r.data.data)).catch(() => {});
       fetchConversations();
     }
   }, [user]);
