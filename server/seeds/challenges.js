@@ -127,60 +127,64 @@ const challenges = [
       { input: '[1,2,3,4]', expectedOutput: '[24,12,8,6]', isHidden: false },
       { input: '[-1,1,0,-3,3]', expectedOutput: '[0,0,9,0,0]', isHidden: false }
     ],
+    hints: ['Calculate left products and right products separately']
   },
-  
+
   // Frontend Challenges
   {
-    title: 'Build a Counter Component', slug: 'build-counter-component',
-    description: '## Build a Counter Component\n\nCreate a React counter component with increment, decrement, and reset buttons. Style it with CSS.\n\n### Requirements\n- Display current count\n- Increment button (+)\n- Decrement button (-)\n- Reset button\n- Prevent count from going below 0',
-    difficulty: 'intermediate', category: 'frontend', tags: ['react', 'components', 'state'], xpReward: 100,
-    starterCode: { javascript: 'function Counter() {\n  // Your code here\n  return <div>Counter</div>;\n}' },
-    testCases: [{ input: 'render', expectedOutput: 'Counter displays 0', isHidden: false }],
-    hints: ['Use useState hook', 'Add onClick handlers']
+    title: 'CSS Flexbox Centering', slug: 'css-flexbox-centering',
+    description: '## Center a Div\n\nWrite a CSS snippet that perfectly centers a child div inside a parent div using Flexbox.',
+    difficulty: 'beginner', category: 'frontend', tags: ['css', 'flexbox'], xpReward: 50,
+    starterCode: { javascript: 'function centerDiv() {\n  return "display: flex; justify-content: center; align-items: center;";\n}', python: 'def center_div():\n    return "display: flex; justify-content: center; align-items: center;"' },
+    testCases: [ { input: '""', expectedOutput: '"display: flex; justify-content: center; align-items: center;"', isHidden: false } ],
+    hints: ['justify-content and align-items are your friends']
   },
   {
-    title: 'Promise.all Implementation', slug: 'promise-all',
-    description: '## Promise.all Implementation\n\nImplement your own version of `Promise.all()`.\n\n### Requirements\n- Accept an array of promises\n- Resolve when all promises resolve\n- Reject if any promise rejects\n- Maintain order of results',
-    difficulty: 'advanced', category: 'frontend', tags: ['promises', 'async', 'javascript'], xpReward: 200,
-    starterCode: { javascript: 'function promiseAll(promises) {\n  // Your code here\n}' },
-    testCases: [{ input: '[Promise.resolve(1), Promise.resolve(2)]', expectedOutput: '[1, 2]', isHidden: false }],
-    hints: ['Track resolved count', 'Use an array to maintain order']
+    title: 'React useState Hook', slug: 'react-usestate-hook',
+    description: '## React Counter\n\nReturn a string representation of a simple React counter component using useState.',
+    difficulty: 'intermediate', category: 'frontend', tags: ['react', 'hooks'], xpReward: 100,
+    starterCode: { javascript: 'function getCounterCode() {\n  return "const [count, setCount] = useState(0);";\n}', python: 'def get_counter_code():\n    return "const [count, setCount] = useState(0);"' },
+    testCases: [ { input: '""', expectedOutput: '"const [count, setCount] = useState(0);"', isHidden: false } ],
+    hints: ['useState returns an array with state and setter']
   },
-  
+
   // Backend Challenges
   {
-    title: 'REST API Design', slug: 'rest-api-design',
-    description: '## REST API Design\n\nDesign a REST API for a blog platform with posts, comments, and users.\n\n### Requirements\n- CRUD operations for posts\n- Authentication endpoints\n- Comment system\n- Proper HTTP methods and status codes',
-    difficulty: 'intermediate', category: 'backend', tags: ['api-design', 'rest', 'express'], xpReward: 100,
-    starterCode: { javascript: '// Design your API routes\nconst express = require("express");\nconst router = express.Router();\n\n// Your routes here' },
-    testCases: [{ input: 'design', expectedOutput: 'Valid REST API', isHidden: false }],
-    hints: ['Follow REST conventions', 'Use proper HTTP verbs']
+    title: 'Node.js Express Route', slug: 'nodejs-express-route',
+    description: '## Simple GET Route\n\nReturn the code string to create a simple GET route in Express.js that returns "Hello World".',
+    difficulty: 'beginner', category: 'backend', tags: ['nodejs', 'express'], xpReward: 50,
+    starterCode: { javascript: 'function getExpressRoute() {\n  return "app.get(\'/\', (req, res) => res.send(\'Hello World\'));";\n}', python: 'def get_express_route():\n    return "app.get(\'/\', (req, res) => res.send(\'Hello World\'));"' },
+    testCases: [ { input: '""', expectedOutput: '"app.get(\'/\', (req, res) => res.send(\'Hello World\'));"', isHidden: false } ],
+    hints: ['app.get(path, handler)']
   },
-  
+  {
+    title: 'SQL Inner Join', slug: 'sql-inner-join',
+    description: '## SQL Inner Join\n\nReturn a SQL query string that selects all columns from users and orders using an INNER JOIN on user_id.',
+    difficulty: 'intermediate', category: 'backend', tags: ['sql', 'database'], xpReward: 100,
+    starterCode: { javascript: 'function getJoinQuery() {\n  return "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;";\n}', python: 'def get_join_query():\n    return "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;"' },
+    testCases: [ { input: '""', expectedOutput: '"SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;"', isHidden: false } ],
+    hints: ['INNER JOIN table ON condition']
+  },
+
   // System Design Challenges
   {
-    title: 'Rate Limiter', slug: 'rate-limiter',
-    description: '## Rate Limiter\n\nImplement a rate limiter that allows N requests per time window.\n\n### Requirements\n- Sliding window algorithm\n- Support multiple clients\n- Return true/false for each request\n- O(1) average time complexity',
-    difficulty: 'advanced', category: 'system-design', tags: ['system-design', 'algorithms'], xpReward: 200,
-    starterCode: { javascript: 'class RateLimiter {\n  constructor(maxRequests, windowMs) {\n    // Your code here\n  }\n  \n  isAllowed(clientId) {\n    // Your code here\n  }\n}' },
-    testCases: [{ input: 'maxRequests=3, window=1000ms', expectedOutput: 'true, true, true, false', isHidden: false }],
-    hints: ['Use a sliding window approach', 'Store timestamps per client']
+    title: 'Load Balancing Strategy', slug: 'load-balancing-strategy',
+    description: '## Round Robin\n\nWrite a function that simulates Round Robin load balancing. Given an array of servers `["A", "B", "C"]` and a request number `n`, return the server that should handle the request.',
+    difficulty: 'beginner', category: 'system-design', tags: ['load-balancing', 'architecture'], xpReward: 50,
+    starterCode: { javascript: 'function roundRobin(servers, n) {\n  return servers[n % servers.length];\n}', python: 'def round_robin(servers, n):\n    return servers[n % len(servers)]' },
+    testCases: [
+      { input: '["A", "B", "C"], 0', expectedOutput: '"A"', isHidden: false },
+      { input: '["A", "B", "C"], 4', expectedOutput: '"B"', isHidden: false }
+    ],
+    hints: ['Use the modulo operator']
   },
   {
-    title: 'Design a URL Shortener', slug: 'url-shortener',
-    description: '## Design a URL Shortener\n\nDesign and implement a URL shortening service like bit.ly.\n\n### Requirements\n- Generate short URLs from long URLs\n- Redirect short URLs to original URLs\n- Handle collisions\n- Support analytics (click count)\n- Scale to millions of URLs',
-    difficulty: 'expert', category: 'system-design', tags: ['system-design', 'hashing', 'database'], xpReward: 400,
-    starterCode: { javascript: 'class URLShortener {\n  constructor() {\n    // Your code here\n  }\n  \n  shorten(longUrl) {\n    // Your code here\n  }\n  \n  resolve(shortCode) {\n    // Your code here\n  }\n}' },
-    testCases: [{ input: '"https://example.com/very/long/url"', expectedOutput: 'short code (6 chars)', isHidden: false }],
-    hints: ['Use base62 encoding', 'Consider hash collisions']
-  },
-  {
-    title: 'Real-time Chat System', slug: 'realtime-chat',
-    description: '## Real-time Chat System\n\nDesign a real-time chat system architecture.\n\n### Requirements\n- 1-on-1 and group messaging\n- Message persistence\n- Online/offline status\n- Read receipts\n- Message delivery guarantees',
-    difficulty: 'expert', category: 'system-design', tags: ['websockets', 'system-design', 'architecture'], xpReward: 400,
-    starterCode: { javascript: '// Design your chat system architecture\n// Include: data models, API design, WebSocket events' },
-    testCases: [{ input: 'design', expectedOutput: 'Valid system design', isHidden: false }],
-    hints: ['Consider WebSocket for real-time', 'Think about message ordering']
+    title: 'CAP Theorem Basics', slug: 'cap-theorem-basics',
+    description: '## CAP Theorem\n\nReturn the two properties of the CAP theorem that a NoSQL database like MongoDB prioritizes when partitioning occurs.',
+    difficulty: 'intermediate', category: 'system-design', tags: ['databases', 'cap'], xpReward: 100,
+    starterCode: { javascript: 'function capPriorities() {\n  return "Consistency and Partition Tolerance";\n}', python: 'def cap_priorities():\n    return "Consistency and Partition Tolerance"' },
+    testCases: [ { input: '""', expectedOutput: '"Consistency and Partition Tolerance"', isHidden: false } ],
+    hints: ['MongoDB is typically CP']
   }
 ];
 
