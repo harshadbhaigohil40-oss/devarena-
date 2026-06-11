@@ -6,6 +6,7 @@ import { challengeService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
+import Editor from '@monaco-editor/react';
 
 export default function ChallengeDetail() {
   const { slug } = useParams();
@@ -107,27 +108,39 @@ export default function ChallengeDetail() {
 
         {/* Code Editor */}
         <div className="flex flex-col gap-md">
-          <div className="card" style={{ flex: 1 }}>
-            <div className="flex justify-between items-center mb-md">
-              <h3>💻 Code Editor</h3>
+          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
+            <div className="flex justify-between items-center" style={{ padding: '1rem', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-tertiary)' }}>
+              <h3 style={{ fontSize: '1rem', margin: 0 }}>💻 Code Editor</h3>
               <select 
                 value={language} 
                 onChange={handleLanguageChange}
                 className="input"
-                style={{ width: '150px', padding: '0.4rem', fontSize: '0.875rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
+                style={{ width: '130px', padding: '0.3rem', fontSize: '0.875rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-secondary)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
               >
                 <option value="javascript">JavaScript</option>
                 <option value="python">Python</option>
               </select>
             </div>
-            <textarea value={code} onChange={e => setCode(e.target.value)}
-              style={{
-                width: '100%', minHeight: 350, padding: '1rem', fontFamily: 'var(--font-mono)', fontSize: '0.875rem',
-                background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)',
-                borderRadius: 'var(--radius-md)', resize: 'vertical', outline: 'none', lineHeight: 1.6, tabSize: 2,
-              }}
-              spellCheck={false}
-            />
+            
+            <div style={{ flex: 1, minHeight: '400px' }}>
+              <Editor
+                height="100%"
+                language={language}
+                theme="vs-dark"
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  fontFamily: 'var(--font-mono)',
+                  lineHeight: 1.6,
+                  padding: { top: 16 },
+                  scrollBeyondLastLine: false,
+                  smoothScrolling: true,
+                  cursorBlinking: "smooth",
+                }}
+              />
+            </div>
           </div>
 
           <button onClick={handleSubmit} disabled={submitting} className="btn btn-primary btn-lg" style={{ width: '100%' }}>
