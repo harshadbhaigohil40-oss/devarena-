@@ -1,37 +1,134 @@
 const challenges = [
-  // Beginner Challenges
-  { title: 'Two Sum', slug: 'two-sum', description: '## Two Sum\n\nGiven an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to target.\n\n### Example\n```\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]\n```\n\n### Constraints\n- Each input would have exactly one solution\n- You may not use the same element twice', difficulty: 'beginner', category: 'algorithms', tags: ['arrays', 'hash-map'], xpReward: 50, starterCode: { javascript: 'function twoSum(nums, target) {\n  // Your code here\n}', python: 'def two_sum(nums, target):\n    # Your code here\n    pass' }, testCases: [{ input: '[2,7,11,15], 9', expectedOutput: '[0,1]', isHidden: false }, { input: '[3,2,4], 6', expectedOutput: '[1,2]', isHidden: false }, { input: '[3,3], 6', expectedOutput: '[0,1]', isHidden: true }], solution: 'function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) return [map.get(complement), i];\n    map.set(nums[i], i);\n  }\n}', hints: ['Think about using a hash map', 'Store each number and its index as you iterate'] },
-
-  { title: 'Reverse String', slug: 'reverse-string', description: '## Reverse String\n\nWrite a function that reverses a string. The input string is given as an array of characters.\n\n### Example\n```\nInput: ["h","e","l","l","o"]\nOutput: ["o","l","l","e","h"]\n```', difficulty: 'beginner', category: 'algorithms', tags: ['strings', 'two-pointers'], xpReward: 50, starterCode: { javascript: 'function reverseString(s) {\n  // Your code here\n}', python: 'def reverse_string(s):\n    # Your code here\n    pass' }, testCases: [{ input: '["h","e","l","l","o"]', expectedOutput: '["o","l","l","e","h"]', isHidden: false }, { input: '["H","a","n"]', expectedOutput: '["n","a","H"]', isHidden: false }], hints: ['Use two pointers', 'Swap from both ends'] },
-
-  { title: 'FizzBuzz', slug: 'fizzbuzz', description: '## FizzBuzz\n\nGiven an integer n, return a string array where:\n- answer[i] == "FizzBuzz" if i is divisible by 3 and 5\n- answer[i] == "Fizz" if i is divisible by 3\n- answer[i] == "Buzz" if i is divisible by 5\n- answer[i] == i (as a string) otherwise\n\n### Example\n```\nInput: n = 15\nOutput: ["1","2","Fizz","4","Buzz",...,"FizzBuzz"]\n```', difficulty: 'beginner', category: 'algorithms', tags: ['math', 'strings'], xpReward: 50, starterCode: { javascript: 'function fizzBuzz(n) {\n  // Your code here\n}' }, testCases: [{ input: '3', expectedOutput: '["1","2","Fizz"]', isHidden: false }, { input: '5', expectedOutput: '["1","2","Fizz","4","Buzz"]', isHidden: false }], hints: ['Check divisibility by 15 first, then 3, then 5'] },
-
-  { title: 'Valid Parentheses', slug: 'valid-parentheses', description: '## Valid Parentheses\n\nGiven a string s containing just the characters `(`, `)`, `{`, `}`, `[` and `]`, determine if the input string is valid.\n\n### Example\n```\nInput: s = "()[]{}"\nOutput: true\n```', difficulty: 'beginner', category: 'data-structures', tags: ['stack', 'strings'], xpReward: 50, starterCode: { javascript: 'function isValid(s) {\n  // Your code here\n}' }, testCases: [{ input: '"()"', expectedOutput: 'true', isHidden: false }, { input: '"()[]{}"', expectedOutput: 'true', isHidden: false }, { input: '"(]"', expectedOutput: 'false', isHidden: false }], hints: ['Use a stack', 'Push opening brackets, pop when closing'] },
-
-  { title: 'Palindrome Check', slug: 'palindrome-check', description: '## Palindrome Check\n\nGiven a string, determine if it is a palindrome, considering only alphanumeric characters and ignoring cases.\n\n### Example\n```\nInput: "A man, a plan, a canal: Panama"\nOutput: true\n```', difficulty: 'beginner', category: 'algorithms', tags: ['strings', 'two-pointers'], xpReward: 50, starterCode: { javascript: 'function isPalindrome(s) {\n  // Your code here\n}' }, testCases: [{ input: '"racecar"', expectedOutput: 'true', isHidden: false }, { input: '"hello"', expectedOutput: 'false', isHidden: false }], hints: ['Clean the string first', 'Compare from both ends'] },
+  // Beginner Challenges (Arrays, Strings, Hash Maps)
+  {
+    title: 'Two Sum', slug: 'two-sum',
+    description: '## Two Sum\n\nGiven an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to target.\n\n### Constraints\n- Each input would have exactly one solution\n- You may not use the same element twice',
+    difficulty: 'beginner', category: 'algorithms', tags: ['arrays', 'hash-map'], xpReward: 50,
+    starterCode: { javascript: 'function twoSum(nums, target) {\n  // Your code here\n}', python: 'def two_sum(nums, target):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[2,7,11,15], 9', expectedOutput: '[0,1]', isHidden: false },
+      { input: '[3,2,4], 6', expectedOutput: '[1,2]', isHidden: false },
+      { input: '[3,3], 6', expectedOutput: '[0,1]', isHidden: true }
+    ],
+    solution: '...', hints: ['Think about using a hash map']
+  },
+  {
+    title: 'Reverse String', slug: 'reverse-string',
+    description: '## Reverse String\n\nWrite a function that reverses an array of characters in-place (for this challenge, just return the reversed array).\n\n### Example\n`Input: ["h","e","l","l","o"]`\n`Output: ["o","l","l","e","h"]`',
+    difficulty: 'beginner', category: 'algorithms', tags: ['strings', 'two-pointers'], xpReward: 50,
+    starterCode: { javascript: 'function reverseString(s) {\n  // Your code here\n}', python: 'def reverse_string(s):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '["h","e","l","l","o"]', expectedOutput: '["o","l","l","e","h"]', isHidden: false },
+      { input: '["H","a","n"]', expectedOutput: '["n","a","H"]', isHidden: false }
+    ],
+    hints: ['Use two pointers', 'Swap from both ends']
+  },
+  {
+    title: 'Valid Anagram', slug: 'valid-anagram',
+    description: '## Valid Anagram\n\nGiven two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise.\n\n### Example\n`Input: "anagram", "nagaram"`\n`Output: true`',
+    difficulty: 'beginner', category: 'algorithms', tags: ['strings', 'hash-map'], xpReward: 50,
+    starterCode: { javascript: 'function isAnagram(s, t) {\n  // Your code here\n}', python: 'def is_anagram(s, t):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '"anagram", "nagaram"', expectedOutput: 'true', isHidden: false },
+      { input: '"rat", "car"', expectedOutput: 'false', isHidden: false }
+    ],
+    hints: ['Count character frequencies']
+  },
+  {
+    title: 'Contains Duplicate', slug: 'contains-duplicate',
+    description: '## Contains Duplicate\n\nGiven an integer array `nums`, return `true` if any value appears at least twice in the array, and return `false` if every element is distinct.\n\n### Example\n`Input: [1,2,3,1]`\n`Output: true`',
+    difficulty: 'beginner', category: 'algorithms', tags: ['arrays', 'hash-set'], xpReward: 50,
+    starterCode: { javascript: 'function containsDuplicate(nums) {\n  // Your code here\n}', python: 'def contains_duplicate(nums):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[1,2,3,1]', expectedOutput: 'true', isHidden: false },
+      { input: '[1,2,3,4]', expectedOutput: 'false', isHidden: false }
+    ],
+    hints: ['A Set data structure can be very helpful here']
+  },
+  {
+    title: 'Single Number', slug: 'single-number',
+    description: '## Single Number\n\nGiven a non-empty array of integers `nums`, every element appears twice except for one. Find that single one.\nYou must implement a solution with a linear runtime complexity and use only constant extra space.\n\n### Example\n`Input: [4,1,2,1,2]`\n`Output: 4`',
+    difficulty: 'beginner', category: 'algorithms', tags: ['arrays', 'bit-manipulation'], xpReward: 50,
+    starterCode: { javascript: 'function singleNumber(nums) {\n  // Your code here\n}', python: 'def single_number(nums):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[2,2,1]', expectedOutput: '1', isHidden: false },
+      { input: '[4,1,2,1,2]', expectedOutput: '4', isHidden: false }
+    ],
+    hints: ['Consider XOR bitwise operation']
+  },
 
   // Intermediate Challenges
-  { title: 'Binary Search', slug: 'binary-search', description: '## Binary Search\n\nGiven a sorted array of integers nums and a target value, return the index of the target if found, otherwise return -1.\n\n### Example\n```\nInput: nums = [-1,0,3,5,9,12], target = 9\nOutput: 4\n```', difficulty: 'intermediate', category: 'algorithms', tags: ['binary-search', 'arrays'], xpReward: 100, starterCode: { javascript: 'function binarySearch(nums, target) {\n  // Your code here\n}' }, testCases: [{ input: '[-1,0,3,5,9,12], 9', expectedOutput: '4', isHidden: false }, { input: '[-1,0,3,5,9,12], 2', expectedOutput: '-1', isHidden: false }], hints: ['Use two pointers: left and right', 'Check the middle element'] },
-
-  { title: 'Merge Sorted Arrays', slug: 'merge-sorted-arrays', description: '## Merge Sorted Arrays\n\nGiven two sorted integer arrays nums1 and nums2, merge them into a single sorted array.\n\n### Example\n```\nInput: nums1 = [1,2,3], nums2 = [2,5,6]\nOutput: [1,2,2,3,5,6]\n```', difficulty: 'intermediate', category: 'algorithms', tags: ['arrays', 'sorting', 'two-pointers'], xpReward: 100, starterCode: { javascript: 'function mergeSorted(nums1, nums2) {\n  // Your code here\n}' }, testCases: [{ input: '[1,2,3], [2,5,6]', expectedOutput: '[1,2,2,3,5,6]', isHidden: false }], hints: ['Use two pointers, one for each array'] },
-
-  { title: 'Linked List Cycle', slug: 'linked-list-cycle', description: '## Linked List Cycle\n\nGiven head, the head of a linked list, determine if the linked list has a cycle in it.\n\n### Approach\nUse Floyd\'s cycle detection algorithm (slow and fast pointers).', difficulty: 'intermediate', category: 'data-structures', tags: ['linked-list', 'two-pointers'], xpReward: 100, starterCode: { javascript: 'function hasCycle(head) {\n  // Your code here\n}' }, testCases: [{ input: '[3,2,0,-4], pos=1', expectedOutput: 'true', isHidden: false }], hints: ['Use slow and fast pointers', 'If they meet, there is a cycle'] },
-
-  { title: 'Build a Counter Component', slug: 'build-counter-component', description: '## Build a Counter Component\n\nCreate a React counter component with increment, decrement, and reset buttons. Style it with CSS.\n\n### Requirements\n- Display current count\n- Increment button (+)\n- Decrement button (-)\n- Reset button\n- Prevent count from going below 0', difficulty: 'intermediate', category: 'frontend', tags: ['react', 'components', 'state'], xpReward: 100, starterCode: { javascript: 'function Counter() {\n  // Your code here\n  return <div>Counter</div>;\n}' }, testCases: [{ input: 'render', expectedOutput: 'Counter displays 0', isHidden: false }], hints: ['Use useState hook', 'Add onClick handlers'] },
-
-  { title: 'REST API Design', slug: 'rest-api-design', description: '## REST API Design\n\nDesign a REST API for a blog platform with posts, comments, and users.\n\n### Requirements\n- CRUD operations for posts\n- Authentication endpoints\n- Comment system\n- Proper HTTP methods and status codes', difficulty: 'intermediate', category: 'backend', tags: ['api-design', 'rest', 'express'], xpReward: 100, starterCode: { javascript: '// Design your API routes\nconst express = require("express");\nconst router = express.Router();\n\n// Your routes here' }, testCases: [{ input: 'design', expectedOutput: 'Valid REST API', isHidden: false }], hints: ['Follow REST conventions', 'Use proper HTTP verbs'] },
+  {
+    title: 'Maximum Subarray', slug: 'maximum-subarray',
+    description: '## Maximum Subarray\n\nGiven an integer array `nums`, find the subarray which has the largest sum and return its sum.\n\n### Example\n`Input: [-2,1,-3,4,-1,2,1,-5,4]`\n`Output: 6` (subarray [4,-1,2,1] has the largest sum = 6)',
+    difficulty: 'intermediate', category: 'algorithms', tags: ['arrays', 'dynamic-programming'], xpReward: 100,
+    starterCode: { javascript: 'function maxSubArray(nums) {\n  // Your code here\n}', python: 'def max_sub_array(nums):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[-2,1,-3,4,-1,2,1,-5,4]', expectedOutput: '6', isHidden: false },
+      { input: '[1]', expectedOutput: '1', isHidden: false },
+      { input: '[5,4,-1,7,8]', expectedOutput: '23', isHidden: true }
+    ],
+    hints: ['Kadane\'s Algorithm is the best approach']
+  },
+  {
+    title: 'Climbing Stairs', slug: 'climbing-stairs',
+    description: '## Climbing Stairs\n\nYou are climbing a staircase. It takes `n` steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?\n\n### Example\n`Input: n = 3`\n`Output: 3`',
+    difficulty: 'intermediate', category: 'algorithms', tags: ['math', 'dynamic-programming'], xpReward: 100,
+    starterCode: { javascript: 'function climbStairs(n) {\n  // Your code here\n}', python: 'def climb_stairs(n):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '2', expectedOutput: '2', isHidden: false },
+      { input: '3', expectedOutput: '3', isHidden: false },
+      { input: '5', expectedOutput: '8', isHidden: true }
+    ],
+    hints: ['This is closely related to the Fibonacci sequence']
+  },
+  {
+    title: 'Best Time to Buy and Sell Stock', slug: 'best-time-to-buy-and-sell-stock',
+    description: '## Best Time to Buy and Sell Stock\n\nYou are given an array `prices` where `prices[i]` is the price of a given stock on the `i`th day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.\nReturn the maximum profit you can achieve. If you cannot achieve any profit, return 0.\n\n### Example\n`Input: [7,1,5,3,6,4]`\n`Output: 5` (Buy on day 2 at price 1, sell on day 5 at price 6)',
+    difficulty: 'intermediate', category: 'algorithms', tags: ['arrays', 'dynamic-programming'], xpReward: 100,
+    starterCode: { javascript: 'function maxProfit(prices) {\n  // Your code here\n}', python: 'def max_profit(prices):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[7,1,5,3,6,4]', expectedOutput: '5', isHidden: false },
+      { input: '[7,6,4,3,1]', expectedOutput: '0', isHidden: false }
+    ],
+    hints: ['Track the minimum price seen so far']
+  },
+  {
+    title: 'Missing Number', slug: 'missing-number',
+    description: '## Missing Number\n\nGiven an array `nums` containing `n` distinct numbers in the range `[0, n]`, return the only number in the range that is missing from the array.\n\n### Example\n`Input: [3,0,1]`\n`Output: 2`',
+    difficulty: 'intermediate', category: 'algorithms', tags: ['arrays', 'math', 'bit-manipulation'], xpReward: 100,
+    starterCode: { javascript: 'function missingNumber(nums) {\n  // Your code here\n}', python: 'def missing_number(nums):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[3,0,1]', expectedOutput: '2', isHidden: false },
+      { input: '[0,1]', expectedOutput: '2', isHidden: false },
+      { input: '[9,6,4,2,3,5,7,0,1]', expectedOutput: '8', isHidden: true }
+    ],
+    hints: ['Can you use the mathematical formula for the sum of the first N numbers?']
+  },
 
   // Advanced Challenges
-  { title: 'LRU Cache', slug: 'lru-cache', description: '## LRU Cache\n\nDesign a data structure that follows Least Recently Used (LRU) cache constraints.\n\n### Implement\n- `LRUCache(capacity)` - Initialize the cache\n- `get(key)` - Return value or -1\n- `put(key, value)` - Update or insert\n\nBoth operations must run in O(1) time.', difficulty: 'advanced', category: 'data-structures', tags: ['hash-map', 'linked-list', 'design'], xpReward: 200, starterCode: { javascript: 'class LRUCache {\n  constructor(capacity) {\n    // Your code here\n  }\n  \n  get(key) {\n    // Your code here\n  }\n  \n  put(key, value) {\n    // Your code here\n  }\n}' }, testCases: [{ input: 'capacity=2, put(1,1), put(2,2), get(1)', expectedOutput: '1', isHidden: false }], hints: ['Use a Map (ordered) or HashMap + Doubly Linked List', 'Move accessed items to front'] },
-
-  { title: 'Rate Limiter', slug: 'rate-limiter', description: '## Rate Limiter\n\nImplement a rate limiter that allows N requests per time window.\n\n### Requirements\n- Sliding window algorithm\n- Support multiple clients\n- Return true/false for each request\n- O(1) average time complexity', difficulty: 'advanced', category: 'system-design', tags: ['system-design', 'algorithms'], xpReward: 200, starterCode: { javascript: 'class RateLimiter {\n  constructor(maxRequests, windowMs) {\n    // Your code here\n  }\n  \n  isAllowed(clientId) {\n    // Your code here\n  }\n}' }, testCases: [{ input: 'maxRequests=3, window=1000ms', expectedOutput: 'true, true, true, false', isHidden: false }], hints: ['Use a sliding window approach', 'Store timestamps per client'] },
-
-  { title: 'Promise.all Implementation', slug: 'promise-all', description: '## Promise.all Implementation\n\nImplement your own version of `Promise.all()`.\n\n### Requirements\n- Accept an array of promises\n- Resolve when all promises resolve\n- Reject if any promise rejects\n- Maintain order of results', difficulty: 'advanced', category: 'frontend', tags: ['promises', 'async', 'javascript'], xpReward: 200, starterCode: { javascript: 'function promiseAll(promises) {\n  // Your code here\n}' }, testCases: [{ input: '[Promise.resolve(1), Promise.resolve(2)]', expectedOutput: '[1, 2]', isHidden: false }], hints: ['Track resolved count', 'Use an array to maintain order'] },
-
-  // Expert Challenges
-  { title: 'Design a URL Shortener', slug: 'url-shortener', description: '## Design a URL Shortener\n\nDesign and implement a URL shortening service like bit.ly.\n\n### Requirements\n- Generate short URLs from long URLs\n- Redirect short URLs to original URLs\n- Handle collisions\n- Support analytics (click count)\n- Scale to millions of URLs', difficulty: 'expert', category: 'system-design', tags: ['system-design', 'hashing', 'database'], xpReward: 400, starterCode: { javascript: 'class URLShortener {\n  constructor() {\n    // Your code here\n  }\n  \n  shorten(longUrl) {\n    // Your code here\n  }\n  \n  resolve(shortCode) {\n    // Your code here\n  }\n}' }, testCases: [{ input: '"https://example.com/very/long/url"', expectedOutput: 'short code (6 chars)', isHidden: false }], hints: ['Use base62 encoding', 'Consider hash collisions'] },
-
-  { title: 'Real-time Chat System', slug: 'realtime-chat', description: '## Real-time Chat System\n\nDesign a real-time chat system architecture.\n\n### Requirements\n- 1-on-1 and group messaging\n- Message persistence\n- Online/offline status\n- Read receipts\n- Message delivery guarantees', difficulty: 'expert', category: 'system-design', tags: ['websockets', 'system-design', 'architecture'], xpReward: 400, starterCode: { javascript: '// Design your chat system architecture\n// Include: data models, API design, WebSocket events' }, testCases: [{ input: 'design', expectedOutput: 'Valid system design', isHidden: false }], hints: ['Consider WebSocket for real-time', 'Think about message ordering'] },
+  {
+    title: 'Find the Duplicate Number', slug: 'find-the-duplicate-number',
+    description: '## Find the Duplicate Number\n\nGiven an array of integers `nums` containing `n + 1` integers where each integer is in the range `[1, n]` inclusive.\nThere is only one repeated number in `nums`, return this repeated number.\nYou must solve the problem without modifying the array `nums` and uses only constant extra space.\n\n### Example\n`Input: [1,3,4,2,2]`\n`Output: 2`',
+    difficulty: 'advanced', category: 'algorithms', tags: ['arrays', 'two-pointers', 'binary-search'], xpReward: 200,
+    starterCode: { javascript: 'function findDuplicate(nums) {\n  // Your code here\n}', python: 'def find_duplicate(nums):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[1,3,4,2,2]', expectedOutput: '2', isHidden: false },
+      { input: '[3,1,3,4,2]', expectedOutput: '3', isHidden: false }
+    ],
+    hints: ['Can you think of this array as a Linked List and detect a cycle?', 'Floyd\'s Tortoise and Hare algorithm']
+  },
+  {
+    title: 'Product of Array Except Self', slug: 'product-of-array-except-self',
+    description: '## Product of Array Except Self\n\nGiven an integer array `nums`, return an array `answer` such that `answer[i]` is equal to the product of all the elements of `nums` except `nums[i]`.\nThe product of any prefix or suffix of `nums` is guaranteed to fit in a 32-bit integer.\n\nYou must write an algorithm that runs in `O(n)` time and without using the division operation.\n\n### Example\n`Input: [1,2,3,4]`\n`Output: [24,12,8,6]`',
+    difficulty: 'advanced', category: 'algorithms', tags: ['arrays', 'prefix-sum'], xpReward: 200,
+    starterCode: { javascript: 'function productExceptSelf(nums) {\n  // Your code here\n}', python: 'def product_except_self(nums):\n    # Your code here\n    pass' },
+    testCases: [
+      { input: '[1,2,3,4]', expectedOutput: '[24,12,8,6]', isHidden: false },
+      { input: '[-1,1,0,-3,3]', expectedOutput: '[0,0,9,0,0]', isHidden: false }
+    ],
+    hints: ['Calculate left products and right products separately']
+  }
 ];
 
 module.exports = challenges;
