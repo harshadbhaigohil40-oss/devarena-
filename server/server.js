@@ -40,7 +40,10 @@ initGemini();
 // Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow any origin
+    callback(null, true);
+  },
   credentials: true,
 }));
 app.use(morgan('dev'));
