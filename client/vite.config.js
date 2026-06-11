@@ -29,7 +29,8 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['framer-motion', 'react-hot-toast', 'react-icons'],
           charts: ['recharts'],
-          utils: ['axios', 'date-fns', 'zustand']
+          utils: ['axios', 'date-fns', 'zustand'],
+          editor: ['@monaco-editor/react']
         }
       }
     }
