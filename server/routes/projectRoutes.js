@@ -1,10 +1,9 @@
 const router = require('express').Router();
 const { listProjects, getProject, createProject, updateProject, deleteProject, likeProject } = require('../controllers/projectController');
 const { auth } = require('../middleware/auth');
-const { cacheMiddleware } = require('../middleware/cacheMiddleware');
 
-router.get('/', cacheMiddleware(300), listProjects);
-router.get('/:id', cacheMiddleware(300), getProject);
+router.get('/', listProjects);
+router.get('/:id', getProject);
 router.post('/', auth, createProject);
 router.put('/:id', auth, updateProject);
 router.delete('/:id', auth, deleteProject);

@@ -7,7 +7,9 @@ const cacheMiddleware = (duration) => (req, res, next) => {
     return next();
   }
 
-  const key = req.originalUrl || req.url;
+  // Ensure cache key is unique per user if authentication is present
+  const userIdentifier = req.user ? req.user._id.toString() : 'guest';
+  const key = `${req.originalUrl || req.url}_${userIdentifier}`;
   const cachedResponse = cache.get(key);
 
   if (cachedResponse) {
