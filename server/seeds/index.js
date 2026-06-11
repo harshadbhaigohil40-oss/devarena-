@@ -40,10 +40,10 @@ const seedDB = async () => {
       const availableChallenges = getChallengesByCategory(category);
       
       const newNodes = tree.nodes.map((node, index) => {
-        // Distribute 1 or 2 challenges to each node if available
         const nodeChallengeIds = [];
-        if (availableChallenges.length > 0) {
-          nodeChallengeIds.push(availableChallenges[index % availableChallenges.length]);
+        // Distribute all challenges evenly across nodes
+        for (let i = index; i < availableChallenges.length; i += tree.nodes.length) {
+          nodeChallengeIds.push(availableChallenges[i]);
         }
         return { ...node, challengeIds: nodeChallengeIds };
       });
