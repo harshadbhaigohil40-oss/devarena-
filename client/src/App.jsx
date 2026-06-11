@@ -37,13 +37,28 @@ import { ChallengeSkeleton } from '@/components/skeletons/ChallengeSkeleton';
 
 import PageLoader from '@/components/ui/PageLoader';
 
-const FallbackLoader = () => <PageLoader />;
+const RouteLoader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <div style={{ 
+      width: '40px', 
+      height: '40px', 
+      border: '3px solid var(--bg-tertiary)', 
+      borderTopColor: 'var(--accent-primary)', 
+      borderRadius: '50%', 
+      animation: 'spin 1s linear infinite' 
+    }}>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  </div>
+);
+
+const FallbackLoader = () => <RouteLoader />;
 
 export default function App() {
   const location = useLocation();
   const { loading } = useAuth();
 
-  if (loading) return <FallbackLoader />;
+  if (loading) return <PageLoader />;
 
   return (
     <ErrorBoundary>
