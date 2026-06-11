@@ -189,10 +189,18 @@ const challenges = [
 ];
 
 const generateMassiveChallenges = () => {
-  const categories = ['algorithms', 'frontend', 'backend', 'system-design'];
   const allChallenges = [...challenges];
 
-  categories.forEach(category => {
+  const topics = {
+    'algorithms': ['Binary Tree', 'Graph Traversal', 'Dynamic Programming', 'Sliding Window', 'Two Pointers', 'Merge Sort', 'Hash Map', 'Trie', 'Heap', 'Backtracking'],
+    'frontend': ['React State', 'CSS Grid', 'Flexbox', 'DOM Manipulation', 'Web Performance', 'Accessibility', 'Redux', 'Vue.js Basics', 'WebSockets UI', 'Canvas API'],
+    'backend': ['REST API Design', 'GraphQL', 'JWT Auth', 'SQL Joins', 'NoSQL Indexing', 'Redis Caching', 'Docker Containers', 'Microservices', 'Rate Limiting', 'Cron Jobs'],
+    'system-design': ['Database Sharding', 'Load Balancing', 'Message Queues', 'Content Delivery Network (CDN)', 'CAP Theorem', 'Leader Election', 'Data Replication', 'API Gateway', 'Event Sourcing', 'Distributed Locks']
+  };
+
+  const actionVerbs = ['Implement', 'Design', 'Optimize', 'Build', 'Refactor', 'Debug', 'Create', 'Analyze'];
+
+  Object.keys(topics).forEach(category => {
     const baseForCategory = challenges.filter(c => c.category === category);
     if (baseForCategory.length === 0) return;
     
@@ -200,11 +208,16 @@ const generateMassiveChallenges = () => {
     
     while (count < 100) {
       const template = baseForCategory[count % baseForCategory.length];
+      const topic = topics[category][count % topics[category].length];
+      const verb = actionVerbs[count % actionVerbs.length];
+      
+      const newTitle = `${verb} ${topic} - Level ${count + 1}`;
       
       allChallenges.push({
         ...template,
-        title: `${template.title} - Practice #${count + 1}`,
-        slug: `${template.slug}-practice-${count + 1}`,
+        title: newTitle,
+        slug: newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: `## ${newTitle}\n\nYour task is to ${verb.toLowerCase()} a solution related to **${topic}**.\n\n### Requirements\n- Ensure optimal performance.\n- Handle edge cases properly.\n- Follow best practices for ${category}.`,
         difficulty: count < 30 ? 'beginner' : (count < 70 ? 'intermediate' : 'advanced'),
         xpReward: count < 30 ? 50 : (count < 70 ? 100 : 200),
       });
