@@ -188,4 +188,31 @@ const challenges = [
   }
 ];
 
-module.exports = challenges;
+const generateMassiveChallenges = () => {
+  const categories = ['algorithms', 'frontend', 'backend', 'system-design'];
+  const allChallenges = [...challenges];
+
+  categories.forEach(category => {
+    const baseForCategory = challenges.filter(c => c.category === category);
+    if (baseForCategory.length === 0) return;
+    
+    let count = baseForCategory.length;
+    
+    while (count < 100) {
+      const template = baseForCategory[count % baseForCategory.length];
+      
+      allChallenges.push({
+        ...template,
+        title: `${template.title} - Practice #${count + 1}`,
+        slug: `${template.slug}-practice-${count + 1}`,
+        difficulty: count < 30 ? 'beginner' : (count < 70 ? 'intermediate' : 'advanced'),
+        xpReward: count < 30 ? 50 : (count < 70 ? 100 : 200),
+      });
+      count++;
+    }
+  });
+  
+  return allChallenges;
+};
+
+module.exports = generateMassiveChallenges();
