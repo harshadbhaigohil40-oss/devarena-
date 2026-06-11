@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const http = require('http');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
+const compression = require('compression');
 
 const connectDB = require('./config/db');
 const { initSocket } = require('./config/socket');
@@ -43,6 +44,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(morgan('dev'));
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(mongoSanitize()); // Prevent NoSQL injection
