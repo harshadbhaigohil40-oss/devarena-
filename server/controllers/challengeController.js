@@ -14,7 +14,7 @@ exports.listChallenges = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const challenges = await Challenge.find(filter)
       .select('-solution -testCases')
-      .sort({ createdAt: -1 })
+      .sort({ xpReward: 1, title: 1 })
       .skip(skip)
       .limit(parseInt(limit));
 
