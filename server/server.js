@@ -67,6 +67,49 @@ app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/applications', applicationRoutes);
 
+// TEMPORARY ROUTE TO SEED DATABASE FROM RENDER
+app.get('/api/admin/seed-temp', async (req, res) => {
+  try {
+    const Challenge = require('./models/Challenge');
+    const Badge = require('./models/Badge');
+    const SkillTree = require('./models/SkillTree');
+    const challengeData = require('./seeds/challenges');
+    const badgeData = require('./seeds/badges');
+    const skillTreeData = require('./seeds/skillTrees');
+
+    await Challenge.deleteMany({});
+    await Badge.deleteMany({});
+    await SkillTree.deleteMany({});
+
+    const challenges = await Challenge.insertMany(challengeData);
+    const badges = await Badge.insertMany(badgeData);
+
+    const getChallengesByCategory = (category) => challenges.filter(c => c.category === category).map(c => c._id);
+    const mappedSkillTreeData = skillTreeData.map(tree => {
+      let category = 'algorithms';
+      if (tree.name.includes('Frontend')) category = 'frontend';
+      else if (tree.name.includes('Backend')) category = 'backend';
+      else if (tree.name.includes('System Design')) category = 'system-design';
+
+      const availableChallenges = getChallengesByCategory(category);
+      const newNodes = tree.nodes.map((node, index) => {
+        const nodeChallengeIds = [];
+        for (let i = index; i < availableChallenges.length; i += tree.nodes.length) {
+          nodeChallengeIds.push(availableChallenges[i]);
+        }
+        return { ...node, challengeIds: nodeChallengeIds };
+      });
+      return { ...tree, nodes: newNodes };
+    });
+
+    const skillTrees = await SkillTree.insertMany(mappedSkillTreeData);
+
+    res.json({ success: true, message: `Seeded ${challenges.length} challenges, ${badges.length} badges, and ${skillTrees.length} skill trees.` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
