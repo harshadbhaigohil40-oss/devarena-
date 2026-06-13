@@ -3,13 +3,25 @@ import 'react-calendar-heatmap/dist/styles.css';
 import { motion } from 'framer-motion';
 import { subDays } from 'date-fns';
 
-const today = new Date();
-const data = Array.from({ length: 150 }).map((_, i) => ({
-  date: subDays(today, i),
-  count: Math.floor(Math.random() * 4), // 0 to 3
-}));
+import { isSameDay } from 'date-fns';
 
-export function ActivityHeatmap() {
+export function ActivityHeatmap({ stats }: { stats?: any }) {
+  const today = new Date();
+  const data = Array.from({ length: 150 }).map((_, i) => {
+    const d = subDays(today, i);
+    return { date: d, count: 0 };
+  });
+
+  if (stats?.recentXP) {
+    stats.recentXP.forEach((event: any) => {
+      const eventDate = new Date(event.createdAt);
+      const dayData = data.find(d => isSameDay(d.date, eventDate));
+      if (dayData) {
+        dayData.count = Math.min(dayData.count + 1, 4); // Max color scale is 4
+      }
+    });
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}

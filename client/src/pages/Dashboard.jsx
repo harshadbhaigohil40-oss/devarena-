@@ -156,14 +156,14 @@ export default function Dashboard() {
 
       {/* Analytics Row 1 */}
       <div className="grid grid-2 mb-xl">
-        <XPGrowthChart />
-        <SkillRadarChart />
+        <XPGrowthChart stats={stats} />
+        <SkillRadarChart stats={stats} />
       </div>
 
       {/* Analytics Row 2 */}
       <div className="grid grid-2 mb-xl" style={{ gridTemplateColumns: '1fr 2fr' }}>
-        <ChallengePieChart />
-        <ActivityHeatmap />
+        <ChallengePieChart stats={stats} />
+        <ActivityHeatmap stats={stats} />
       </div>
 
       {/* Messages / Conversations */}

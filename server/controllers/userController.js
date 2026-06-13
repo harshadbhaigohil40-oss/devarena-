@@ -37,7 +37,7 @@ exports.getStats = async (req, res, next) => {
     const progress = progressToNextLevel(user.xp);
     const xpNeeded = xpForLevel(user.level);
 
-    const recentXP = await XPEvent.find({ userId }).sort({ createdAt: -1 }).limit(10);
+    const recentXP = await XPEvent.find({ userId }).sort({ createdAt: -1 }).limit(200);
 
     success(res, {
       xp: user.xp,

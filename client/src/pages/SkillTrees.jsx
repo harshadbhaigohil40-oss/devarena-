@@ -218,9 +218,11 @@ export default function SkillTrees() {
                         onClick={() => {
                           if (isUnlocked) {
                             import('react-hot-toast').then(module => module.toast.success(`Entering ${node.title} arena...`));
-                            setTimeout(() => navigate('/challenges'), 500);
+                            // Navigate to challenges page filtered by this node's topic
+                            const searchTerm = node.title.replace(/[&]/g, '').trim();
+                            setTimeout(() => navigate(`/challenges?search=${encodeURIComponent(searchTerm)}&node=${node.nodeId}`), 500);
                           } else {
-                            import('react-hot-toast').then(module => module.toast.error(`Node locked! Complete previous challenges first.`));
+                            import('react-hot-toast').then(module => module.toast.error(`Node locked! Need ${node.xpRequired} XP to unlock.`));
                           }
                         }}
                       >
@@ -290,16 +292,27 @@ export default function SkillTrees() {
                               initial={{ opacity: 0, y: 10, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
                               style={{
                                 position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '1rem',
-                                width: '200px', background: 'rgba(15, 15, 20, 0.95)', backdropFilter: 'blur(10px)',
+                                width: '220px', background: 'rgba(15, 15, 20, 0.95)', backdropFilter: 'blur(10px)',
                                 border: `1px solid ${selected.color}40`, borderRadius: '12px', padding: '1rem',
                                 boxShadow: `0 10px 20px rgba(0,0,0,0.3), 0 0 10px ${selected.color}10`,
                                 pointerEvents: 'none', zIndex: 100
                               }}
                             >
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>{node.description || 'Master this node to unlock advanced abilities.'}</div>
-                              <div className="flex justify-between items-center" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.5rem' }}>
-                                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-primary)' }}>PROGRESS</span>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: selected.color }}>{node.progress || 0}%</span>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', lineHeight: 1.5 }}>{node.description || 'Master this node to unlock advanced abilities.'}</div>
+                              
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', marginBottom: '0.5rem' }}>
+                                <span style={{ color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Challenges</span>
+                                <span style={{ color: '#fff', fontWeight: 700 }}>{node.completed || 0} / {node.total || 0}</span>
+                              </div>
+
+                              {/* Mini progress bar */}
+                              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+                                <div style={{ width: `${node.progress || 0}%`, height: '100%', background: selected.color, borderRadius: '4px', transition: 'width 0.5s ease' }} />
+                              </div>
+
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.5rem' }}>
+                                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>XP Required</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: selected.color }}>{node.xpRequired} XP</span>
                               </div>
                             </motion.div>
                           )}

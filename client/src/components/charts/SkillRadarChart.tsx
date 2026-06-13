@@ -1,16 +1,20 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { motion } from 'framer-motion';
 
-const data = [
-  { subject: 'Algorithms', A: 120, fullMark: 150 },
-  { subject: 'React', A: 98, fullMark: 150 },
-  { subject: 'Node.js', A: 86, fullMark: 150 },
-  { subject: 'System Design', A: 99, fullMark: 150 },
-  { subject: 'TypeScript', A: 85, fullMark: 150 },
-  { subject: 'Databases', A: 65, fullMark: 150 },
-];
+export function SkillRadarChart({ stats }: { stats?: any }) {
+  const defaultData = [
+    { subject: 'Algorithms', A: 0, fullMark: 150 },
+    { subject: 'React', A: 0, fullMark: 150 },
+    { subject: 'Node.js', A: 0, fullMark: 150 },
+    { subject: 'System Design', A: 0, fullMark: 150 },
+    { subject: 'TypeScript', A: 0, fullMark: 150 },
+    { subject: 'Databases', A: 0, fullMark: 150 },
+  ];
 
-export function SkillRadarChart() {
+  const data = stats?.topSkills?.length > 0
+    ? stats.topSkills.map((s: any) => ({ subject: s.name, A: s.level * 10, fullMark: 150 }))
+    : defaultData;
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}

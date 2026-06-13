@@ -31,38 +31,49 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: 'calc(var(--navbar-height) + 4rem)' }}>
-        <motion.div style={{ y, opacity, position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)', width: '80vw', height: '80vw', maxWidth: '800px', maxHeight: '800px', background: 'radial-gradient(circle, var(--accent-primary-glow) 0%, transparent 60%)', filter: 'blur(80px)', zIndex: -1, pointerEvents: 'none' }} />
+        <motion.div style={{ y, opacity, position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: '90vw', height: '90vw', maxWidth: '1000px', maxHeight: '1000px', background: 'radial-gradient(circle, rgba(138, 43, 226, 0.15) 0%, transparent 60%)', filter: 'blur(100px)', zIndex: -1, pointerEvents: 'none' }} />
         
-        <div className="page-container" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '100px', marginBottom: '2rem', backdropFilter: 'blur(10px)' }}>
-              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-success)', boxShadow: '0 0 10px var(--color-success)' }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>DevArena v2.0 is now live</span>
+        <div className="page-container" style={{ width: '100%', maxWidth: '1100px', margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+            <div style={{ 
+              display: 'inline-flex', alignItems: 'center', gap: '0.75rem', 
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--border-primary)', 
+              padding: '0.6rem 1.5rem', 
+              borderRadius: '100px', 
+              marginBottom: '2.5rem', 
+              backdropFilter: 'blur(12px)',
+              boxShadow: 'var(--shadow-sm)'
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', background: 'rgba(0, 230, 118, 0.2)', borderRadius: '50%' }}>
+                <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-success)', boxShadow: '0 0 10px var(--color-success)' }} />
+              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0', letterSpacing: '0.5px' }}>DevArena Platform 2.0</span>
             </div>
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            style={{ fontSize: 'clamp(3rem, 8vw, 5.5rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.03em', marginBottom: '1.5rem', color: '#fff' }}>
-            Engineer your <br />
-            <span style={{ background: 'linear-gradient(to right, #fff 20%, var(--accent-primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', paddingBottom: '10px' }}>
-              ultimate career
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '1.5rem', color: 'var(--text-primary)', textShadow: 'var(--shadow-sm)' }}>
+            Level Up <br />
+            <span style={{ background: 'linear-gradient(135deg, #6c5ce7 0%, #00cec9 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', paddingBottom: '10px' }}>
+              Your Code
             </span>
           </motion.h1>
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            style={{ fontSize: 'clamp(1.125rem, 2vw, 1.25rem)', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto 3rem', lineHeight: 1.6 }}>
-            The definitive platform for ambitious developers. Solve complex algorithms, master system design, and get hired by top tech companies through verified skill tracking.
+          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            style={{ fontSize: 'clamp(1.125rem, 2vw, 1.35rem)', color: 'var(--text-secondary)', maxWidth: '650px', margin: '0 auto 3.5rem', lineHeight: 1.7, fontWeight: 400 }}>
+            The gamified platform for ambitious developers. Solve challenges, earn XP and badges, master skill trees, and get hired by elite engineering teams.
           </motion.p>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }} style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             <Link to="/register" style={{ textDecoration: 'none' }}>
-              <div style={{ background: '#fff', color: '#000', padding: '1rem 2rem', borderRadius: '8px', fontWeight: 600, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s ease', cursor: 'pointer', boxShadow: '0 4px 14px rgba(255,255,255,0.25)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+              <div style={{ background: '#fff', color: '#000', padding: '1.1rem 2.5rem', borderRadius: '100px', fontWeight: 600, fontSize: '1.125rem', display: 'flex', alignItems: 'center', gap: '0.75rem', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', boxShadow: '0 8px 25px rgba(255,255,255,0.2)' }} onMouseOver={e => {e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(255,255,255,0.3)';}} onMouseOut={e => {e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(255,255,255,0.2)';}}>
                 Start Coding Free
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </div>
             </Link>
             <Link to="/login" style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 2rem', borderRadius: '8px', fontWeight: 600, fontSize: '1.1rem', display: 'flex', alignItems: 'center', transition: 'all 0.2s ease', cursor: 'pointer' }} onMouseOver={e => {e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';}} onMouseOut={e => {e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';}}>
+              <div style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', padding: '1.1rem 2.5rem', borderRadius: '100px', fontWeight: 600, fontSize: '1.125rem', display: 'flex', alignItems: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', backdropFilter: 'blur(10px)' }} onMouseOver={e => {e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.borderColor = 'var(--border-secondary)';}} onMouseOut={e => {e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.borderColor = 'var(--border-primary)';}}>
                 Sign In
               </div>
             </Link>
@@ -93,24 +104,37 @@ export default function Landing() {
           {features.map((f, i) => (
             <motion.div key={i} {...fadeUp} transition={{ duration: 0.6, delay: i * 0.1 }}
               style={{
-                background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
-                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '2.5rem',
-                position: 'relative', overflow: 'hidden', transition: 'transform 0.3s ease'
+                background: 'var(--bg-secondary)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid var(--border-primary)', 
+                borderRadius: '24px', 
+                padding: '2.5rem',
+                position: 'relative', 
+                overflow: 'hidden', 
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
               }}
-              onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-              onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+              onMouseOver={e => {
+                e.currentTarget.style.transform = 'translateY(-8px)';
+                e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(138, 43, 226, 0.4)';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+              }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)', opacity: 0, transition: 'opacity 0.3s ease' }} className="hover-line" />
-              <div style={{ fontSize: '2rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>{f.icon}</div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem', color: '#fff' }}>{f.title}</h3>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>{f.desc}</p>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, var(--border-secondary), transparent)', opacity: 0.3 }} />
+              <div style={{ fontSize: '2rem', marginBottom: '1.5rem', background: 'var(--bg-tertiary)', width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '16px', border: '1px solid var(--border-primary)' }}>{f.icon}</div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{f.title}</h3>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '1rem' }}>{f.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* Metrics Section */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '6rem 1.5rem', background: 'rgba(0,0,0,0.5)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <section style={{ position: 'relative', zIndex: 1, padding: '6rem 1.5rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-primary)', borderBottom: '1px solid var(--border-primary)' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem', textAlign: 'center' }}>
           {[
             { metric: '500k+', label: 'Lines of Code Evaluated' },
@@ -119,7 +143,7 @@ export default function Landing() {
             { metric: '10k+', label: 'Hired Developers' }
           ].map((stat, i) => (
             <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }}>
-              <div style={{ fontSize: '3rem', fontWeight: 800, color: '#fff', letterSpacing: '-1px', marginBottom: '0.5rem' }}>{stat.metric}</div>
+              <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px', marginBottom: '0.5rem' }}>{stat.metric}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 500 }}>{stat.label}</div>
             </motion.div>
           ))}
@@ -130,7 +154,7 @@ export default function Landing() {
       <section style={{ position: 'relative', zIndex: 1, padding: '10rem 1.5rem', textAlign: 'center', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '100vw', height: '500px', background: 'radial-gradient(ellipse at center, rgba(108,92,231,0.15) 0%, transparent 60%)', filter: 'blur(60px)', zIndex: -1, pointerEvents: 'none' }} />
         <motion.div {...fadeUp} style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: '#fff', letterSpacing: '-0.03em' }}>Ready to push to production?</h2>
+          <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>Ready to push to production?</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem', marginBottom: '2.5rem' }}>Join the elite network of developers transforming their careers.</p>
           <Link to="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: '#fff', padding: '1.25rem 3rem', borderRadius: '100px', fontWeight: 600, fontSize: '1.125rem', textDecoration: 'none', transition: 'all 0.2s ease', boxShadow: '0 0 30px var(--accent-primary-glow)' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
             Get Started Now
@@ -139,15 +163,15 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer style={{ position: 'relative', zIndex: 1, padding: '3rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <footer style={{ position: 'relative', zIndex: 1, padding: '3rem 1.5rem', borderTop: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ width: '24px', height: '24px', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', borderRadius: '6px', display: 'inline-block' }} />
-          <span style={{ fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>DEVARENA</span>
+          <span style={{ fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>DEVARENA</span>
         </div>
         <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          <span style={{ cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.color='#fff'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Changelog</span>
-          <span style={{ cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.color='#fff'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Documentation</span>
-          <span style={{ cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.color='#fff'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Twitter</span>
+          <span style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color='var(--text-primary)'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Changelog</span>
+          <span style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color='var(--text-primary)'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Documentation</span>
+          <span style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color='var(--text-primary)'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Twitter</span>
         </div>
       </footer>
     </div>

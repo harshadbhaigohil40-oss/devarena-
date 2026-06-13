@@ -1,20 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { challengeService } from '../../services';
 import toast from 'react-hot-toast';
 
 export default function Challenges() {
-  const [filter, setFilter] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialFilter = searchParams.get('difficulty') || 'all';
+  const initialSearch = searchParams.get('search') || '';
+  const nodeId = searchParams.get('node') || '';
 
-  const { data: challenges = [], isLoading: loading, isError } = useQuery({
-    queryKey: ['challenges', filter],
+  const [filter, setFilter] = useState(initialFilter);
+  const [search, setSearch] = useState(initialSearch);
+  const [page, setPage] = useState(1);
+
+  // When filter or search changes, update URL params
+  useEffect(() => {
+    const params = {};
+    if (filter !== 'all') params.difficulty = filter;
+    if (search) params.search = search;
+    if (nodeId) params.node = nodeId;
+    setSearchParams(params, { replace: true });
+    setPage(1);
+  }, [filter, search]);
+
+  const { data: result = { challenges: [], total: 0 }, isLoading: loading, isError } = useQuery({
+    queryKey: ['challenges', filter, search, page],
     queryFn: async () => {
-      const params = filter !== 'all' ? { difficulty: filter } : {};
+      const params = { page, limit: 18 };
+      if (filter !== 'all') params.difficulty = filter;
+      if (search) params.search = search;
       const res = await challengeService.list(params);
-      const fetchedData = res.data.data;
-      return Array.isArray(fetchedData) ? fetchedData : fetchedData.challenges || [];
+      const responseData = res.data;
+      // The paginated helper returns { success, data: [...], pagination: { total, page, limit, pages } }
+      if (responseData.pagination) {
+        return { challenges: responseData.data, total: responseData.pagination.total };
+      }
+      // Fallback for non-paginated responses  
+      const fetchedData = responseData.data;
+      if (Array.isArray(fetchedData)) return { challenges: fetchedData, total: fetchedData.length };
+      return { challenges: fetchedData.challenges || fetchedData, total: fetchedData.total || 0 };
     },
     onError: () => toast.error('Failed to load challenges'),
   });
@@ -79,22 +105,56 @@ export default function Challenges() {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
+        <input 
+          type="text" 
+          className="input" 
+          value={search} 
+          onChange={e => setSearch(e.target.value)} 
+          placeholder="Search challenges by name, topic, or pattern..." 
+          style={{ 
+            width: '100%', 
+            padding: '0.85rem 1.25rem 0.85rem 3rem', 
+            background: 'var(--bg-secondary)', 
+            border: '1px solid rgba(255,255,255,0.08)', 
+            borderRadius: 'var(--radius-lg)', 
+            fontSize: '1rem',
+            color: 'var(--text-primary)'
+          }} 
+        />
+        <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4, fontSize: '1.1rem' }}>🔍</span>
+        {search && (
+          <button onClick={() => { setSearch(''); setSearchParams({}); }} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '0.8rem' }}>✕</button>
+        )}
+      </div>
+
+      {/* Active search indicator */}
+      {search && (
+        <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          <span>Showing results for</span>
+          <span style={{ background: 'rgba(138,43,226,0.15)', color: 'var(--accent-primary)', padding: '0.25rem 0.75rem', borderRadius: '100px', fontWeight: 600, border: '1px solid rgba(138,43,226,0.3)' }}>"{search}"</span>
+          <span style={{ color: 'var(--text-tertiary)' }}>({result.total} found)</span>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-3" style={{ gap: '1.5rem' }}>
           {[1, 2, 3, 4, 5, 6].map(i => (
             <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }} className="card skeleton" style={{ height: '220px', borderRadius: 'var(--radius-lg)' }} />
           ))}
         </div>
-      ) : challenges.length === 0 ? (
+      ) : result.challenges.length === 0 ? (
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card text-center" style={{ padding: '4rem 2rem', borderStyle: 'dashed' }}>
           <span style={{ fontSize: '4rem', marginBottom: '1rem', display: 'block', filter: 'grayscale(100%) opacity(50%)' }}>🔍</span>
           <h3>No Challenges Found</h3>
           <p className="text-muted">We couldn't find any challenges matching your criteria. Check back soon!</p>
         </motion.div>
       ) : (
+        <>
         <motion.div layout className="grid grid-3" style={{ gap: '1.5rem' }}>
           <AnimatePresence>
-            {challenges.map((challenge, index) => (
+            {result.challenges.map((challenge, index) => (
               <motion.div 
                 key={challenge._id}
                 layout
@@ -171,6 +231,30 @@ export default function Challenges() {
             ))}
           </AnimatePresence>
         </motion.div>
+
+        {/* Pagination */}
+        {result.total > 18 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem', padding: '1.5rem' }}>
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))} 
+              disabled={page === 1}
+              style={{ padding: '0.5rem 1.5rem', background: page === 1 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '100px', color: page === 1 ? 'var(--text-tertiary)' : '#fff', fontWeight: 600, cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+            >
+              ← Previous
+            </button>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+              Page {page} of {Math.ceil(result.total / 18)}
+            </span>
+            <button 
+              onClick={() => setPage(p => p + 1)} 
+              disabled={page >= Math.ceil(result.total / 18)}
+              style={{ padding: '0.5rem 1.5rem', background: page >= Math.ceil(result.total / 18) ? 'rgba(255,255,255,0.03)' : 'var(--accent-primary)', border: 'none', borderRadius: '100px', color: '#fff', fontWeight: 600, cursor: page >= Math.ceil(result.total / 18) ? 'not-allowed' : 'pointer' }}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+        </>
       )}
     </motion.div>
   );

@@ -8,7 +8,7 @@ export default function Navbar({ onMenuClick }) {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useThemeStore();
   const location = useLocation();
-  const isLanding = location.pathname === '/';
+  const isLanding = ['/', '/login', '/register'].includes(location.pathname);
 
   return (
     <motion.nav
@@ -16,73 +16,64 @@ export default function Navbar({ onMenuClick }) {
       animate={{ y: 0 }}
       className="navbar"
       style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 'var(--navbar-height)',
-        background: 'rgba(var(--bg-primary-rgb, 10, 10, 15), 0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--border-primary)', zIndex: 100,
+        position: 'fixed', top: 0, left: isLanding ? 0 : 'var(--sidebar-width)', right: 0, height: 'var(--navbar-height)',
+        background: 'var(--bg-secondary)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--border-primary)', zIndex: 40,
         display: 'flex', alignItems: 'center', padding: '0 1.5rem',
-        justifyContent: 'space-between',
+        justifyContent: isLanding ? 'space-between' : 'flex-end',
+        transition: 'left var(--transition-normal)'
       }}
     >
+      {/* Show Logo only on Landing/Auth pages where sidebar is hidden */}
+      {(isLanding || window.innerWidth <= 768) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {onMenuClick && !isLanding && (
+            <button 
+              className="btn btn-icon" 
+              onClick={onMenuClick}
+              style={{ fontSize: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-primary)' }}
+            >
+              ☰
+            </button>
+          )}
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: 'var(--accent-gradient)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              fontWeight: 900, fontSize: '0.75rem', color: 'white',
+            }}>DA</div>
+            <span style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>
+              DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
+            </span>
+          </Link>
+        </div>
+      )}
+
+      {/* Top Navbar Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {onMenuClick && (
+        {!isLanding && (
           <button 
-            className="mobile-only btn btn-icon" 
-            onClick={onMenuClick}
-            style={{ fontSize: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-primary)' }}
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+            className="btn btn-ghost btn-sm flex items-center gap-sm" 
+            style={{ color: 'var(--text-secondary)', background: 'var(--bg-secondary)', borderRadius: '20px', padding: '0.35rem 1rem', border: '1px solid var(--border-primary)' }}
           >
-            ☰
+            <span>🔍 Search...</span>
+            <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem', background: 'var(--bg-tertiary)', borderRadius: '4px', border: '1px solid var(--border-secondary)' }}>Ctrl K</span>
           </button>
         )}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 8,
-            background: 'var(--level-gradient)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            fontWeight: 900, fontSize: '0.75rem', color: 'white',
-          }}>DA</div>
-          <span className="desktop-only" style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>
-            DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
-          </span>
-        </Link>
-      </div>
+        
+        <button className="btn btn-icon" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Notifications">
+          🔔
+        </button>
+        
+        <button onClick={toggleTheme} className="btn btn-icon" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle theme">
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button 
-          onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-          className="desktop-only btn btn-ghost btn-sm flex items-center gap-sm" 
-          style={{ color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', borderRadius: '20px', padding: '0.25rem 0.75rem' }}
-        >
-          <span>🔍 Search...</span>
-          <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem', background: 'var(--bg-secondary)', borderRadius: '4px', border: '1px solid var(--border-primary)' }}>Ctrl K</span>
-        </button>
-        <button onClick={toggleTheme} className="desktop-only btn btn-icon" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle theme">
-          {theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight' ? '☀️' : '🌙'}
-        </button>
         {isAuthenticated ? (
           <>
-            {user?.role === 'developer' && (
-              <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="level-badge" style={{ width: 28, height: 28, fontSize: '0.7rem' }}>
-                  {user.level}
-                </div>
-                <span style={{ fontSize: '0.875rem', color: 'var(--xp-gold)', fontWeight: 600 }}>
-                  ⚡ {formatNumber(user.xp)} XP
-                </span>
-              </div>
-            )}
-            <Link to="/dashboard" className="desktop-only btn btn-ghost btn-sm">Dashboard</Link>
-            <div style={{ position: 'relative' }}>
-              <Link to={`/profile/${user._id}`} style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: 'var(--level-gradient)', display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: '0.8rem', color: 'white',
-                textDecoration: 'none',
-              }}>
-                {user.username?.charAt(0).toUpperCase()}
-              </Link>
-            </div>
-            <button onClick={logout} className="desktop-only btn btn-ghost btn-sm" style={{ color: 'var(--text-secondary)' }}>
+            <button onClick={logout} className="btn btn-ghost btn-sm" style={{ color: 'var(--text-secondary)' }}>
               Logout
             </button>
           </>

@@ -190,42 +190,134 @@ const challenges = [
 
 const generateMassiveChallenges = () => {
   const allChallenges = [...challenges];
+  let globalIdCounter = allChallenges.length;
 
-  const topics = {
-    'algorithms': ['Binary Tree', 'Graph Traversal', 'Dynamic Programming', 'Sliding Window', 'Two Pointers', 'Merge Sort', 'Hash Map', 'Trie', 'Heap', 'Backtracking'],
-    'frontend': ['React State', 'CSS Grid', 'Flexbox', 'DOM Manipulation', 'Web Performance', 'Accessibility', 'Redux', 'Vue.js Basics', 'WebSockets UI', 'Canvas API'],
-    'backend': ['REST API Design', 'GraphQL', 'JWT Auth', 'SQL Joins', 'NoSQL Indexing', 'Redis Caching', 'Docker Containers', 'Microservices', 'Rate Limiting', 'Cron Jobs'],
-    'system-design': ['Database Sharding', 'Load Balancing', 'Message Queues', 'Content Delivery Network (CDN)', 'CAP Theorem', 'Leader Election', 'Data Replication', 'API Gateway', 'Event Sourcing', 'Distributed Locks']
+  const createVariations = (coreCategory, coreTopic, corePattern, baseDifficulty, count, categoryTag) => {
+    const difficulties = {
+      'beginner': 50,
+      'intermediate': 100,
+      'advanced': 200,
+      'expert': 300
+    };
+    
+    const variationTypes = ['Basic', 'Sorted array', 'Streaming data', 'Huge dataset', 'Multiple target versions', 'Memory optimized', 'Time optimized', 'With negative numbers', 'With duplicates', 'Edge case focus'];
+    
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      const vType = variationTypes[i % variationTypes.length];
+      const variationNum = String(Math.floor(i / variationTypes.length) + 1).padStart(3, '0');
+      const title = `${corePattern} - ${vType} Variation ${variationNum}`;
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + globalIdCounter++;
+      
+      results.push({
+        title: title,
+        slug: slug,
+        description: `## ${title}\n\n**Category**: ${coreCategory} -> ${coreTopic}\n\nThis is a variation of the core pattern: **${corePattern}**.\nFocus on handling the **${vType}** aspect.\n\n### Requirements\n- Ensure optimal performance.\n- Handle edge cases properly.`,
+        difficulty: baseDifficulty,
+        category: categoryTag,
+        tags: [coreTopic.toLowerCase().replace(/[^a-z0-9]+/g, '-'), corePattern.toLowerCase().replace(/[^a-z0-9]+/g, '-')],
+        xpReward: difficulties[baseDifficulty] || 50,
+        starterCode: { javascript: '// Your optimized code here', python: '# Your optimized code here' },
+        testCases: [
+          { input: '"example_input"', expectedOutput: '"example_output"', isHidden: false }
+        ],
+        hints: [`Think about how ${vType} changes the base approach.`]
+      });
+    }
+    return results;
   };
 
-  const actionVerbs = ['Implement', 'Design', 'Optimize', 'Build', 'Refactor', 'Debug', 'Create', 'Analyze'];
+  const plan = [
+    // 1. ALGORITHM MASTERY (2000)
+    // Level 1 - Fundamentals (500)
+    { cat: 'Algorithm Mastery', topic: 'Arrays', pattern: 'Two Sum Variations', diff: 'beginner', count: 150, tag: 'algorithms' },
+    { cat: 'Algorithm Mastery', topic: 'Strings', pattern: 'Palindrome Variations', diff: 'beginner', count: 100, tag: 'algorithms' },
+    { cat: 'Algorithm Mastery', topic: 'Hashing', pattern: 'Frequency Maps', diff: 'beginner', count: 150, tag: 'algorithms' },
+    { cat: 'Algorithm Mastery', topic: 'Math basics', pattern: 'GCD and LCM', diff: 'beginner', count: 100, tag: 'algorithms' },
+    
+    // Level 2 - Core DSA (700)
+    { cat: 'Algorithm Mastery', topic: 'Searching', pattern: 'Binary Search Variations', diff: 'intermediate', count: 350, tag: 'algorithms' },
+    { cat: 'Algorithm Mastery', topic: 'Sorting', pattern: 'Merge and Quick Sort', diff: 'intermediate', count: 350, tag: 'algorithms' },
 
-  Object.keys(topics).forEach(category => {
-    const baseForCategory = challenges.filter(c => c.category === category);
-    if (baseForCategory.length === 0) return;
-    
-    let count = baseForCategory.length;
-    
-    while (count < 100) {
-      const template = baseForCategory[count % baseForCategory.length];
-      const topic = topics[category][count % topics[category].length];
-      const verb = actionVerbs[count % actionVerbs.length];
-      
-      const newTitle = `${verb} ${topic} - Level ${count + 1}`;
-      
-      allChallenges.push({
-        ...template,
-        title: newTitle,
-        slug: newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        description: `## ${newTitle}\n\nYour task is to ${verb.toLowerCase()} a solution related to **${topic}**.\n\n### Requirements\n- Ensure optimal performance.\n- Handle edge cases properly.\n- Follow best practices for ${category}.`,
-        difficulty: count < 30 ? 'beginner' : (count < 70 ? 'intermediate' : 'advanced'),
-        xpReward: count < 30 ? 50 : (count < 70 ? 100 : 200),
-      });
-      count++;
-    }
+    // Level 3 - Advanced DSA (600)
+    { cat: 'Algorithm Mastery', topic: 'Recursion', pattern: 'Backtracking and Combinations', diff: 'advanced', count: 600, tag: 'algorithms' },
+
+    // Level 4 - DP and Graphs (600)
+    { cat: 'Algorithm Mastery', topic: 'Dynamic Programming', pattern: '1D and 2D DP', diff: 'advanced', count: 300, tag: 'algorithms' },
+    { cat: 'Algorithm Mastery', topic: 'Graphs', pattern: 'DFS BFS and Shortest Path', diff: 'advanced', count: 300, tag: 'algorithms' },
+
+    // Level 5 - Expert (200)
+    { cat: 'Algorithm Mastery', topic: 'Algorithm Expert', pattern: 'Advanced Data Structures', diff: 'expert', count: 200, tag: 'algorithms' },
+
+    // 2. FRONTEND ENGINEERING (1000)
+    // Level 1 - Basics (250)
+    { cat: 'Frontend Engineering', topic: 'HTML CSS layouts', pattern: 'Flexbox and Grid', diff: 'beginner', count: 100, tag: 'frontend' },
+    { cat: 'Frontend Engineering', topic: 'JS DOM manipulation', pattern: 'Event Listeners', diff: 'beginner', count: 100, tag: 'frontend' },
+    { cat: 'Frontend Engineering', topic: 'Basic UI logic', pattern: 'Form Validation', diff: 'beginner', count: 50, tag: 'frontend' },
+    // Level 2 - React Core (350)
+    { cat: 'Frontend Engineering', topic: 'Components', pattern: 'Component Lifecycle', diff: 'intermediate', count: 100, tag: 'frontend' },
+    { cat: 'Frontend Engineering', topic: 'Props and state', pattern: 'Prop Drilling Solutions', diff: 'intermediate', count: 100, tag: 'frontend' },
+    { cat: 'Frontend Engineering', topic: 'Hooks', pattern: 'Custom Hooks', diff: 'intermediate', count: 100, tag: 'frontend' },
+    { cat: 'Frontend Engineering', topic: 'Routing', pattern: 'Protected Routes', diff: 'intermediate', count: 50, tag: 'frontend' },
+    // Level 3 - Advanced Frontend (300)
+    { cat: 'Frontend Engineering', topic: 'State management', pattern: 'Redux and Zustand Patterns', diff: 'advanced', count: 100, tag: 'frontend' },
+    { cat: 'Frontend Engineering', topic: 'Performance', pattern: 'Lazy Loading and Memoization', diff: 'advanced', count: 100, tag: 'frontend' },
+    { cat: 'Frontend Engineering', topic: 'Web APIs', pattern: 'Intersection Observer', diff: 'advanced', count: 100, tag: 'frontend' },
+    // Level 4 - System UI (100)
+    { cat: 'Frontend Engineering', topic: 'System UI', pattern: 'Kanban and Spreadsheet Clone', diff: 'expert', count: 100, tag: 'frontend' },
+
+    // 3. BACKEND ENGINEERING (1000)
+    // Level 1 - APIs (250)
+    { cat: 'Backend Engineering', topic: 'CRUD APIs', pattern: 'RESTful Endpoints', diff: 'beginner', count: 100, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Authentication basics', pattern: 'JWT and Sessions', diff: 'beginner', count: 100, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Middleware logic', pattern: 'Logging and Error Handling', diff: 'beginner', count: 50, tag: 'backend' },
+    // Level 2 - Database (250)
+    { cat: 'Backend Engineering', topic: 'SQL queries', pattern: 'Joins and Aggregations', diff: 'intermediate', count: 100, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Schema design', pattern: 'Normalization and Relations', diff: 'intermediate', count: 100, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Indexing basics', pattern: 'B-Trees and Hash Indexes', diff: 'intermediate', count: 50, tag: 'backend' },
+    // Level 3 - Scalable Backend (350)
+    { cat: 'Backend Engineering', topic: 'Caching', pattern: 'Redis PubSub', diff: 'advanced', count: 100, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Rate limiting', pattern: 'Token Bucket and Sliding Log', diff: 'advanced', count: 100, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Queue systems', pattern: 'RabbitMQ and Kafka Basics', diff: 'advanced', count: 100, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'File uploads', pattern: 'S3 and GridFS Streaming', diff: 'advanced', count: 50, tag: 'backend' },
+    // Level 4 - Distributed Systems (150)
+    { cat: 'Backend Engineering', topic: 'Microservices', pattern: 'Service Discovery and Mesh', diff: 'expert', count: 50, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Load balancing', pattern: 'Consistent Hashing', diff: 'expert', count: 50, tag: 'backend' },
+    { cat: 'Backend Engineering', topic: 'Consistency models', pattern: 'Eventual and Strong Consistency', diff: 'expert', count: 50, tag: 'backend' },
+
+    // 4. SYSTEM DESIGN (1000)
+    // Level 1 - Basic Design (250)
+    { cat: 'System Design', topic: 'URL shortener', pattern: 'Base62 Encoding', diff: 'beginner', count: 100, tag: 'system-design' },
+    { cat: 'System Design', topic: 'File uploader', pattern: 'Chunked Uploads', diff: 'beginner', count: 100, tag: 'system-design' },
+    { cat: 'System Design', topic: 'Auth system', pattern: 'OAuth2 and SSO Architecture', diff: 'beginner', count: 50, tag: 'system-design' },
+    // Level 2 - Medium Systems (350)
+    { cat: 'System Design', topic: 'Chat system', pattern: 'WebSocket and Long Polling', diff: 'intermediate', count: 100, tag: 'system-design' },
+    { cat: 'System Design', topic: 'News feed', pattern: 'Fanout on Write and Read', diff: 'intermediate', count: 150, tag: 'system-design' },
+    { cat: 'System Design', topic: 'Notification system', pattern: 'Push and Email and SMS Gateway', diff: 'intermediate', count: 100, tag: 'system-design' },
+    // Level 3 - Large Scale (300)
+    { cat: 'System Design', topic: 'Instagram', pattern: 'Photo Storage and Timeline', diff: 'advanced', count: 100, tag: 'system-design' },
+    { cat: 'System Design', topic: 'YouTube', pattern: 'Video Transcoding and Streaming', diff: 'advanced', count: 100, tag: 'system-design' },
+    { cat: 'System Design', topic: 'Uber', pattern: 'Quadtree and Geospatial Indexing', diff: 'advanced', count: 100, tag: 'system-design' },
+    // Level 4 - Expert Design (100)
+    { cat: 'System Design', topic: 'Distributed cache', pattern: 'Memcached and Redis Internals', diff: 'expert', count: 30, tag: 'system-design' },
+    { cat: 'System Design', topic: 'Search engine', pattern: 'Inverted Index and Crawler', diff: 'expert', count: 40, tag: 'system-design' },
+    { cat: 'System Design', topic: 'CDN system', pattern: 'Edge Caching and Routing', diff: 'expert', count: 30, tag: 'system-design' }
+  ];
+
+  plan.forEach(p => {
+    let scaleFactor = 1;
+    if (p.cat === 'Algorithm Mastery') scaleFactor = 2.5; // 2000 * 2.5 = 5000
+    if (p.cat === 'Frontend Engineering') scaleFactor = 5; // 1000 * 5 = 5000
+    if (p.cat === 'Backend Engineering') scaleFactor = 5; // 1000 * 5 = 5000
+    if (p.cat === 'System Design') scaleFactor = 5; // 1000 * 5 = 5000
+
+    const adjustedCount = Math.round(p.count * scaleFactor);
+    const vars = createVariations(p.cat, p.topic, p.pattern, p.diff, adjustedCount, p.tag);
+    allChallenges.push(...vars);
   });
-  
+
   return allChallenges;
 };
 
 module.exports = generateMassiveChallenges();
+

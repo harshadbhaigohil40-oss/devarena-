@@ -1,15 +1,22 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 
-const data = [
-  { name: 'Completed', value: 45 },
-  { name: 'Pending', value: 12 },
-  { name: 'Failed', value: 4 },
-];
+const COLORS = ['var(--color-success)', 'var(--color-danger)'];
 
-const COLORS = ['var(--color-success)', 'var(--color-warning)', 'var(--color-danger)'];
+export function ChallengePieChart({ stats }: { stats?: any }) {
+  const completed = stats?.challengesSolved || 0;
+  const total = stats?.totalSubmissions || 0;
+  const failed = Math.max(0, total - completed);
 
-export function ChallengePieChart() {
+  const data = total === 0 
+    ? [{ name: 'No Activity', value: 1 }] 
+    : [
+        { name: 'Completed', value: completed },
+        { name: 'Failed / Pending', value: failed },
+      ];
+
+  const currentColors = total === 0 ? ['rgba(255,255,255,0.05)'] : COLORS;
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -32,7 +39,7 @@ export function ChallengePieChart() {
             stroke="none"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={currentColors[index % currentColors.length]} />
             ))}
           </Pie>
           <Tooltip 

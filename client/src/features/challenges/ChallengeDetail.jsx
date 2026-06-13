@@ -11,8 +11,8 @@ import Editor from '@monaco-editor/react';
 export default function ChallengeDetail() {
   const { slug } = useParams();
   const { user } = useAuth();
-  const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
+  const [userCode, setUserCode] = useState({ javascript: '', python: '' });
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -21,36 +21,45 @@ export default function ChallengeDetail() {
     queryFn: async () => {
       const res = await challengeService.get(slug);
       return res.data.data.challenge;
-    },
-    onSuccess: (data) => {
-      setCode(data.starterCode?.[language] || '// Write your solution here');
-    },
-    onError: () => toast.error('Challenge not found'),
+    }
   });
 
   useEffect(() => {
-    if (challenge && !code) {
-      setCode(challenge.starterCode?.[language] || '// Write your solution here');
+    if (challenge && challenge.starterCode) {
+      setUserCode({
+        javascript: challenge.starterCode.javascript || '// Write your solution here',
+        python: challenge.starterCode.python || '# Write your solution here'
+      });
     }
   }, [challenge]);
 
+  const activeCode = userCode[language] || '';
+
+  const handleEditorChange = (value) => {
+    setUserCode(prev => ({
+      ...prev,
+      [language]: value || ''
+    }));
+  };
+
+  const handleReset = () => {
+    setUserCode(prev => ({
+      ...prev,
+      [language]: challenge?.starterCode?.[language] || ''
+    }));
+  };
+
   const handleLanguageChange = (e) => {
-    const newLang = e.target.value;
-    setLanguage(newLang);
-    if (challenge && challenge.starterCode && challenge.starterCode[newLang]) {
-      setCode(challenge.starterCode[newLang]);
-    } else {
-      setCode(newLang === 'python' ? '# Write your solution here' : '// Write your solution here');
-    }
+    setLanguage(e.target.value);
   };
 
   const handleSubmit = async () => {
     if (!user) return toast.error('Please sign in to submit');
-    if (!code.trim()) return toast.error('Please write some code');
+    if (!activeCode.trim()) return toast.error('Please write some code');
     setSubmitting(true);
     setResult(null);
     try {
-      const res = await challengeService.submit(challenge._id, { code, language });
+      const res = await challengeService.submit(challenge._id, { code: activeCode, language });
       setResult(res.data.data);
       if (res.data.data.allPassed) {
         toast.success(`Challenge solved! +${res.data.data.xpResult?.xpEarned || challenge.xpReward} XP 🎉`);
@@ -127,8 +136,8 @@ export default function ChallengeDetail() {
                 height="100%"
                 language={language}
                 theme="vs-dark"
-                value={code}
-                onChange={(value) => setCode(value || '')}
+                value={activeCode}
+                onChange={handleEditorChange}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,
@@ -143,9 +152,14 @@ export default function ChallengeDetail() {
             </div>
           </div>
 
-          <button onClick={handleSubmit} disabled={submitting} className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-            {submitting ? '⏳ Running tests...' : '▶️ Submit Solution'}
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+            <button onClick={handleReset} disabled={submitting} className="btn btn-secondary btn-lg" style={{ flex: 1 }}>
+              🔄 Reset Code
+            </button>
+            <button onClick={handleSubmit} disabled={submitting} className="btn btn-primary btn-lg" style={{ flex: 2 }}>
+              {submitting ? '⏳ Running tests...' : '▶️ Submit Solution'}
+            </button>
+          </div>
 
           {/* Results */}
           {result && (
@@ -164,11 +178,19 @@ export default function ChallengeDetail() {
                     <span className="text-sm">Test {i + 1}: {tr.passed ? 'Passed' : 'Failed'}</span>
                     <span className="text-xs text-muted">({tr.executionTime}ms)</span>
                   </div>
-                  {!tr.passed && (
-                    <div className="w-full mt-xs" style={{ background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--color-danger)' }}>
-                      Output: {tr.output}
-                    </div>
-                  )}
+                  <div className="w-full mt-xs" style={{ 
+                    background: 'rgba(0,0,0,0.25)', 
+                    padding: '0.75rem', 
+                    borderRadius: 'var(--radius-sm)', 
+                    fontSize: '0.825rem', 
+                    fontFamily: 'var(--font-mono)', 
+                    color: tr.passed ? 'var(--color-success)' : 'var(--color-danger)',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: '1.5',
+                    borderLeft: `3px solid ${tr.passed ? 'var(--color-success)' : 'var(--color-danger)'}`
+                  }}>
+                    {tr.output}
+                  </div>
                 </div>
               ))}
             </motion.div>

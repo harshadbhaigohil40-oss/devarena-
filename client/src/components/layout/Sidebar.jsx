@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 
@@ -31,13 +31,27 @@ export default function Sidebar({ isOpen, onClose }) {
       animate={{ x: isOpen ? 0 : (window.innerWidth <= 768 ? -260 : 0) }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       style={{
-        position: 'fixed', top: 'var(--navbar-height)', left: 0, bottom: 0,
+        position: 'fixed', top: 0, left: 0, bottom: 0,
         width: 'var(--sidebar-width)', background: 'var(--bg-secondary)',
         borderRight: '1px solid var(--border-primary)', padding: '1.5rem 0',
         overflowY: 'auto', zIndex: 50,
         display: 'flex', flexDirection: 'column',
       }}
     >
+      <div style={{ padding: '0 1.5rem', marginBottom: '2rem' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 8,
+            background: 'var(--accent-gradient)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            fontWeight: 900, fontSize: '0.875rem', color: 'white',
+          }}>DA</div>
+          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>
+            DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
+          </span>
+        </Link>
+      </div>
+
       <div style={{ padding: '0 1rem', flex: 1 }}>
         <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.75rem', paddingLeft: '0.75rem' }}>
           Navigation

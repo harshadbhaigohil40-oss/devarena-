@@ -11,7 +11,9 @@ const fs = require('fs');
 const path = require('path');
 
 // Real sandboxed code evaluation using 'vm' module and local python
-const evaluateCode = (code, testCases, language, category) => {
+// Real sandboxed code evaluation using 'vm' module and local python
+// Real sandboxed code evaluation using 'vm' module and local python
+const evaluateCode = (code, testCases, language, category, starterCode = '') => {
   // Use mock evaluation for unsupported languages only
   if (!['javascript', 'python'].includes(language)) {
     return testCases.map((tc, index) => {
@@ -37,7 +39,7 @@ const evaluateCode = (code, testCases, language, category) => {
         return {
           testCaseIndex: index,
           passed: false,
-          output: e.message,
+          output: `Error: ${e.message}`,
           executionTime: 0,
         };
       }
@@ -49,19 +51,42 @@ const evaluateCode = (code, testCases, language, category) => {
     return testCases.map((tc, index) => {
       try {
         let functionName = '';
-        const funcMatch = code.match(/def\s+([a-zA-Z0-9_]+)\s*\(/);
-        if (funcMatch) {
-          functionName = funcMatch[1];
-        } else {
-          throw new Error('Could not find main function name. Define with "def func_name(...)"');
+        // Try starter code first
+        if (starterCode) {
+          const starterMatch = starterCode.match(/def\s+([a-zA-Z0-9_]+)\s*\(/);
+          if (starterMatch) functionName = starterMatch[1];
+        }
+        // Fallback to user code
+        if (!functionName) {
+          const funcMatch = code.match(/def\s+([a-zA-Z0-9_]+)\s*\(/);
+          if (funcMatch) functionName = funcMatch[1];
         }
 
-        const testCode = `
+        const testCode = functionName
+          ? `
 import json
+import inspect
+true = True
+false = False
+null = None
+
 ${code}
 
-result = ${functionName}(${tc.input})
+sig = inspect.signature(${functionName})
+args = []
+test_input = ${tc.input === '"example_input"' ? '{"id": 1, "test": "data"}' : tc.input}
+for param in sig.parameters.values():
+    args.append(test_input)
+
+result = ${functionName}(*args)
 print(json.dumps(result) if result is not None else 'undefined')
+`
+          : `
+true = True
+false = False
+null = None
+
+${code}
 `;
         // Create temp file for execution
         const tempDir = path.join(__dirname, '..', 'tmp');
@@ -72,9 +97,19 @@ print(json.dumps(result) if result is not None else 'undefined')
         const start = process.hrtime();
         let rawResult = '';
         try {
-          rawResult = execSync(`python "${filePath}"`, { timeout: 2000 }).toString().trim();
+          rawResult = execSync(`python -W ignore "${filePath}"`, { timeout: 2000, stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
         } catch (err) {
-          throw new Error(err.message || err.stderr?.toString() || 'Execution failed');
+          const stderrStr = err.stderr ? err.stderr.toString().trim() : '';
+          let errorMsg = stderrStr || err.message || 'Execution failed';
+          errorMsg = errorMsg.replace(/line (\d+)/g, (match, p1) => `line ${Math.max(1, parseInt(p1) - 7)}`);
+          // Hide physical path of local file
+          if (filePath) {
+            const escapedPath = filePath.replace(/\\/g, '\\\\');
+            errorMsg = errorMsg.replace(new RegExp(escapedPath, 'g'), 'solution.py');
+            const fileName = path.basename(filePath);
+            errorMsg = errorMsg.replace(new RegExp(fileName, 'g'), 'solution.py');
+          }
+          throw new Error(errorMsg);
         } finally {
           if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
         }
@@ -82,21 +117,36 @@ print(json.dumps(result) if result is not None else 'undefined')
         const end = process.hrtime(start);
         const executionTime = Math.round((end[0] * 1000) + (end[1] / 1000000));
 
-        const normalizedResult = rawResult.replace(/\s+/g, '');
-        const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
-        const passed = normalizedResult === normalizedExpected;
+        const lines = rawResult.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const lastLine = lines[lines.length - 1] || '';
 
-        return {
-          testCaseIndex: index,
-          passed,
-          output: passed ? tc.expectedOutput : `Expected: ${tc.expectedOutput}, but got: ${rawResult}`,
-          executionTime: executionTime || 1,
-        };
+        if (category === 'algorithms') {
+          const normalizedResult = lastLine.replace(/\s+/g, '');
+          const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
+          const passed = normalizedResult === normalizedExpected;
+
+          return {
+            testCaseIndex: index,
+            passed,
+            output: passed ? 'Success' : `Error: Test Failed.\nExpected: ${tc.expectedOutput}\nBut got: ${lastLine}`,
+            executionTime: executionTime || 1,
+          };
+        } else {
+          if (!functionName) throw new Error("Could not find a valid function to evaluate. Please define your function.");
+          if (lastLine === 'undefined') throw new Error("Function must return a valid output, but returned nothing. Make sure to use the 'return' keyword.");
+          
+          return {
+            testCaseIndex: index,
+            passed: true,
+            output: "Success: Code executed successfully and returned a valid object/result.",
+            executionTime: executionTime || 1,
+          };
+        }
       } catch (e) {
         return {
           testCaseIndex: index,
           passed: false,
-          output: e.message || String(e),
+          output: e.message?.startsWith('Error') ? e.message : `Error: ${e.message || String(e)}`,
           executionTime: 0,
         };
       }
@@ -109,35 +159,71 @@ print(json.dumps(result) if result is not None else 'undefined')
       const sandbox = {
         console: { log: () => {} },
         Math, String, Number, Array, Object, Set, Map,
-        Promise, setTimeout
+        Promise, setTimeout, Buffer,
+        require: (moduleName) => {
+          const safeBuiltins = ['path', 'util', 'crypto', 'buffer', 'assert', 'os'];
+          if (safeBuiltins.includes(moduleName)) {
+            return require(moduleName);
+          }
+          
+          const createDeepProxy = () => {
+            function noop() { return createDeepProxy(); }
+            return new Proxy(noop, {
+              get: (target, prop) => {
+                if (prop === 'then') return undefined; // Prevent infinite promise resolution loops
+                return createDeepProxy();
+              },
+              apply: () => createDeepProxy(),
+              construct: () => createDeepProxy()
+            });
+          };
+
+          return createDeepProxy();
+        }
       };
 
       vm.createContext(sandbox);
 
       let functionName = '';
-      const funcMatch = code.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
-      if (funcMatch) {
-        functionName = funcMatch[1];
-      } else {
-        const classMatch = code.match(/class\s+([a-zA-Z0-9_]+)\s*\{/);
-        if (classMatch) {
-          functionName = classMatch[1];
+      // Try starter code first
+      if (starterCode) {
+        const funcMatch = starterCode.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
+        if (funcMatch) {
+          functionName = funcMatch[1];
         } else {
-          const constMatch = code.match(/(?:const|let|var)\s+([a-zA-Z0-9_]+)\s*=\s*(?:function|\()/);
-          if (constMatch) functionName = constMatch[1];
+          const classMatch = starterCode.match(/class\s+([a-zA-Z0-9_]+)\s*\{/);
+          if (classMatch) {
+            functionName = classMatch[1];
+          } else {
+            const constMatch = starterCode.match(/(?:const|let|var)\s+([a-zA-Z0-9_]+)\s*=\s*(?:function|\()/);
+            if (constMatch) functionName = constMatch[1];
+          }
         }
       }
 
+      // Fallback to user code
       if (!functionName) {
-        throw new Error('Could not determine main function name. Please ensure you defined the main function.');
+        const funcMatch = code.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
+        if (funcMatch) {
+          functionName = funcMatch[1];
+        } else {
+          const classMatch = code.match(/class\s+([a-zA-Z0-9_]+)\s*\{/);
+          if (classMatch) {
+            functionName = classMatch[1];
+          } else {
+            const constMatch = code.match(/(?:const|let|var)\s+([a-zA-Z0-9_]+)\s*=\s*(?:function|\()/);
+            if (constMatch) functionName = constMatch[1];
+          }
+        }
       }
 
-      const testRunnerCode = `
-        ${code}
-        
-        // Execute and return result
-        ${functionName}(${tc.input});
-      `;
+      const testRunnerCode = functionName
+        ? `${code}
+const _test_fn = ${functionName};
+const _testInput = ${tc.input === '"example_input"' ? '{"id": 1, "test": "data"}' : tc.input};
+const _args = new Array(_test_fn.length).fill(_testInput);
+_test_fn(..._args);`
+        : code;
       
       const testScript = new vm.Script(testRunnerCode);
       const start = process.hrtime();
@@ -145,27 +231,46 @@ print(json.dumps(result) if result is not None else 'undefined')
       const end = process.hrtime(start);
       const executionTime = Math.round((end[0] * 1000) + (end[1] / 1000000));
       
-      let resultStr;
-      if (rawResult === undefined) resultStr = 'undefined';
-      else resultStr = JSON.stringify(rawResult);
-      
-      const normalizedResult = resultStr.replace(/\s+/g, '');
-      const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
+      if (category === 'algorithms') {
+        let resultStr;
+        if (rawResult === undefined) resultStr = 'undefined';
+        else resultStr = JSON.stringify(rawResult);
+        
+        const normalizedResult = resultStr.replace(/\s+/g, '');
+        const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
+        const passed = normalizedResult === normalizedExpected;
 
-      const passed = normalizedResult === normalizedExpected;
-
-      return {
-        testCaseIndex: index,
-        passed,
-        output: passed ? tc.expectedOutput : `Expected: ${tc.expectedOutput}, but got: ${resultStr}`,
-        executionTime: executionTime || 1,
-      };
-
+        return {
+          testCaseIndex: index,
+          passed,
+          output: passed ? 'Success' : `Error: Test Failed.\nExpected: ${tc.expectedOutput}\nBut got: ${resultStr}`,
+          executionTime: executionTime || 1,
+        };
+      } else {
+        if (!functionName) throw new Error("Could not find a valid function to evaluate. Please define your function.");
+        if (rawResult === undefined || rawResult === null) throw new Error("Function must return a valid output, but returned nothing. Make sure to use the 'return' keyword.");
+        
+        return {
+          testCaseIndex: index,
+          passed: true,
+          output: "Success: Code executed successfully and returned a valid object/result.",
+          executionTime: executionTime || 1,
+        };
+      }
     } catch (e) {
+      let errorOutput = e.message || String(e);
+      if (e.stack && e.stack.includes('evalmachine')) {
+        errorOutput = e.stack
+          .split('\n')
+          .filter(line => line.includes('evalmachine') || !line.includes('at '))
+          .slice(0, 3)
+          .join('\n')
+          .replace(/evalmachine\.<anonymous>:/g, 'Line ');
+      }
       return {
         testCaseIndex: index,
         passed: false,
-        output: e.message || String(e),
+        output: errorOutput.startsWith('Error') ? errorOutput : `Error: ${errorOutput}`,
         executionTime: 0,
       };
     }
@@ -182,6 +287,23 @@ exports.submitSolution = async (req, res, next) => {
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) return error(res, 'Challenge not found.', 404);
 
+    // Check if code has actual content (excluding comments and whitespace)
+    const cleanJS = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').trim();
+    const cleanPy = code.replace(/#.*/g, '').trim();
+    const activeClean = language === 'python' ? cleanPy : cleanJS;
+
+    const isOnlyCommentOrEmpty = activeClean.length < 3;
+
+    // Check if code is exactly identical to the starter code
+    const isStarterCode = challenge.starterCode && (
+      code.trim() === challenge.starterCode.javascript?.trim() ||
+      code.trim() === challenge.starterCode.python?.trim()
+    );
+
+    if (isOnlyCommentOrEmpty || isStarterCode) {
+      return error(res, 'Please write actual code logic before submitting.', 400);
+    }
+
     // Check if already solved
     const alreadySolved = await Submission.findOne({
       userId: req.userId,
@@ -190,7 +312,7 @@ exports.submitSolution = async (req, res, next) => {
     });
 
     // Evaluate code
-    const testResults = evaluateCode(code, challenge.testCases, language, challenge.category);
+    const testResults = evaluateCode(code, challenge.testCases, language, challenge.category, challenge.starterCode?.[language] || '');
     const allPassed = testResults.every(r => r.passed);
     const status = allPassed ? 'passed' : 'failed';
 

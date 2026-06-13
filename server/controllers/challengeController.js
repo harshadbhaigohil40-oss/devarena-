@@ -9,12 +9,18 @@ exports.listChallenges = async (req, res, next) => {
 
     if (difficulty) filter.difficulty = difficulty;
     if (category) filter.category = category;
-    if (search) filter.title = { $regex: search, $options: 'i' };
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+      ];
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const challenges = await Challenge.find(filter)
       .select('-solution -testCases')
-      .sort({ xpReward: 1, title: 1 })
+      .sort({ _id: -1 }) // Sort by newest (insertion order reversed) to show a healthy mix
       .skip(skip)
       .limit(parseInt(limit));
 
