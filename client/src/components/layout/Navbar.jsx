@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useThemeStore } from '../../features/theme/useThemeStore';
 import { motion } from 'framer-motion';
 import { formatNumber } from '../../utils/helpers';
+import toast from 'react-hot-toast';
 
 export default function Navbar({ onMenuClick }) {
   const { user, logout, isAuthenticated } = useAuth();
@@ -63,7 +64,12 @@ export default function Navbar({ onMenuClick }) {
           </button>
         )}
         
-        <button className="btn btn-icon" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Notifications">
+        <button 
+          onClick={() => toast('No new notifications right now!', { icon: '🔔', style: { borderRadius: '10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)' } })}
+          className="btn btn-icon" 
+          style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} 
+          aria-label="Notifications"
+        >
           🔔
         </button>
         
