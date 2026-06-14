@@ -10,18 +10,26 @@ exports.listChallenges = async (req, res, next) => {
     if (difficulty) filter.difficulty = difficulty;
     if (category) filter.category = category;
     if (search) {
-      // Split search into words and create an OR regex to match any of the terms
-      const searchTerms = search.split(/[\s,-]+/).filter(Boolean);
-      if (searchTerms.length > 0) {
-        // Escape regex special characters in terms, then join with |
-        const safeTerms = searchTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-        const searchRegex = new RegExp(safeTerms.join('|'), 'i');
+      // Handle special alias for "Fundamentals" which isn't present in the old database data
+      if (search.toLowerCase().includes('fundamental')) {
         filter.$or = [
-          { title: searchRegex },
-          { tags: searchRegex },
-          { category: searchRegex },
-          { description: searchRegex }
+          { difficulty: 'beginner', category: 'algorithms' },
+          { tags: 'algorithms' }
         ];
+      } else {
+        // Split search into words and create an OR regex to match any of the terms
+        const searchTerms = search.split(/[\s,-]+/).filter(Boolean);
+        if (searchTerms.length > 0) {
+          // Escape regex special characters in terms, then join with |
+          const safeTerms = searchTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+          const searchRegex = new RegExp(safeTerms.join('|'), 'i');
+          filter.$or = [
+            { title: searchRegex },
+            { tags: searchRegex },
+            { category: searchRegex },
+            { description: searchRegex }
+          ];
+        }
       }
     }
 
