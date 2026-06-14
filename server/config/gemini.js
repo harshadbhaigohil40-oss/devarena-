@@ -6,7 +6,7 @@ let model = null;
 const initGemini = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'your-gemini-api-key') {
-    console.warn('⚠️  Gemini API key not configured — AI features will use mock responses');
+    console.error('❌ Gemini API key not configured. AI features will fail.');
     return null;
   }
   try {
@@ -20,7 +20,13 @@ const initGemini = () => {
   }
 };
 
-const getModel = () => model;
+const getModel = () => {
+  if (!model) {
+    throw new Error('Gemini AI is not configured or initialized.');
+  }
+  return model;
+};
+
 const isAvailable = () => model !== null;
 
 module.exports = { initGemini, getModel, isAvailable };

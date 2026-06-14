@@ -1,61 +1,6 @@
-const { getModel, isAvailable } = require('../config/gemini');
-
-// Mock responses for when Gemini is unavailable
-const MOCK_RESPONSES = {
-  career: `Based on your profile, here are my recommendations:
-
-**Career Path Suggestion:** Full-Stack Developer → Senior Developer → Tech Lead
-
-**Key Skills to Focus On:**
-1. **System Design** — Essential for senior roles
-2. **Cloud Architecture** — AWS/GCP certification boosts salary 20-30%
-3. **Leadership** — Start mentoring juniors now
-
-**Salary Expectations (India):**
-- Mid-level: ₹12-20 LPA
-- Senior: ₹25-45 LPA
-- Lead: ₹40-70 LPA
-
-**Action Items:**
-- Complete 5 system design challenges this month
-- Build a production-grade project using microservices
-- Contribute to 2+ open-source projects
-
-*This is a sample response. Configure your Gemini API key for personalized AI guidance.*`,
-
-  skill: `Based on your current progress, here are recommended skills:
-
-1. **TypeScript** — Industry standard, essential for large codebases
-2. **Docker & Kubernetes** — DevOps skills are high-demand
-3. **GraphQL** — Modern API design
-4. **Redis** — Caching & real-time features
-5. **Testing (Jest/Cypress)** — Quality assurance is non-negotiable
-
-*Configure your Gemini API key for personalized recommendations.*`,
-
-  review: `Here's a general code review:
-
-✅ **Good practices noticed:**
-- Clean function naming
-- Proper error handling
-
-⚠️ **Suggestions:**
-- Add input validation
-- Consider edge cases
-- Add JSDoc comments
-- Extract magic numbers into constants
-
-*Configure your Gemini API key for AI-powered code reviews.*`,
-
-  resume: `{"score": 75, "missingKeywords": ["Docker", "Kubernetes", "AWS"], "suggestions": ["Add metrics to your bullet points (e.g. 'improved performance by 20%')", "Highlight your open-source contributions more clearly."], "summary": "Strong foundational React skills, but lacking cloud deployment experience."}`,
-  roadmap: `{"title": "Full-Stack Senior Engineer", "estimatedMonths": 6, "phases": [{"name": "Advanced React & Architecture", "description": "Mastering Micro-frontends and state management.", "topics": ["Zustand", "Module Federation", "SSR"]}, {"name": "Backend Scaling", "description": "Building high throughput systems.", "topics": ["Redis Caching", "Message Queues", "Kubernetes"]}]}`
-};
+const { getModel } = require('../config/gemini');
 
 const getCareerAdvice = async (userProfile, question) => {
-  if (!isAvailable()) {
-    return MOCK_RESPONSES.career;
-  }
-
   try {
     const model = getModel();
     const prompt = `You are an expert career advisor for software developers. 
@@ -80,15 +25,11 @@ Use an encouraging, professional tone. Format beautifully using markdown headers
     return result.response.text();
   } catch (error) {
     console.error('Gemini API error:', error.message);
-    return MOCK_RESPONSES.career;
+    throw new Error('Failed to generate career advice. Please try again later.');
   }
 };
 
 const getSkillRecommendation = async (userProfile) => {
-  if (!isAvailable()) {
-    return MOCK_RESPONSES.skill;
-  }
-
   try {
     const model = getModel();
     const prompt = `You are a technical skills advisor for developers.
@@ -107,15 +48,11 @@ Format the output using clear markdown with emojis to make it engaging and reada
     return result.response.text();
   } catch (error) {
     console.error('Gemini API error:', error.message);
-    return MOCK_RESPONSES.skill;
+    throw new Error('Failed to generate skill recommendations. Please try again later.');
   }
 };
 
 const getCodeReview = async (code, language) => {
-  if (!isAvailable()) {
-    return MOCK_RESPONSES.review;
-  }
-
   try {
     const model = getModel();
     const prompt = `You are an expert code reviewer. Review the following ${language} code:
@@ -136,15 +73,11 @@ Format using clean markdown.`;
     return result.response.text();
   } catch (error) {
     console.error('Gemini API error:', error.message);
-    return MOCK_RESPONSES.review;
+    throw new Error('Failed to generate code review. Please try again later.');
   }
 };
 
 const analyzeResume = async (resumeText, jobDescription = "") => {
-  if (!isAvailable()) {
-    return JSON.parse(MOCK_RESPONSES.resume);
-  }
-
   try {
     const model = getModel();
     const prompt = `You are an expert ATS (Applicant Tracking System) and Senior Technical Recruiter.
@@ -174,15 +107,11 @@ Provide your analysis STRICTLY in the following JSON format, do not use markdown
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
     console.error('Gemini API error:', error.message);
-    return JSON.parse(MOCK_RESPONSES.resume);
+    throw new Error('Failed to analyze resume. Please try again later.');
   }
 };
 
 const generateRoadmap = async (currentSkills, targetRole) => {
-  if (!isAvailable()) {
-    return JSON.parse(MOCK_RESPONSES.roadmap);
-  }
-
   try {
     const model = getModel();
     const prompt = `You are a Senior Career Mentor for developers.
@@ -214,15 +143,11 @@ Provide your roadmap STRICTLY in the following JSON format, do not use markdown 
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
     console.error('Gemini API error:', error.message);
-    return JSON.parse(MOCK_RESPONSES.roadmap);
+    throw new Error('Failed to generate roadmap. Please try again later.');
   }
 };
 
 const generalChat = async (prompt) => {
-  if (!isAvailable()) {
-    return "Hi there! I am DevArena AI. Configure your Gemini API key to chat with me!";
-  }
-
   try {
     const model = getModel();
     const systemPrompt = `You are DevArena AI, a helpful, encouraging, and highly skilled software engineering assistant. You guide users on the DevArena platform to level up their coding skills. Answer concisely and use markdown formatting.\n\nUser says: ${prompt}`;
@@ -231,7 +156,7 @@ const generalChat = async (prompt) => {
     return result.response.text();
   } catch (error) {
     console.error('Gemini API error:', error.message);
-    return "Oops, I'm experiencing some network interference. Try again later.";
+    throw new Error('Failed to respond. Please try again later.');
   }
 };
 
