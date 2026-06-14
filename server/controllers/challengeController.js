@@ -11,10 +11,10 @@ exports.listChallenges = async (req, res, next) => {
     if (category) filter.category = category;
     if (search) {
       // Split search into words and create an OR regex to match any of the terms
-      const searchTerms = search.split(/[\\s,-]+/).filter(Boolean);
+      const searchTerms = search.split(/[\s,-]+/).filter(Boolean);
       if (searchTerms.length > 0) {
         // Escape regex special characters in terms, then join with |
-        const safeTerms = searchTerms.map(t => t.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&'));
+        const safeTerms = searchTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
         const searchRegex = new RegExp(safeTerms.join('|'), 'i');
         filter.$or = [
           { title: searchRegex },
