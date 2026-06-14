@@ -64,3 +64,9 @@ export const recruiterService = {
   viewCandidate: (id) => api.get(`/recruiter/talent/${id}`),
   getAnalytics: () => api.get('/recruiter/analytics'),
 };
+
+export const notificationService = {
+  getNotifications: () => api.get('/notifications'),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/notifications/mark-all-read'),
+};

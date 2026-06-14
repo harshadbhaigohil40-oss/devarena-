@@ -27,6 +27,7 @@ const aiRoutes = require('./routes/aiRoutes');
 const recruiterRoutes = require('./routes/recruiterRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -66,6 +67,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
