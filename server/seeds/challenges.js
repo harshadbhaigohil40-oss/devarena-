@@ -192,7 +192,7 @@ const generateMassiveChallenges = () => {
   const allChallenges = [...challenges];
   let globalIdCounter = allChallenges.length;
 
-  const createVariations = (coreCategory, coreTopic, corePattern, baseDifficulty, count, categoryTag) => {
+  const createVariations = (coreCategory, coreTopic, corePattern, baseDifficulty, count, categoryTag, level) => {
     const difficulties = {
       'beginner': 50,
       'intermediate': 100,
@@ -212,10 +212,10 @@ const generateMassiveChallenges = () => {
       results.push({
         title: title,
         slug: slug,
-        description: `## ${title}\n\n**Category**: ${coreCategory} -> ${coreTopic}\n\nThis is a variation of the core pattern: **${corePattern}**.\nFocus on handling the **${vType}** aspect.\n\n### Requirements\n- Ensure optimal performance.\n- Handle edge cases properly.`,
+        description: `## ${title}\n\n**Category**: ${coreCategory} -> ${coreTopic}\n${level ? `**Level**: ${level}\n\n` : ''}This is a variation of the core pattern: **${corePattern}**.\nFocus on handling the **${vType}** aspect.\n\n### Requirements\n- Ensure optimal performance.\n- Handle edge cases properly.`,
         difficulty: baseDifficulty,
         category: categoryTag,
-        tags: [coreTopic.toLowerCase().replace(/[^a-z0-9]+/g, '-'), corePattern.toLowerCase().replace(/[^a-z0-9]+/g, '-')],
+        tags: [coreTopic.toLowerCase().replace(/[^a-z0-9]+/g, '-'), corePattern.toLowerCase().replace(/[^a-z0-9]+/g, '-'), ...(level ? [level.toLowerCase()] : [])],
         xpReward: difficulties[baseDifficulty] || 50,
         starterCode: { javascript: '// Your optimized code here', python: '# Your optimized code here' },
         testCases: [
@@ -230,10 +230,10 @@ const generateMassiveChallenges = () => {
   const plan = [
     // 1. ALGORITHM MASTERY (2000)
     // Level 1 - Fundamentals (500)
-    { cat: 'Algorithm Mastery', topic: 'Arrays', pattern: 'Two Sum Variations', diff: 'beginner', count: 150, tag: 'algorithms' },
-    { cat: 'Algorithm Mastery', topic: 'Strings', pattern: 'Palindrome Variations', diff: 'beginner', count: 100, tag: 'algorithms' },
-    { cat: 'Algorithm Mastery', topic: 'Hashing', pattern: 'Frequency Maps', diff: 'beginner', count: 150, tag: 'algorithms' },
-    { cat: 'Algorithm Mastery', topic: 'Math basics', pattern: 'GCD and LCM', diff: 'beginner', count: 100, tag: 'algorithms' },
+    { cat: 'Algorithm Mastery', topic: 'Arrays', pattern: 'Two Sum Variations', diff: 'beginner', count: 150, tag: 'algorithms', level: 'Fundamentals' },
+    { cat: 'Algorithm Mastery', topic: 'Strings', pattern: 'Palindrome Variations', diff: 'beginner', count: 100, tag: 'algorithms', level: 'Fundamentals' },
+    { cat: 'Algorithm Mastery', topic: 'Hashing', pattern: 'Frequency Maps', diff: 'beginner', count: 150, tag: 'algorithms', level: 'Fundamentals' },
+    { cat: 'Algorithm Mastery', topic: 'Math basics', pattern: 'GCD and LCM', diff: 'beginner', count: 100, tag: 'algorithms', level: 'Fundamentals' },
     
     // Level 2 - Core DSA (700)
     { cat: 'Algorithm Mastery', topic: 'Searching', pattern: 'Binary Search Variations', diff: 'intermediate', count: 350, tag: 'algorithms' },
@@ -312,7 +312,7 @@ const generateMassiveChallenges = () => {
     if (p.cat === 'System Design') scaleFactor = 5; // 1000 * 5 = 5000
 
     const adjustedCount = Math.round(p.count * scaleFactor);
-    const vars = createVariations(p.cat, p.topic, p.pattern, p.diff, adjustedCount, p.tag);
+    const vars = createVariations(p.cat, p.topic, p.pattern, p.diff, adjustedCount, p.tag, p.level);
     allChallenges.push(...vars);
   });
 
