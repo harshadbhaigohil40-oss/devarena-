@@ -14,12 +14,18 @@ const submissionSchema = new mongoose.Schema({
     output: String,
     executionTime: Number,
   }],
-  xpEarned: { type: Number, default: 0 },
 
+  // Performance metrics
+  runtime: { type: Number, default: 0 },      // Total ms across all tests
+  memoryUsed: { type: Number, default: 0 },    // Peak memory in KB
+
+  xpEarned: { type: Number, default: 0 },
   submittedAt: { type: Date, default: Date.now, index: true },
 });
 
 // Compound index for checking user's submissions per challenge
 submissionSchema.index({ userId: 1, challengeId: 1 });
+// For leaderboard queries
+submissionSchema.index({ challengeId: 1, status: 1, runtime: 1 });
 
 module.exports = mongoose.model('Submission', submissionSchema);

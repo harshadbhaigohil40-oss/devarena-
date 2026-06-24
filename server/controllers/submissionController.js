@@ -10,273 +10,271 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Real sandboxed code evaluation using 'vm' module and local python
-// Real sandboxed code evaluation using 'vm' module and local python
-// Real sandboxed code evaluation using 'vm' module and local python
-const evaluateCode = (code, testCases, language, category, starterCode = '') => {
-  // Use mock evaluation for unsupported languages only
-  if (!['javascript', 'python'].includes(language)) {
-    return testCases.map((tc, index) => {
-      try {
-        const containsLogic = code.length > 20 && !code.match(/^\s*$/);
-        const passed = containsLogic && (
-          code.includes('return') ||
-          code.includes('console.log') ||
-          code.includes('print') ||
-          code.includes('function') ||
-          code.includes('=>') ||
-          code.includes('class') ||
-          code.includes('def')
-        );
+// ─── Argument Parser ─────────────────────────────────────────────────────────
+// Splits a test-case input string like `[1,2,3], 9` into JS values safely.
+function parseArgs(inputStr) {
+  if (!inputStr || inputStr.trim() === '""' || inputStr.trim() === "''") return [];
 
+  // Wrap in array brackets so JSON.parse handles it as a tuple
+  const wrapped = `[${inputStr}]`;
+  try {
+    return JSON.parse(wrapped);
+  } catch (_) {
+    // Fallback: eval in a sandbox (safe – only literal values)
+    try {
+      const sandbox = { Math, String, Number, Array, Object };
+      vm.createContext(sandbox);
+      return vm.runInContext(`(function(){ return [${inputStr}]; })()`, sandbox, { timeout: 500 });
+    } catch (_2) {
+      return [inputStr]; // last resort: treat as single string
+    }
+  }
+}
+
+// ─── JS Evaluator ────────────────────────────────────────────────────────────
+function evaluateJS(code, testCases, category, starterCode) {
+  return testCases.map((tc, index) => {
+    try {
+      let capturedLogs = [];
+      const sandbox = {
+        console: { 
+          log: (...args) => {
+            capturedLogs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
+          } 
+        },
+        Math, String, Number, Boolean, Array, Object, Set, Map,
+        parseInt, parseFloat, isNaN, isFinite, JSON,
+        Promise, setTimeout: () => {}, Buffer,
+        require: (moduleName) => {
+          const safe = ['path', 'util', 'crypto', 'buffer', 'assert'];
+          if (safe.includes(moduleName)) return require(moduleName);
+          const noop = () => noop;
+          return new Proxy(noop, { get: () => noop, apply: () => noop });
+        }
+      };
+      vm.createContext(sandbox);
+
+      // Detect function name from starter or user code
+      let functionName = '';
+      const sources = [starterCode, code].filter(Boolean);
+      for (const src of sources) {
+        const m = src.match(/function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/) ||
+                  src.match(/(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?(?:function|\([^)]*\)\s*=>|[a-zA-Z_$][a-zA-Z0-9_$]*\s*=>)/) ||
+                  src.match(/class\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\{/);
+        if (m) { functionName = m[1]; break; }
+      }
+
+      const args = parseArgs(tc.input);
+
+      // Build runner – call the detected function with parsed args
+      const runner = functionName
+        ? `${code}
+(function __runner__() {
+  const __fn__ = typeof ${functionName} === 'function' ? ${functionName} : (new ${functionName}());
+  return __fn__(${args.map((_, i) => `__args__[${i}]`).join(', ')});
+})()`
+        : code;
+
+      vm.runInContext(`var __args__ = ${JSON.stringify(args)};`, sandbox, { timeout: 500 });
+      const script = new vm.Script(runner);
+      const start = process.hrtime();
+      const rawResult = script.runInContext(sandbox, { timeout: 2000 });
+      const end = process.hrtime(start);
+      const executionTime = Math.round(end[0] * 1000 + end[1] / 1e6);
+
+      let resultStr;
+      if (rawResult === undefined) resultStr = 'undefined';
+      else if (rawResult instanceof Set) resultStr = JSON.stringify(Array.from(rawResult));
+      else if (rawResult instanceof Map) resultStr = JSON.stringify(Object.fromEntries(rawResult));
+      else resultStr = JSON.stringify(rawResult);
+
+      const logsOutput = capturedLogs.length > 0 ? `\nLogs:\n${capturedLogs.join('\n')}` : '';
+
+      if (category === 'algorithms') {
+        const normalizedResult = resultStr.replace(/\s+/g, '');
+        const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
+        const passed = normalizedResult === normalizedExpected;
         return {
           testCaseIndex: index,
           passed,
-          output: passed ? tc.expectedOutput : 'Incorrect output. Please check your logic.',
-          executionTime: Math.floor(Math.random() * 50) + 5,
+          output: passed
+            ? `✓ Output: ${resultStr}${logsOutput}`
+            : `Expected: ${tc.expectedOutput}\nGot:      ${resultStr}${logsOutput}`,
+          executionTime: executionTime || 1,
         };
-      } catch (e) {
+      } else {
+        if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
+        if (rawResult === undefined || rawResult === null)
+          throw new Error('Function returned nothing. Make sure to use the `return` keyword.');
         return {
           testCaseIndex: index,
-          passed: false,
-          output: `Error: ${e.message}`,
-          executionTime: 0,
+          passed: true,
+          output: `✓ Code executed and returned: ${resultStr}${logsOutput}`,
+          executionTime: executionTime || 1,
         };
       }
-    });
-  }
-
-  // Real code evaluation for Python algorithms
-  if (language === 'python') {
-    return testCases.map((tc, index) => {
-      try {
-        let functionName = '';
-        // Try starter code first
-        if (starterCode) {
-          const starterMatch = starterCode.match(/def\s+([a-zA-Z0-9_]+)\s*\(/);
-          if (starterMatch) functionName = starterMatch[1];
+    } catch (e) {
+      let msg = e.message || String(e);
+      if (e.stack && e.stack.includes('evalmachine')) {
+        const stackLines = e.stack.split('\n');
+        const errIdx = stackLines.findIndex(l => l.includes(e.message));
+        if (errIdx > 0) {
+           const snippet = stackLines.slice(0, errIdx).join('\n').replace(/evalmachine\.<anonymous>:/g, 'Line ');
+           msg = `${e.name || 'Error'}: ${e.message}\n${snippet}`;
         }
-        // Fallback to user code
-        if (!functionName) {
-          const funcMatch = code.match(/def\s+([a-zA-Z0-9_]+)\s*\(/);
-          if (funcMatch) functionName = funcMatch[1];
-        }
+      }
+      return { testCaseIndex: index, passed: false, output: msg.startsWith('Error') ? msg : `Error: ${msg}`, executionTime: 0 };
+    }
+  });
+}
 
-        const testCode = functionName
-          ? `
-import json
-import inspect
+// ─── Python Evaluator ────────────────────────────────────────────────────────
+function evaluatePython(code, testCases, category, starterCode) {
+  return testCases.map((tc, index) => {
+    const tempDir = path.join(__dirname, '..', 'tmp');
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+    const filePath = path.join(tempDir, `py_${Date.now()}_${index}.py`);
+
+    try {
+      // Detect function name
+      let functionName = '';
+      const sources = [starterCode, code].filter(Boolean);
+      for (const src of sources) {
+        const m = src.match(/def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+        if (m) { functionName = m[1]; break; }
+      }
+
+      // Build Python test script
+      const inputForPy = (tc.input === '"example_input"' || tc.input === '') ? 'None' : tc.input;
+
+      const testScript = functionName ? `
+import json, sys
+
+# Alias JS-style literals
 true = True
 false = False
 null = None
 
 ${code}
 
-sig = inspect.signature(${functionName})
-args = []
-test_input = ${tc.input === '"example_input"' ? '{"id": 1, "test": "data"}' : tc.input}
-for param in sig.parameters.values():
-    args.append(test_input)
+def __parse_args__(raw):
+    try:
+        val = eval(f"[{raw}]", {"true": True, "false": False, "null": None})
+        return val
+    except:
+        return [raw]
 
-result = ${functionName}(*args)
-print(json.dumps(result) if result is not None else 'undefined')
-`
-          : `
+_args = __parse_args__(${JSON.stringify(inputForPy)})
+_result = ${functionName}(*_args)
+if _result is None:
+    print("null")
+elif isinstance(_result, bool):
+    print("true" if _result else "false")
+else:
+    print(json.dumps(_result))
+` : `
+import sys
 true = True
 false = False
 null = None
 
 ${code}
 `;
-        // Create temp file for execution
-        const tempDir = path.join(__dirname, '..', 'tmp');
-        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
-        const filePath = path.join(tempDir, `temp_${Date.now()}_${index}.py`);
-        fs.writeFileSync(filePath, testCode);
 
-        const start = process.hrtime();
-        let rawResult = '';
-        try {
-          rawResult = execSync(`python -W ignore "${filePath}"`, { timeout: 2000, stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
-        } catch (err) {
-          const stderrStr = err.stderr ? err.stderr.toString().trim() : '';
-          let errorMsg = stderrStr || err.message || 'Execution failed';
-          errorMsg = errorMsg.replace(/line (\d+)/g, (match, p1) => `line ${Math.max(1, parseInt(p1) - 7)}`);
-          // Hide physical path of local file
-          if (filePath) {
-            const escapedPath = filePath.replace(/\\/g, '\\\\');
-            errorMsg = errorMsg.replace(new RegExp(escapedPath, 'g'), 'solution.py');
-            const fileName = path.basename(filePath);
-            errorMsg = errorMsg.replace(new RegExp(fileName, 'g'), 'solution.py');
-          }
-          throw new Error(errorMsg);
-        } finally {
-          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        }
-        
-        const end = process.hrtime(start);
-        const executionTime = Math.round((end[0] * 1000) + (end[1] / 1000000));
+      fs.writeFileSync(filePath, testScript);
 
-        const lines = rawResult.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        const lastLine = lines[lines.length - 1] || '';
-
-        if (category === 'algorithms') {
-          const normalizedResult = lastLine.replace(/\s+/g, '');
-          const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
-          const passed = normalizedResult === normalizedExpected;
-
-          return {
-            testCaseIndex: index,
-            passed,
-            output: passed ? 'Success' : `Error: Test Failed.\nExpected: ${tc.expectedOutput}\nBut got: ${lastLine}`,
-            executionTime: executionTime || 1,
-          };
-        } else {
-          if (!functionName) throw new Error("Could not find a valid function to evaluate. Please define your function.");
-          if (lastLine === 'undefined') throw new Error("Function must return a valid output, but returned nothing. Make sure to use the 'return' keyword.");
-          
-          return {
-            testCaseIndex: index,
-            passed: true,
-            output: "Success: Code executed successfully and returned a valid object/result.",
-            executionTime: executionTime || 1,
-          };
-        }
-      } catch (e) {
-        return {
-          testCaseIndex: index,
-          passed: false,
-          output: e.message?.startsWith('Error') ? e.message : `Error: ${e.message || String(e)}`,
-          executionTime: 0,
-        };
-      }
-    });
-  }
-
-  // Real code evaluation for JS algorithms
-  return testCases.map((tc, index) => {
-    try {
-      const sandbox = {
-        console: { log: () => {} },
-        Math, String, Number, Array, Object, Set, Map,
-        Promise, setTimeout, Buffer,
-        require: (moduleName) => {
-          const safeBuiltins = ['path', 'util', 'crypto', 'buffer', 'assert', 'os'];
-          if (safeBuiltins.includes(moduleName)) {
-            return require(moduleName);
-          }
-          
-          const createDeepProxy = () => {
-            function noop() { return createDeepProxy(); }
-            return new Proxy(noop, {
-              get: (target, prop) => {
-                if (prop === 'then') return undefined; // Prevent infinite promise resolution loops
-                return createDeepProxy();
-              },
-              apply: () => createDeepProxy(),
-              construct: () => createDeepProxy()
-            });
-          };
-
-          return createDeepProxy();
-        }
-      };
-
-      vm.createContext(sandbox);
-
-      let functionName = '';
-      // Try starter code first
-      if (starterCode) {
-        const funcMatch = starterCode.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
-        if (funcMatch) {
-          functionName = funcMatch[1];
-        } else {
-          const classMatch = starterCode.match(/class\s+([a-zA-Z0-9_]+)\s*\{/);
-          if (classMatch) {
-            functionName = classMatch[1];
-          } else {
-            const constMatch = starterCode.match(/(?:const|let|var)\s+([a-zA-Z0-9_]+)\s*=\s*(?:function|\()/);
-            if (constMatch) functionName = constMatch[1];
-          }
-        }
-      }
-
-      // Fallback to user code
-      if (!functionName) {
-        const funcMatch = code.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
-        if (funcMatch) {
-          functionName = funcMatch[1];
-        } else {
-          const classMatch = code.match(/class\s+([a-zA-Z0-9_]+)\s*\{/);
-          if (classMatch) {
-            functionName = classMatch[1];
-          } else {
-            const constMatch = code.match(/(?:const|let|var)\s+([a-zA-Z0-9_]+)\s*=\s*(?:function|\()/);
-            if (constMatch) functionName = constMatch[1];
-          }
-        }
-      }
-
-      const testRunnerCode = functionName
-        ? `${code}
-const _test_fn = ${functionName};
-const _testInput = ${tc.input === '"example_input"' ? '{"id": 1, "test": "data"}' : tc.input};
-const _args = new Array(_test_fn.length).fill(_testInput);
-_test_fn(..._args);`
-        : code;
-      
-      const testScript = new vm.Script(testRunnerCode);
       const start = process.hrtime();
-      const rawResult = testScript.runInContext(sandbox, { timeout: 1000 });
+      let rawResult = '';
+      try {
+        rawResult = execSync(`python -W ignore "${filePath}"`, {
+          timeout: 5000,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          encoding: 'utf8'
+        }).trim();
+      } catch (err) {
+        const stderr = err.stderr ? err.stderr.toString().trim() : '';
+        let errMsg = stderr || err.message || 'Execution failed';
+        // Sanitize path info
+        errMsg = errMsg
+          .replace(new RegExp(filePath.replace(/\\/g, '\\\\'), 'g'), 'solution.py')
+          .replace(new RegExp(path.basename(filePath), 'g'), 'solution.py')
+          .replace(/line (\d+)/g, (_, n) => `line ${Math.max(1, parseInt(n) - 16)}`);
+        throw new Error(errMsg);
+      } finally {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+
       const end = process.hrtime(start);
-      const executionTime = Math.round((end[0] * 1000) + (end[1] / 1000000));
-      
+      const executionTime = Math.round(end[0] * 1000 + end[1] / 1e6);
+
+      const lines = rawResult.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const lastLine = lines.pop() || '';
+      const logsOutput = lines.length > 0 ? `\nLogs:\n${lines.join('\n')}` : '';
+
       if (category === 'algorithms') {
-        let resultStr;
-        if (rawResult === undefined) resultStr = 'undefined';
-        else resultStr = JSON.stringify(rawResult);
-        
-        const normalizedResult = resultStr.replace(/\s+/g, '');
+        const normalizedResult = lastLine.replace(/\s+/g, '');
         const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
         const passed = normalizedResult === normalizedExpected;
-
         return {
           testCaseIndex: index,
           passed,
-          output: passed ? 'Success' : `Error: Test Failed.\nExpected: ${tc.expectedOutput}\nBut got: ${resultStr}`,
+          output: passed
+            ? `✓ Output: ${lastLine}${logsOutput}`
+            : `Expected: ${tc.expectedOutput}\nGot:      ${lastLine}${logsOutput}`,
           executionTime: executionTime || 1,
         };
       } else {
-        if (!functionName) throw new Error("Could not find a valid function to evaluate. Please define your function.");
-        if (rawResult === undefined || rawResult === null) throw new Error("Function must return a valid output, but returned nothing. Make sure to use the 'return' keyword.");
-        
+        if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
         return {
           testCaseIndex: index,
           passed: true,
-          output: "Success: Code executed successfully and returned a valid object/result.",
+          output: `✓ Code executed successfully. Output: ${lastLine}${logsOutput}`,
           executionTime: executionTime || 1,
         };
       }
     } catch (e) {
-      let errorOutput = e.message || String(e);
-      if (e.stack && e.stack.includes('evalmachine')) {
-        errorOutput = e.stack
-          .split('\n')
-          .filter(line => line.includes('evalmachine') || !line.includes('at '))
-          .slice(0, 3)
-          .join('\n')
-          .replace(/evalmachine\.<anonymous>:/g, 'Line ');
-      }
-      return {
-        testCaseIndex: index,
-        passed: false,
-        output: errorOutput.startsWith('Error') ? errorOutput : `Error: ${errorOutput}`,
-        executionTime: 0,
-      };
+      if (fs.existsSync(filePath)) { try { fs.unlinkSync(filePath); } catch (_) {} }
+      const msg = e.message || String(e);
+      return { testCaseIndex: index, passed: false, output: msg.startsWith('Error') ? msg : `Error: ${msg}`, executionTime: 0 };
     }
   });
+}
+
+// ─── Main Evaluator ───────────────────────────────────────────────────────────
+const evaluateCode = (code, testCases, language, category, starterCode = '') => {
+  if (language === 'python') return evaluatePython(code, testCases, category, starterCode);
+  if (language === 'javascript') return evaluateJS(code, testCases, category, starterCode);
+
+  // Unsupported language mock
+  return testCases.map((tc, index) => ({
+    testCaseIndex: index,
+    passed: code.length > 20 && !code.match(/^\s*$/),
+    output: 'Unsupported language – evaluation mocked.',
+    executionTime: Math.floor(Math.random() * 50) + 5,
+  }));
 };
 
+// ─── Run (test without saving) ────────────────────────────────────────────────
+exports.runCode = async (req, res, next) => {
+  try {
+    const { code, language = 'javascript' } = req.body;
+    const challengeId = req.params.id;
+
+    if (!code) return error(res, 'Code is required.', 400);
+
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) return error(res, 'Challenge not found.', 404);
+
+    // Only run visible test cases
+    const visibleTests = challenge.testCases.filter(tc => !tc.isHidden);
+    const testResults = evaluateCode(code, visibleTests, language, challenge.category, challenge.starterCode?.[language] || '');
+    const allPassed = testResults.every(r => r.passed);
+
+    success(res, { testResults, allPassed, isRun: true });
+  } catch (err) { next(err); }
+};
+
+// ─── Submit (full evaluation + save) ─────────────────────────────────────────
 exports.submitSolution = async (req, res, next) => {
   try {
     const { code, language = 'javascript' } = req.body;
@@ -287,31 +285,18 @@ exports.submitSolution = async (req, res, next) => {
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) return error(res, 'Challenge not found.', 404);
 
-    // Check if code has actual content (excluding comments and whitespace)
-    const cleanJS = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').trim();
-    const cleanPy = code.replace(/#.*/g, '').trim();
-    const activeClean = language === 'python' ? cleanPy : cleanJS;
-
-    const isOnlyCommentOrEmpty = activeClean.length < 3;
-
-    // Check if code is exactly identical to the starter code
+    // Reject empty / starter-only submissions
+    const cleanCode = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').replace(/#.*/g, '').trim();
     const isStarterCode = challenge.starterCode && (
       code.trim() === challenge.starterCode.javascript?.trim() ||
       code.trim() === challenge.starterCode.python?.trim()
     );
-
-    if (isOnlyCommentOrEmpty || isStarterCode) {
+    if (cleanCode.length < 3 || isStarterCode) {
       return error(res, 'Please write actual code logic before submitting.', 400);
     }
 
-    // Check if already solved
-    const alreadySolved = await Submission.findOne({
-      userId: req.userId,
-      challengeId,
-      status: 'passed',
-    });
+    const alreadySolved = await Submission.findOne({ userId: req.userId, challengeId, status: 'passed' });
 
-    // Evaluate code
     const testResults = evaluateCode(code, challenge.testCases, language, challenge.category, challenge.starterCode?.[language] || '');
     const allPassed = testResults.every(r => r.passed);
     const status = allPassed ? 'passed' : 'failed';
@@ -326,38 +311,20 @@ exports.submitSolution = async (req, res, next) => {
       xpEarned: allPassed && !alreadySolved ? challenge.xpReward : 0,
     });
 
-    // Award XP only on first solve
     let xpResult = null;
     if (allPassed && !alreadySolved) {
-      xpResult = await awardXP(
-        req.userId,
-        challenge.xpReward,
-        'challenge',
-        challengeId,
-        `Solved: ${challenge.title}`
-      );
-
-      // Update challenge stats
+      xpResult = await awardXP(req.userId, challenge.xpReward, 'challenge', challengeId, `Solved: ${challenge.title}`);
       challenge.completionCount += 1;
       challenge.attemptCount += 1;
       await challenge.save();
-
-      // Update user stats
-      await User.findByIdAndUpdate(req.userId, {
-        $inc: { challengesSolved: 1 },
-      });
-
+      await User.findByIdAndUpdate(req.userId, { $inc: { challengesSolved: 1 } });
       emitChallengeCompleted(req.userId, challengeId, challenge.xpReward);
     } else {
       challenge.attemptCount += 1;
       await challenge.save();
     }
 
-    success(res, {
-      submission,
-      xpResult,
-      allPassed,
-    });
+    success(res, { submission, xpResult, allPassed });
   } catch (err) { next(err); }
 };
 
@@ -367,7 +334,6 @@ exports.getSubmissions = async (req, res, next) => {
       userId: req.userId,
       challengeId: req.params.id,
     }).sort({ submittedAt: -1 }).limit(10);
-
     success(res, { submissions });
   } catch (err) { next(err); }
 };

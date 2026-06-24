@@ -150,7 +150,7 @@ Provide your roadmap STRICTLY in the following JSON format, do not use markdown 
 const generalChat = async (prompt) => {
   try {
     const model = getModel();
-    const systemPrompt = `You are DevArena AI, a helpful, encouraging, and highly skilled software engineering assistant. You guide users on the DevArena platform to level up their coding skills. Answer concisely and use markdown formatting.\n\nUser says: ${prompt}`;
+    const systemPrompt = `You are DevArena AI, a helpful, encouraging, and highly skilled software engineering assistant. You guide users on the DevArena platform to level up their coding skills. Answer concisely and use markdown formatting.\n\nHere is the recent conversation transcript:\n${prompt}\n\nPlease provide the next response as the AI assistant.`;
 
     const result = await model.generateContent(systemPrompt);
     return result.response.text();

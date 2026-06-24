@@ -15,96 +15,87 @@ const seedDB = async () => {
     await connectDB();
     console.log('🌱 Seeding database...\n');
 
-    // Clear existing data
     await Challenge.deleteMany({});
     await Badge.deleteMany({});
     await SkillTree.deleteMany({});
 
-    // Seed challenges
-    // Shuffle the challenges array using Fisher-Yates or simple random sort so the global challenge page is diverse
-    const shuffledChallengeData = [...challengeData].sort(() => Math.random() - 0.5);
-    const challenges = await Challenge.insertMany(shuffledChallengeData);
+    const challenges = await Challenge.insertMany(challengeData);
     console.log(`✅ Seeded ${challenges.length} challenges`);
 
-    // Seed badges
     const badges = await Badge.insertMany(badgeData);
     console.log(`✅ Seeded ${badges.length} badges`);
 
-    // Explicitly map tags to nodeIds so each node gets only perfectly matching questions
+    // Map node IDs → challenge tags
     const nodeTagMap = {
-      // Algorithms
-      'algo-basics': ['arrays', 'strings', 'hashing', 'math-basics'],
-      'algo-search': ['searching'],
-      'algo-sort': ['sorting'],
-      'algo-recursion': ['recursion'],
-      'algo-dp': ['dynamic-programming'],
-      'algo-graphs': ['graphs'],
-      'algo-master': ['algorithm-expert'],
-      
+      // Algorithm Mastery
+      'algo-basics':    ['arrays','strings','hash-map','hash-set','bit-manipulation'],
+      'algo-search':    ['searching','binary-search'],
+      'algo-sort':      ['sorting','merge-sort'],
+      'algo-recursion': ['recursion','backtracking'],
+      'algo-dp':        ['dynamic-programming'],
+      'algo-graphs':    ['graphs','dfs','bfs'],
+      'algo-master':    ['algorithm-expert','design'],
       // Frontend
-      'fe-html': ['html-css-layouts'],
-      'fe-js': ['js-dom-manipulation', 'basic-ui-logic'],
-      'fe-responsive': ['html-css-layouts'], // shares basic layout tags
-      'fe-react': ['components', 'props-and-state', 'hooks', 'routing'],
-      'fe-advanced': ['state-management', 'performance'],
-      'fe-testing': ['web-apis'],
-      'fe-master': ['system-ui'],
-
+      'fe-html':        ['html-css-layouts'],
+      'fe-js':          ['js-dom-manipulation'],
+      'fe-responsive':  ['html-css-layouts'],
+      'fe-react':       ['hooks','closures'],
+      'fe-advanced':    ['state-management','performance'],
+      'fe-testing':     ['web-apis'],
+      'fe-master':      ['system-ui','design-patterns'],
       // Backend
-      'be-node': ['crud-apis'],
-      'be-express': ['middleware-logic'],
-      'be-db': ['sql-queries', 'schema-design', 'indexing-basics'],
-      'be-auth': ['authentication-basics'],
-      'be-scale': ['caching', 'rate-limiting', 'queue-systems', 'load-balancing'],
-      'be-realtime': ['file-uploads', 'consistency-models'],
-      'be-master': ['microservices'],
-
+      'be-node':        ['crud-apis','http'],
+      'be-express':     ['middleware-logic','parsing'],
+      'be-db':          ['sql-queries','schema-design'],
+      'be-auth':        ['authentication-basics','jwt'],
+      'be-scale':       ['caching','rate-limiting'],
+      'be-realtime':    ['queue-systems'],
+      'be-master':      ['microservices','load-balancing'],
       // System Design
-      'sd-basics': ['url-shortener', 'auth-system'],
-      'sd-storage': ['file-uploader', 'distributed-cache'],
-      'sd-compute': ['chat-system', 'notification-system'],
-      'sd-distributed': ['news-feed', 'consistency-models'],
-      'sd-interview': ['instagram', 'youtube', 'uber'],
-      'sd-cloud': ['cdn-system'],
-      'sd-master': ['search-engine']
+      'sd-basics':      ['url-shortener','load-balancing','encoding'],
+      'sd-storage':     ['file-uploader','distributed-cache','caching'],
+      'sd-compute':     ['chat-system','notification-system'],
+      'sd-distributed': ['news-feed','distributed'],
+      'sd-interview':   ['instagram','sharding'],
+      'sd-cloud':       ['cdn-system'],
+      'sd-master':      ['search-engine','probabilistic'],
     };
 
     const getChallengesByTags = (tagsArray) => {
       if (!tagsArray || tagsArray.length === 0) return [];
       return challenges.filter(c => c.tags.some(t => tagsArray.includes(t))).map(c => c._id);
     };
-    
+
     const mappedSkillTreeData = skillTreeData.map(tree => {
+      const category = tree.name.includes('Frontend') ? 'frontend'
+        : tree.name.includes('Backend') ? 'backend'
+        : tree.name.includes('System Design') ? 'system-design'
+        : 'algorithms';
+
       const newNodes = tree.nodes.map(node => {
         const requiredTags = nodeTagMap[node.nodeId] || [];
-        const nodeChallengeIds = getChallengesByTags(requiredTags);
-        
-        // If the mapping resulted in no challenges, fallback to tier-based distribution
-        if (nodeChallengeIds.length === 0) {
-           let diffMapping = 'beginner';
-           if (node.tier === 1) diffMapping = 'beginner';
-           else if (node.tier === 2) diffMapping = 'intermediate';
-           else if (node.tier === 3 || node.tier === 4) diffMapping = 'advanced';
-           else if (node.tier === 5) diffMapping = 'expert';
+        let ids = getChallengesByTags(requiredTags);
 
-           const category = tree.name.includes('Frontend') ? 'frontend' 
-                        : tree.name.includes('Backend') ? 'backend' 
-                        : tree.name.includes('System Design') ? 'system-design' 
-                        : 'algorithms';
-                        
-           const fallbackChallenges = challenges.filter(c => c.category === category && c.difficulty === diffMapping).map(c => c._id);
-           return { ...node, challengeIds: fallbackChallenges };
+        // Fallback: tier-based difficulty within same category
+        if (ids.length === 0) {
+          const diffMap = { 1: 'beginner', 2: 'intermediate', 3: 'advanced', 4: 'advanced', 5: 'expert' };
+          ids = challenges.filter(c => c.category === category && c.difficulty === diffMap[node.tier]).map(c => c._id);
         }
 
-        return { ...node, challengeIds: nodeChallengeIds };
+        return { ...node, challengeIds: ids };
       });
-      
+
       return { ...tree, nodes: newNodes };
     });
 
-    // Seed skill trees
     const skillTrees = await SkillTree.insertMany(mappedSkillTreeData);
     console.log(`✅ Seeded ${skillTrees.length} skill trees`);
+
+    // Print mapping summary
+    mappedSkillTreeData.forEach(tree => {
+      console.log(`\n📊 ${tree.name}:`);
+      tree.nodes.forEach(n => console.log(`   ${n.nodeId} (Tier ${n.tier}): ${n.challengeIds.length} challenges`));
+    });
 
     console.log('\n🎉 Database seeded successfully!');
     process.exit(0);

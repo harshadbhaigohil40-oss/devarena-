@@ -19,6 +19,7 @@ const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const Profile = React.lazy(() => import('@/pages/Profile'));
 const SettingsPage = React.lazy(() => import('@/features/settings/SettingsPage'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const Pricing = React.lazy(() => import('@/pages/Pricing'));
 
 // Placeholders for migrating features
 const Challenges = React.lazy(() => import('@/features/challenges/Challenges'));
@@ -75,6 +76,7 @@ export default function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/pricing" element={<Suspense fallback={<FallbackLoader />}><Pricing /></Suspense>} />
             </Route>
 
             {/* Main Layout (Navbar + Sidebar) */}

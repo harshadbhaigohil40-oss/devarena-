@@ -1,6 +1,7 @@
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 const devLinks = [
   { to: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -20,6 +21,13 @@ export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuth();
   const location = useLocation();
   const hiddenPaths = ['/', '/login', '/register'];
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!user || hiddenPaths.includes(location.pathname)) return null;
 
@@ -28,7 +36,7 @@ export default function Sidebar({ isOpen, onClose }) {
   return (
     <motion.aside
       initial={{ x: -260 }}
-      animate={{ x: isOpen ? 0 : (window.innerWidth <= 768 ? -260 : 0) }}
+      animate={{ x: isOpen ? 0 : (isMobile ? -260 : 0) }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       style={{
         position: 'fixed', top: 0, left: 0, bottom: 0,
@@ -61,7 +69,7 @@ export default function Sidebar({ isOpen, onClose }) {
             key={link.to}
             to={link.to}
             onClick={() => {
-              if (window.innerWidth <= 768 && onClose) onClose();
+              if (isMobile && onClose) onClose();
             }}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '0.75rem',

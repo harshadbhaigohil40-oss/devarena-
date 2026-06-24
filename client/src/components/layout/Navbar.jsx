@@ -16,7 +16,14 @@ export default function Navbar({ onMenuClick }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const notifRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -73,7 +80,7 @@ export default function Navbar({ onMenuClick }) {
       }}
     >
       {/* Show Logo only on Landing/Auth pages where sidebar is hidden */}
-      {(isLanding || window.innerWidth <= 768) && (
+      {(isLanding || isMobile) && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {onMenuClick && !isLanding && (
             <button 

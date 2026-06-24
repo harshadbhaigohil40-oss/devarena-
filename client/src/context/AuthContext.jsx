@@ -36,6 +36,15 @@ export function AuthProvider({ children }) {
     return userData;
   };
 
+  const loginWithGoogle = async (credential) => {
+    const res = await authService.googleLogin(credential);
+    const { accessToken: newToken, user: userData } = res.data.data;
+    localStorage.setItem('devarena_token', newToken);
+    setToken(newToken);
+    setUser(userData);
+    return userData;
+  };
+
   const register = async (username, email, password, role) => {
     const res = await authService.register({ username, email, password, role });
     // Backend doesn't return a token on registration, just success message
@@ -53,7 +62,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, updateUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

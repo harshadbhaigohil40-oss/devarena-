@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { register, login, refresh, logout, getMe, verifyEmail, forgotPassword, resetPassword } = require('../controllers/authController');
+const { register, login, refresh, logout, getMe, verifyEmail, forgotPassword, resetPassword, googleLogin } = require('../controllers/authController');
 const { auth } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { authLimiter } = require('../middleware/rateLimiter');
@@ -7,6 +7,7 @@ const { registerSchema, loginSchema, resetPasswordSchema } = require('../validat
 
 router.post('/register', authLimiter, validate(registerSchema), register);
 router.post('/login', authLimiter, validate(loginSchema), login);
+router.post('/google', authLimiter, googleLogin);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.post('/verify-email', authLimiter, verifyEmail);

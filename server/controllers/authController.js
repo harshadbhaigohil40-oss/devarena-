@@ -4,6 +4,10 @@ const User = require('../models/User');
 const { success, error } = require('../utils/responseHelper');
 const leaderboardService = require('../services/leaderboardService');
 const emailService = require('../services/emailService');
+const { OAuth2Client } = require('google-auth-library');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -216,3 +220,81 @@ exports.getMe = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.googleLogin = async (req, res, next) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return error(res, 'No Google credential provided', 400);
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const { sub, email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user
+      let baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+      if (baseUsername.length < 3) baseUsername += 'user';
+      let username = baseUsername;
+      let counter = 1;
+      while(await User.findOne({username})) {
+        username = `${baseUsername}${counter}`;
+        counter++;
+      }
+
+      user = await User.create({
+        username,
+        email,
+        authProvider: 'google',
+        googleId: sub,
+        isEmailVerified: true,
+        avatar: picture,
+      });
+      await leaderboardService.updateEntry(user._id);
+    } else {
+      if (!user.googleId) {
+        user.googleId = sub;
+        if (user.authProvider !== 'google') {
+           user.authProvider = 'google';
+        }
+        if (!user.avatar) user.avatar = picture;
+        await user.save();
+      }
+    }
+
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      return error(res, 'Account is locked. Try again later.', 403);
+    }
+    
+    const { updateStreak } = require('../services/xpService');
+    await updateStreak(user._id);
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    success(res, {
+      accessToken,
+      user: user.toJSON(),
+    });
+
+  } catch (err) {
+    console.error('Google login error:', err);
+    return error(res, 'Google authentication failed', 401);
+  }
+};
+

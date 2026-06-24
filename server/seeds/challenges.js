@@ -1,323 +1,215 @@
 const challenges = [
-  // Beginner Challenges (Arrays, Strings, Hash Maps)
-  {
-    title: 'Two Sum', slug: 'two-sum',
-    description: '## Two Sum\n\nGiven an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to target.\n\n### Constraints\n- Each input would have exactly one solution\n- You may not use the same element twice',
-    difficulty: 'beginner', category: 'algorithms', tags: ['arrays', 'hash-map'], xpReward: 50,
-    starterCode: { javascript: 'function twoSum(nums, target) {\n  // Your code here\n}', python: 'def two_sum(nums, target):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[2,7,11,15], 9', expectedOutput: '[0,1]', isHidden: false },
-      { input: '[3,2,4], 6', expectedOutput: '[1,2]', isHidden: false },
-      { input: '[3,3], 6', expectedOutput: '[0,1]', isHidden: true }
-    ],
-    solution: '...', hints: ['Think about using a hash map']
-  },
-  {
-    title: 'Reverse String', slug: 'reverse-string',
-    description: '## Reverse String\n\nWrite a function that reverses an array of characters in-place (for this challenge, just return the reversed array).\n\n### Example\n`Input: ["h","e","l","l","o"]`\n`Output: ["o","l","l","e","h"]`',
-    difficulty: 'beginner', category: 'algorithms', tags: ['strings', 'two-pointers'], xpReward: 50,
-    starterCode: { javascript: 'function reverseString(s) {\n  // Your code here\n}', python: 'def reverse_string(s):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '["h","e","l","l","o"]', expectedOutput: '["o","l","l","e","h"]', isHidden: false },
-      { input: '["H","a","n"]', expectedOutput: '["n","a","H"]', isHidden: false }
-    ],
-    hints: ['Use two pointers', 'Swap from both ends']
-  },
-  {
-    title: 'Valid Anagram', slug: 'valid-anagram',
-    description: '## Valid Anagram\n\nGiven two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise.\n\n### Example\n`Input: "anagram", "nagaram"`\n`Output: true`',
-    difficulty: 'beginner', category: 'algorithms', tags: ['strings', 'hash-map'], xpReward: 50,
-    starterCode: { javascript: 'function isAnagram(s, t) {\n  // Your code here\n}', python: 'def is_anagram(s, t):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '"anagram", "nagaram"', expectedOutput: 'true', isHidden: false },
-      { input: '"rat", "car"', expectedOutput: 'false', isHidden: false }
-    ],
-    hints: ['Count character frequencies']
-  },
-  {
-    title: 'Contains Duplicate', slug: 'contains-duplicate',
-    description: '## Contains Duplicate\n\nGiven an integer array `nums`, return `true` if any value appears at least twice in the array, and return `false` if every element is distinct.\n\n### Example\n`Input: [1,2,3,1]`\n`Output: true`',
-    difficulty: 'beginner', category: 'algorithms', tags: ['arrays', 'hash-set'], xpReward: 50,
-    starterCode: { javascript: 'function containsDuplicate(nums) {\n  // Your code here\n}', python: 'def contains_duplicate(nums):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[1,2,3,1]', expectedOutput: 'true', isHidden: false },
-      { input: '[1,2,3,4]', expectedOutput: 'false', isHidden: false }
-    ],
-    hints: ['A Set data structure can be very helpful here']
-  },
-  {
-    title: 'Single Number', slug: 'single-number',
-    description: '## Single Number\n\nGiven a non-empty array of integers `nums`, every element appears twice except for one. Find that single one.\nYou must implement a solution with a linear runtime complexity and use only constant extra space.\n\n### Example\n`Input: [4,1,2,1,2]`\n`Output: 4`',
-    difficulty: 'beginner', category: 'algorithms', tags: ['arrays', 'bit-manipulation'], xpReward: 50,
-    starterCode: { javascript: 'function singleNumber(nums) {\n  // Your code here\n}', python: 'def single_number(nums):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[2,2,1]', expectedOutput: '1', isHidden: false },
-      { input: '[4,1,2,1,2]', expectedOutput: '4', isHidden: false }
-    ],
-    hints: ['Consider XOR bitwise operation']
-  },
+  // ═══════════════════ ALGORITHM MASTERY ═══════════════════
+  // Tier 1 — Basics
+  { title:'Two Sum',slug:'two-sum',difficulty:'beginner',category:'algorithms',tags:['arrays','hash-map'],xpReward:50,
+    description:'## Two Sum\n\nGiven an array of integers `nums` and an integer `target`, return indices of the two numbers that add up to target.\n\n### Example\n`Input: [2,7,11,15], 9` → `Output: [0,1]`',
+    starterCode:{javascript:'function twoSum(nums, target) {\n  // Your code here\n}',python:'def two_sum(nums, target):\n    # Your code here\n    pass'},
+    testCases:[{input:'[2,7,11,15], 9',expectedOutput:'[0,1]',isHidden:false},{input:'[3,2,4], 6',expectedOutput:'[1,2]',isHidden:false},{input:'[3,3], 6',expectedOutput:'[0,1]',isHidden:true}],
+    hints:['Use a hash map to store seen values']},
 
-  // Intermediate Challenges
-  {
-    title: 'Maximum Subarray', slug: 'maximum-subarray',
-    description: '## Maximum Subarray\n\nGiven an integer array `nums`, find the subarray which has the largest sum and return its sum.\n\n### Example\n`Input: [-2,1,-3,4,-1,2,1,-5,4]`\n`Output: 6` (subarray [4,-1,2,1] has the largest sum = 6)',
-    difficulty: 'intermediate', category: 'algorithms', tags: ['arrays', 'dynamic-programming'], xpReward: 100,
-    starterCode: { javascript: 'function maxSubArray(nums) {\n  // Your code here\n}', python: 'def max_sub_array(nums):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[-2,1,-3,4,-1,2,1,-5,4]', expectedOutput: '6', isHidden: false },
-      { input: '[1]', expectedOutput: '1', isHidden: false },
-      { input: '[5,4,-1,7,8]', expectedOutput: '23', isHidden: true }
-    ],
-    hints: ['Kadane\'s Algorithm is the best approach']
-  },
-  {
-    title: 'Climbing Stairs', slug: 'climbing-stairs',
-    description: '## Climbing Stairs\n\nYou are climbing a staircase. It takes `n` steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?\n\n### Example\n`Input: n = 3`\n`Output: 3`',
-    difficulty: 'intermediate', category: 'algorithms', tags: ['math', 'dynamic-programming'], xpReward: 100,
-    starterCode: { javascript: 'function climbStairs(n) {\n  // Your code here\n}', python: 'def climb_stairs(n):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '2', expectedOutput: '2', isHidden: false },
-      { input: '3', expectedOutput: '3', isHidden: false },
-      { input: '5', expectedOutput: '8', isHidden: true }
-    ],
-    hints: ['This is closely related to the Fibonacci sequence']
-  },
-  {
-    title: 'Best Time to Buy and Sell Stock', slug: 'best-time-to-buy-and-sell-stock',
-    description: '## Best Time to Buy and Sell Stock\n\nYou are given an array `prices` where `prices[i]` is the price of a given stock on the `i`th day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.\nReturn the maximum profit you can achieve. If you cannot achieve any profit, return 0.\n\n### Example\n`Input: [7,1,5,3,6,4]`\n`Output: 5` (Buy on day 2 at price 1, sell on day 5 at price 6)',
-    difficulty: 'intermediate', category: 'algorithms', tags: ['arrays', 'dynamic-programming'], xpReward: 100,
-    starterCode: { javascript: 'function maxProfit(prices) {\n  // Your code here\n}', python: 'def max_profit(prices):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[7,1,5,3,6,4]', expectedOutput: '5', isHidden: false },
-      { input: '[7,6,4,3,1]', expectedOutput: '0', isHidden: false }
-    ],
-    hints: ['Track the minimum price seen so far']
-  },
-  {
-    title: 'Missing Number', slug: 'missing-number',
-    description: '## Missing Number\n\nGiven an array `nums` containing `n` distinct numbers in the range `[0, n]`, return the only number in the range that is missing from the array.\n\n### Example\n`Input: [3,0,1]`\n`Output: 2`',
-    difficulty: 'intermediate', category: 'algorithms', tags: ['arrays', 'math', 'bit-manipulation'], xpReward: 100,
-    starterCode: { javascript: 'function missingNumber(nums) {\n  // Your code here\n}', python: 'def missing_number(nums):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[3,0,1]', expectedOutput: '2', isHidden: false },
-      { input: '[0,1]', expectedOutput: '2', isHidden: false },
-      { input: '[9,6,4,2,3,5,7,0,1]', expectedOutput: '8', isHidden: true }
-    ],
-    hints: ['Can you use the mathematical formula for the sum of the first N numbers?']
-  },
+  { title:'Contains Duplicate',slug:'contains-duplicate',difficulty:'beginner',category:'algorithms',tags:['arrays','hash-set'],xpReward:50,
+    description:'## Contains Duplicate\n\nReturn `true` if any value appears at least twice in the array.\n\n### Example\n`[1,2,3,1]` → `true`',
+    starterCode:{javascript:'function containsDuplicate(nums) {\n  // Your code here\n}',python:'def contains_duplicate(nums):\n    # Your code here\n    pass'},
+    testCases:[{input:'[1,2,3,1]',expectedOutput:'true',isHidden:false},{input:'[1,2,3,4]',expectedOutput:'false',isHidden:false},{input:'[1,1,1,3,3,4,3,2,4,2]',expectedOutput:'true',isHidden:true}],
+    hints:['Use a Set']},
 
-  // Advanced Challenges
-  {
-    title: 'Find the Duplicate Number', slug: 'find-the-duplicate-number',
-    description: '## Find the Duplicate Number\n\nGiven an array of integers `nums` containing `n + 1` integers where each integer is in the range `[1, n]` inclusive.\nThere is only one repeated number in `nums`, return this repeated number.\nYou must solve the problem without modifying the array `nums` and uses only constant extra space.\n\n### Example\n`Input: [1,3,4,2,2]`\n`Output: 2`',
-    difficulty: 'advanced', category: 'algorithms', tags: ['arrays', 'two-pointers', 'binary-search'], xpReward: 200,
-    starterCode: { javascript: 'function findDuplicate(nums) {\n  // Your code here\n}', python: 'def find_duplicate(nums):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[1,3,4,2,2]', expectedOutput: '2', isHidden: false },
-      { input: '[3,1,3,4,2]', expectedOutput: '3', isHidden: false }
-    ],
-    hints: ['Can you think of this array as a Linked List and detect a cycle?', 'Floyd\'s Tortoise and Hare algorithm']
-  },
-  {
-    title: 'Product of Array Except Self', slug: 'product-of-array-except-self',
-    description: '## Product of Array Except Self\n\nGiven an integer array `nums`, return an array `answer` such that `answer[i]` is equal to the product of all the elements of `nums` except `nums[i]`.\nThe product of any prefix or suffix of `nums` is guaranteed to fit in a 32-bit integer.\n\nYou must write an algorithm that runs in `O(n)` time and without using the division operation.\n\n### Example\n`Input: [1,2,3,4]`\n`Output: [24,12,8,6]`',
-    difficulty: 'advanced', category: 'algorithms', tags: ['arrays', 'prefix-sum'], xpReward: 200,
-    starterCode: { javascript: 'function productExceptSelf(nums) {\n  // Your code here\n}', python: 'def product_except_self(nums):\n    # Your code here\n    pass' },
-    testCases: [
-      { input: '[1,2,3,4]', expectedOutput: '[24,12,8,6]', isHidden: false },
-      { input: '[-1,1,0,-3,3]', expectedOutput: '[0,0,9,0,0]', isHidden: false }
-    ],
-    hints: ['Calculate left products and right products separately']
-  },
+  { title:'Valid Anagram',slug:'valid-anagram',difficulty:'beginner',category:'algorithms',tags:['strings','hash-map'],xpReward:50,
+    description:'## Valid Anagram\n\nReturn `true` if `t` is an anagram of `s`.\n\n### Example\n`"anagram", "nagaram"` → `true`',
+    starterCode:{javascript:'function isAnagram(s, t) {\n  // Your code here\n}',python:'def is_anagram(s, t):\n    # Your code here\n    pass'},
+    testCases:[{input:'"anagram", "nagaram"',expectedOutput:'true',isHidden:false},{input:'"rat", "car"',expectedOutput:'false',isHidden:false}],
+    hints:['Count character frequencies']},
 
-  // Frontend Challenges
-  {
-    title: 'CSS Flexbox Centering', slug: 'css-flexbox-centering',
-    description: '## Center a Div\n\nWrite a CSS snippet that perfectly centers a child div inside a parent div using Flexbox.',
-    difficulty: 'beginner', category: 'frontend', tags: ['css', 'flexbox'], xpReward: 50,
-    starterCode: { javascript: 'function centerDiv() {\n  return "display: flex; justify-content: center; align-items: center;";\n}', python: 'def center_div():\n    return "display: flex; justify-content: center; align-items: center;"' },
-    testCases: [ { input: '""', expectedOutput: '"display: flex; justify-content: center; align-items: center;"', isHidden: false } ],
-    hints: ['justify-content and align-items are your friends']
-  },
-  {
-    title: 'React useState Hook', slug: 'react-usestate-hook',
-    description: '## React Counter\n\nReturn a string representation of a simple React counter component using useState.',
-    difficulty: 'intermediate', category: 'frontend', tags: ['react', 'hooks'], xpReward: 100,
-    starterCode: { javascript: 'function getCounterCode() {\n  return "const [count, setCount] = useState(0);";\n}', python: 'def get_counter_code():\n    return "const [count, setCount] = useState(0);"' },
-    testCases: [ { input: '""', expectedOutput: '"const [count, setCount] = useState(0);"', isHidden: false } ],
-    hints: ['useState returns an array with state and setter']
-  },
+  { title:'Single Number',slug:'single-number',difficulty:'beginner',category:'algorithms',tags:['arrays','bit-manipulation'],xpReward:50,
+    description:'## Single Number\n\nEvery element appears twice except one. Find the single one.\n\n### Example\n`[4,1,2,1,2]` → `4`',
+    starterCode:{javascript:'function singleNumber(nums) {\n  // Your code here\n}',python:'def single_number(nums):\n    # Your code here\n    pass'},
+    testCases:[{input:'[2,2,1]',expectedOutput:'1',isHidden:false},{input:'[4,1,2,1,2]',expectedOutput:'4',isHidden:false}],
+    hints:['XOR cancels duplicates']},
 
-  // Backend Challenges
-  {
-    title: 'Node.js Express Route', slug: 'nodejs-express-route',
-    description: '## Simple GET Route\n\nReturn the code string to create a simple GET route in Express.js that returns "Hello World".',
-    difficulty: 'beginner', category: 'backend', tags: ['nodejs', 'express'], xpReward: 50,
-    starterCode: { javascript: 'function getExpressRoute() {\n  return "app.get(\'/\', (req, res) => res.send(\'Hello World\'));";\n}', python: 'def get_express_route():\n    return "app.get(\'/\', (req, res) => res.send(\'Hello World\'));"' },
-    testCases: [ { input: '""', expectedOutput: '"app.get(\'/\', (req, res) => res.send(\'Hello World\'));"', isHidden: false } ],
-    hints: ['app.get(path, handler)']
-  },
-  {
-    title: 'SQL Inner Join', slug: 'sql-inner-join',
-    description: '## SQL Inner Join\n\nReturn a SQL query string that selects all columns from users and orders using an INNER JOIN on user_id.',
-    difficulty: 'intermediate', category: 'backend', tags: ['sql', 'database'], xpReward: 100,
-    starterCode: { javascript: 'function getJoinQuery() {\n  return "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;";\n}', python: 'def get_join_query():\n    return "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;"' },
-    testCases: [ { input: '""', expectedOutput: '"SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id;"', isHidden: false } ],
-    hints: ['INNER JOIN table ON condition']
-  },
+  // Tier 2 — Searching
+  { title:'Binary Search',slug:'binary-search',difficulty:'intermediate',category:'algorithms',tags:['searching','binary-search'],xpReward:100,
+    description:'## Binary Search\n\nGiven sorted array `nums` and `target`, return index or -1.\n\n### Example\n`[-1,0,3,5,9,12], 9` → `4`',
+    starterCode:{javascript:'function binarySearch(nums, target) {\n  // Your code here\n}',python:'def binary_search(nums, target):\n    # Your code here\n    pass'},
+    testCases:[{input:'[-1,0,3,5,9,12], 9',expectedOutput:'4',isHidden:false},{input:'[-1,0,3,5,9,12], 2',expectedOutput:'-1',isHidden:false},{input:'[5], 5',expectedOutput:'0',isHidden:true}],
+    hints:['Use left and right pointers']},
 
-  // System Design Challenges
-  {
-    title: 'Load Balancing Strategy', slug: 'load-balancing-strategy',
-    description: '## Round Robin\n\nWrite a function that simulates Round Robin load balancing. Given an array of servers `["A", "B", "C"]` and a request number `n`, return the server that should handle the request.',
-    difficulty: 'beginner', category: 'system-design', tags: ['load-balancing', 'architecture'], xpReward: 50,
-    starterCode: { javascript: 'function roundRobin(servers, n) {\n  return servers[n % servers.length];\n}', python: 'def round_robin(servers, n):\n    return servers[n % len(servers)]' },
-    testCases: [
-      { input: '["A", "B", "C"], 0', expectedOutput: '"A"', isHidden: false },
-      { input: '["A", "B", "C"], 4', expectedOutput: '"B"', isHidden: false }
-    ],
-    hints: ['Use the modulo operator']
-  },
-  {
-    title: 'CAP Theorem Basics', slug: 'cap-theorem-basics',
-    description: '## CAP Theorem\n\nReturn the two properties of the CAP theorem that a NoSQL database like MongoDB prioritizes when partitioning occurs.',
-    difficulty: 'intermediate', category: 'system-design', tags: ['databases', 'cap'], xpReward: 100,
-    starterCode: { javascript: 'function capPriorities() {\n  return "Consistency and Partition Tolerance";\n}', python: 'def cap_priorities():\n    return "Consistency and Partition Tolerance"' },
-    testCases: [ { input: '""', expectedOutput: '"Consistency and Partition Tolerance"', isHidden: false } ],
-    hints: ['MongoDB is typically CP']
-  }
+  // Tier 2 — Sorting
+  { title:'Sort Array',slug:'sort-array',difficulty:'intermediate',category:'algorithms',tags:['sorting','merge-sort'],xpReward:100,
+    description:'## Sort an Array\n\nSort the array in ascending order.\n\n### Example\n`[5,2,3,1]` → `[1,2,3,5]`',
+    starterCode:{javascript:'function sortArray(nums) {\n  // Your code here\n}',python:'def sort_array(nums):\n    # Your code here\n    pass'},
+    testCases:[{input:'[5,2,3,1]',expectedOutput:'[1,2,3,5]',isHidden:false},{input:'[5,1,1,2,0,0]',expectedOutput:'[0,0,1,1,2,5]',isHidden:false}],
+    hints:['Merge sort is O(n log n)']},
+
+  // Tier 3 — Recursion
+  { title:'Generate Parentheses',slug:'generate-parentheses',difficulty:'advanced',category:'algorithms',tags:['recursion','backtracking'],xpReward:200,
+    description:'## Generate Parentheses\n\nGenerate all valid combinations of `n` pairs of parentheses.\n\n### Example\n`3` → `["((()))","(()())","(())()","()(())","()()()"]`',
+    starterCode:{javascript:'function generateParenthesis(n) {\n  // Your code here\n}',python:'def generate_parenthesis(n):\n    # Your code here\n    pass'},
+    testCases:[{input:'3',expectedOutput:'["((()))","(()())","(())()","()(())","()()()"]',isHidden:false},{input:'1',expectedOutput:'["()"]',isHidden:false}],
+    hints:['Use backtracking with open/close counts']},
+
+  // Tier 4 — DP
+  { title:'Climbing Stairs',slug:'climbing-stairs',difficulty:'advanced',category:'algorithms',tags:['dynamic-programming','math'],xpReward:200,
+    description:'## Climbing Stairs\n\nYou can climb 1 or 2 steps. How many distinct ways to reach the top?\n\n### Example\n`3` → `3`',
+    starterCode:{javascript:'function climbStairs(n) {\n  // Your code here\n}',python:'def climb_stairs(n):\n    # Your code here\n    pass'},
+    testCases:[{input:'2',expectedOutput:'2',isHidden:false},{input:'3',expectedOutput:'3',isHidden:false},{input:'5',expectedOutput:'8',isHidden:true}],
+    hints:['Fibonacci pattern: f(n) = f(n-1) + f(n-2)']},
+
+  { title:'Maximum Subarray',slug:'maximum-subarray',difficulty:'advanced',category:'algorithms',tags:['dynamic-programming','arrays'],xpReward:200,
+    description:'## Maximum Subarray\n\nFind the subarray with the largest sum.\n\n### Example\n`[-2,1,-3,4,-1,2,1,-5,4]` → `6`',
+    starterCode:{javascript:'function maxSubArray(nums) {\n  // Your code here\n}',python:'def max_sub_array(nums):\n    # Your code here\n    pass'},
+    testCases:[{input:'[-2,1,-3,4,-1,2,1,-5,4]',expectedOutput:'6',isHidden:false},{input:'[1]',expectedOutput:'1',isHidden:false},{input:'[5,4,-1,7,8]',expectedOutput:'23',isHidden:true}],
+    hints:["Kadane's Algorithm"]},
+
+  // Tier 4 — Graphs
+  { title:'Number of Islands',slug:'number-of-islands',difficulty:'advanced',category:'algorithms',tags:['graphs','dfs','bfs'],xpReward:200,
+    description:'## Number of Islands\n\nGiven a 2D grid of `1`s (land) and `0`s (water), count the number of islands.\n\n### Example\n`[[1,1,0],[1,0,0],[0,0,1]]` → `2`',
+    starterCode:{javascript:'function numIslands(grid) {\n  // Your code here\n}',python:'def num_islands(grid):\n    # Your code here\n    pass'},
+    testCases:[{input:'[["1","1","0"],["1","0","0"],["0","0","1"]]',expectedOutput:'2',isHidden:false},{input:'[["1","1","1"],["0","1","0"],["1","1","1"]]',expectedOutput:'1',isHidden:true}],
+    hints:['DFS/BFS to mark visited land']},
+
+  // Tier 5 — Expert
+  { title:'LRU Cache',slug:'lru-cache',difficulty:'expert',category:'algorithms',tags:['algorithm-expert','design'],xpReward:300,
+    description:'## LRU Cache\n\nImplement a function that simulates LRU cache operations. Given capacity and operations array, return get results.\n\n### Example\n`2, [["put",1,1],["put",2,2],["get",1],["put",3,3],["get",2]]` → `[1,-1]`',
+    starterCode:{javascript:'function lruCache(capacity, operations) {\n  // Your code here\n}',python:'def lru_cache(capacity, operations):\n    # Your code here\n    pass'},
+    testCases:[{input:'2, [["put",1,1],["put",2,2],["get",1],["put",3,3],["get",2]]',expectedOutput:'[1,-1]',isHidden:false}],
+    hints:['Use a Map for O(1) access + track insertion order']},
+
+  // ═══════════════════ FRONTEND ENGINEERING ═══════════════════
+  // Tier 1
+  { title:'Reverse String',slug:'reverse-string',difficulty:'beginner',category:'frontend',tags:['html-css-layouts','strings'],xpReward:50,
+    description:'## Reverse String\n\nReverse an array of characters.\n\n### Example\n`["h","e","l","l","o"]` → `["o","l","l","e","h"]`',
+    starterCode:{javascript:'function reverseString(s) {\n  // Your code here\n}',python:'def reverse_string(s):\n    # Your code here\n    pass'},
+    testCases:[{input:'["h","e","l","l","o"]',expectedOutput:'["o","l","l","e","h"]',isHidden:false},{input:'["H","a","n"]',expectedOutput:'["n","a","H"]',isHidden:false}],
+    hints:['Two pointers swap']},
+
+  { title:'Palindrome Check',slug:'palindrome-check',difficulty:'beginner',category:'frontend',tags:['js-dom-manipulation','strings'],xpReward:50,
+    description:'## Palindrome Check\n\nReturn `true` if the string reads the same backward.\n\n### Example\n`"racecar"` → `true`',
+    starterCode:{javascript:'function isPalindrome(s) {\n  // Your code here\n}',python:'def is_palindrome(s):\n    # Your code here\n    pass'},
+    testCases:[{input:'"racecar"',expectedOutput:'true',isHidden:false},{input:'"hello"',expectedOutput:'false',isHidden:false}],
+    hints:['Compare string with its reverse']},
+
+  // Tier 2
+  { title:'Debounce Function',slug:'debounce-function',difficulty:'intermediate',category:'frontend',tags:['hooks','closures'],xpReward:100,
+    description:'## Debounce\n\nReturn the delay value passed in (simplified debounce concept).\n\n### Example\n`300` → `300`',
+    starterCode:{javascript:'function debounce(delay) {\n  // Your code here\n}',python:'def debounce(delay):\n    # Your code here\n    pass'},
+    testCases:[{input:'300',expectedOutput:'300',isHidden:false},{input:'500',expectedOutput:'500',isHidden:false}],
+    hints:['Return the delay']},
+
+  // Tier 3
+  { title:'Flatten Nested Array',slug:'flatten-nested-array',difficulty:'advanced',category:'frontend',tags:['state-management','recursion'],xpReward:200,
+    description:'## Flatten Array\n\nFlatten a nested array to given depth.\n\n### Example\n`[1,[2,[3,[4]]]], 2` → `[1,2,3,[4]]`',
+    starterCode:{javascript:'function flattenArray(arr, depth) {\n  // Your code here\n}',python:'def flatten_array(arr, depth):\n    # Your code here\n    pass'},
+    testCases:[{input:'[1,[2,[3,[4]]]], 1',expectedOutput:'[1,2,[3,[4]]]',isHidden:false},{input:'[1,[2,[3,[4]]]], 2',expectedOutput:'[1,2,3,[4]]',isHidden:false}],
+    hints:['Recursive flatten with depth counter']},
+
+  // Tier 4
+  { title:'Deep Clone Object',slug:'deep-clone-object',difficulty:'advanced',category:'frontend',tags:['performance','web-apis'],xpReward:200,
+    description:'## Deep Clone\n\nCreate a deep clone of a nested object.\n\n### Example\n`{"a":1,"b":{"c":2}}` → `{"a":1,"b":{"c":2}}`',
+    starterCode:{javascript:'function deepClone(obj) {\n  // Your code here\n}',python:'def deep_clone(obj):\n    # Your code here\n    pass'},
+    testCases:[{input:'{"a":1,"b":{"c":2}}',expectedOutput:'{"a":1,"b":{"c":2}}',isHidden:false}],
+    hints:['Recursively copy nested objects']},
+
+  // Tier 5
+  { title:'Event Emitter',slug:'event-emitter',difficulty:'expert',category:'frontend',tags:['system-ui','design-patterns'],xpReward:300,
+    description:'## Event Emitter\n\nReturn the number of listeners registered for the given event count.\n\n### Example\n`3` → `3`',
+    starterCode:{javascript:'function eventEmitterCount(n) {\n  return n;\n}',python:'def event_emitter_count(n):\n    return n'},
+    testCases:[{input:'3',expectedOutput:'3',isHidden:false},{input:'0',expectedOutput:'0',isHidden:false}],
+    hints:['Track listeners in a map']},
+
+  // ═══════════════════ BACKEND ENGINEERING ═══════════════════
+  // Tier 1
+  { title:'HTTP Status Codes',slug:'http-status-codes',difficulty:'beginner',category:'backend',tags:['crud-apis','http'],xpReward:50,
+    description:'## HTTP Status\n\nReturn the HTTP status code for "Not Found".\n\n### Example\n`"Not Found"` → `404`',
+    starterCode:{javascript:'function getStatusCode(status) {\n  // Your code here\n}',python:'def get_status_code(status):\n    # Your code here\n    pass'},
+    testCases:[{input:'"Not Found"',expectedOutput:'404',isHidden:false},{input:'"OK"',expectedOutput:'200',isHidden:false},{input:'"Internal Server Error"',expectedOutput:'500',isHidden:true}],
+    hints:['Use a lookup map']},
+
+  { title:'Parse Query String',slug:'parse-query-string',difficulty:'beginner',category:'backend',tags:['middleware-logic','parsing'],xpReward:50,
+    description:'## Parse Query String\n\nParse `"a=1&b=2"` into `{"a":"1","b":"2"}`.\n\n### Example\n`"a=1&b=2"` → `{"a":"1","b":"2"}`',
+    starterCode:{javascript:'function parseQuery(qs) {\n  // Your code here\n}',python:'def parse_query(qs):\n    # Your code here\n    pass'},
+    testCases:[{input:'"a=1&b=2"',expectedOutput:'{"a":"1","b":"2"}',isHidden:false},{input:'"x=hello"',expectedOutput:'{"x":"hello"}',isHidden:false}],
+    hints:['Split by & then by =']},
+
+  // Tier 2
+  { title:'JWT Payload Decode',slug:'jwt-payload-decode',difficulty:'intermediate',category:'backend',tags:['authentication-basics','jwt'],xpReward:100,
+    description:'## JWT Parts\n\nReturn the number of parts in a JWT token string.\n\n### Example\n`"header.payload.signature"` → `3`',
+    starterCode:{javascript:'function jwtParts(token) {\n  // Your code here\n}',python:'def jwt_parts(token):\n    # Your code here\n    pass'},
+    testCases:[{input:'"header.payload.signature"',expectedOutput:'3',isHidden:false},{input:'"a.b.c"',expectedOutput:'3',isHidden:false}],
+    hints:['Split by dot']},
+
+  // Tier 3
+  { title:'Rate Limiter',slug:'rate-limiter',difficulty:'advanced',category:'backend',tags:['caching','rate-limiting'],xpReward:200,
+    description:'## Rate Limiter\n\nGiven max requests and current count, return `true` if request is allowed.\n\n### Example\n`5, 3` → `true`',
+    starterCode:{javascript:'function isAllowed(max, current) {\n  // Your code here\n}',python:'def is_allowed(max_req, current):\n    # Your code here\n    pass'},
+    testCases:[{input:'5, 3',expectedOutput:'true',isHidden:false},{input:'5, 5',expectedOutput:'false',isHidden:false},{input:'10, 0',expectedOutput:'true',isHidden:true}],
+    hints:['Compare current < max']},
+
+  // Tier 4
+  { title:'Consistent Hash',slug:'consistent-hash',difficulty:'expert',category:'backend',tags:['load-balancing','microservices'],xpReward:300,
+    description:'## Consistent Hashing\n\nGiven servers array and a key number, return which server handles it (modular hash).\n\n### Example\n`["A","B","C"], 7` → `"B"`',
+    starterCode:{javascript:'function consistentHash(servers, key) {\n  // Your code here\n}',python:'def consistent_hash(servers, key):\n    # Your code here\n    pass'},
+    testCases:[{input:'["A","B","C"], 7',expectedOutput:'"B"',isHidden:false},{input:'["X","Y"], 4',expectedOutput:'"X"',isHidden:false}],
+    hints:['key % servers.length']},
+
+  // ═══════════════════ SYSTEM DESIGN ═══════════════════
+  // Tier 1
+  { title:'Round Robin LB',slug:'round-robin-lb',difficulty:'beginner',category:'system-design',tags:['url-shortener','load-balancing'],xpReward:50,
+    description:'## Round Robin\n\nGiven servers and request number n, return which server handles it.\n\n### Example\n`["A","B","C"], 4` → `"B"`',
+    starterCode:{javascript:'function roundRobin(servers, n) {\n  // Your code here\n}',python:'def round_robin(servers, n):\n    # Your code here\n    pass'},
+    testCases:[{input:'["A","B","C"], 0',expectedOutput:'"A"',isHidden:false},{input:'["A","B","C"], 4',expectedOutput:'"B"',isHidden:false}],
+    hints:['n % servers.length']},
+
+  { title:'Base62 Encode',slug:'base62-encode',difficulty:'beginner',category:'system-design',tags:['url-shortener','encoding'],xpReward:50,
+    description:'## Base62 Encode\n\nReturn the length of base62 encoding needed for a number.\n\n### Example\n`100` → `2`',
+    starterCode:{javascript:'function base62Length(num) {\n  // Your code here\n}',python:'def base62_length(num):\n    # Your code here\n    pass'},
+    testCases:[{input:'0',expectedOutput:'1',isHidden:false},{input:'100',expectedOutput:'2',isHidden:false},{input:'62',expectedOutput:'2',isHidden:true}],
+    hints:['Divide by 62 repeatedly']},
+
+  // Tier 2
+  { title:'Cache Hit Rate',slug:'cache-hit-rate',difficulty:'intermediate',category:'system-design',tags:['chat-system','caching'],xpReward:100,
+    description:'## Cache Hit Rate\n\nGiven hits and total requests, return hit rate as percentage (integer).\n\n### Example\n`75, 100` → `75`',
+    starterCode:{javascript:'function cacheHitRate(hits, total) {\n  // Your code here\n}',python:'def cache_hit_rate(hits, total):\n    # Your code here\n    pass'},
+    testCases:[{input:'75, 100',expectedOutput:'75',isHidden:false},{input:'0, 50',expectedOutput:'0',isHidden:false},{input:'33, 100',expectedOutput:'33',isHidden:true}],
+    hints:['Math.floor(hits/total * 100)']},
+
+  // Tier 3
+  { title:'Partition Data',slug:'partition-data',difficulty:'advanced',category:'system-design',tags:['news-feed','distributed'],xpReward:200,
+    description:'## Data Partitioning\n\nGiven total items and partition count, return items per partition.\n\n### Example\n`100, 3` → `[34,33,33]`',
+    starterCode:{javascript:'function partition(total, parts) {\n  // Your code here\n}',python:'def partition(total, parts):\n    # Your code here\n    pass'},
+    testCases:[{input:'100, 3',expectedOutput:'[34,33,33]',isHidden:false},{input:'10, 2',expectedOutput:'[5,5]',isHidden:false}],
+    hints:['Distribute remainder across first partitions']},
+
+  // Tier 4
+  { title:'Sharding Key',slug:'sharding-key',difficulty:'advanced',category:'system-design',tags:['instagram','sharding'],xpReward:200,
+    description:'## Shard Selection\n\nGiven a user ID and shard count, return which shard the user belongs to.\n\n### Example\n`12345, 8` → `1`',
+    starterCode:{javascript:'function getShard(userId, shardCount) {\n  // Your code here\n}',python:'def get_shard(user_id, shard_count):\n    # Your code here\n    pass'},
+    testCases:[{input:'12345, 8',expectedOutput:'1',isHidden:false},{input:'100, 10',expectedOutput:'0',isHidden:false}],
+    hints:['userId % shardCount']},
+
+  // Tier 5
+  { title:'Bloom Filter Size',slug:'bloom-filter-size',difficulty:'expert',category:'system-design',tags:['search-engine','probabilistic'],xpReward:300,
+    description:'## Bloom Filter\n\nGiven n items and false positive rate p (as percentage integer), return optimal bit array size m = ceil(n * 10).\n\n### Example\n`1000, 1` → `10000`',
+    starterCode:{javascript:'function bloomFilterSize(n, p) {\n  // Your code here\n}',python:'def bloom_filter_size(n, p):\n    # Your code here\n    pass'},
+    testCases:[{input:'1000, 1',expectedOutput:'10000',isHidden:false},{input:'500, 5',expectedOutput:'5000',isHidden:false}],
+    hints:['m = ceil(n * 10)']},
+
+  // ═══════════════════ CROSS-CATEGORY BONUS ═══════════════════
+  { title:'Best Time to Buy Stock',slug:'best-time-to-buy-stock',difficulty:'intermediate',category:'algorithms',tags:['arrays','dynamic-programming'],xpReward:100,
+    description:'## Buy and Sell Stock\n\nMaximize profit from one buy and one sell.\n\n### Example\n`[7,1,5,3,6,4]` → `5`',
+    starterCode:{javascript:'function maxProfit(prices) {\n  // Your code here\n}',python:'def max_profit(prices):\n    # Your code here\n    pass'},
+    testCases:[{input:'[7,1,5,3,6,4]',expectedOutput:'5',isHidden:false},{input:'[7,6,4,3,1]',expectedOutput:'0',isHidden:false}],
+    hints:['Track minimum price seen so far']},
+
+  { title:'Missing Number',slug:'missing-number',difficulty:'intermediate',category:'algorithms',tags:['arrays','math'],xpReward:100,
+    description:'## Missing Number\n\nFind the missing number in range [0, n].\n\n### Example\n`[3,0,1]` → `2`',
+    starterCode:{javascript:'function missingNumber(nums) {\n  // Your code here\n}',python:'def missing_number(nums):\n    # Your code here\n    pass'},
+    testCases:[{input:'[3,0,1]',expectedOutput:'2',isHidden:false},{input:'[0,1]',expectedOutput:'2',isHidden:false},{input:'[9,6,4,2,3,5,7,0,1]',expectedOutput:'8',isHidden:true}],
+    hints:['Sum formula: n*(n+1)/2']},
+
+  { title:'Product Except Self',slug:'product-except-self',difficulty:'advanced',category:'algorithms',tags:['arrays','prefix-sum'],xpReward:200,
+    description:'## Product Except Self\n\nReturn array where each element is product of all others.\n\n### Example\n`[1,2,3,4]` → `[24,12,8,6]`',
+    starterCode:{javascript:'function productExceptSelf(nums) {\n  // Your code here\n}',python:'def product_except_self(nums):\n    # Your code here\n    pass'},
+    testCases:[{input:'[1,2,3,4]',expectedOutput:'[24,12,8,6]',isHidden:false},{input:'[-1,1,0,-3,3]',expectedOutput:'[0,0,9,0,0]',isHidden:false}],
+    hints:['Left products × right products']},
 ];
 
-const generateMassiveChallenges = () => {
-  const allChallenges = [...challenges];
-  let globalIdCounter = allChallenges.length;
-
-  const createVariations = (coreCategory, coreTopic, corePattern, baseDifficulty, count, categoryTag, level) => {
-    const difficulties = {
-      'beginner': 50,
-      'intermediate': 100,
-      'advanced': 200,
-      'expert': 300
-    };
-    
-    const variationTypes = ['Basic', 'Sorted array', 'Streaming data', 'Huge dataset', 'Multiple target versions', 'Memory optimized', 'Time optimized', 'With negative numbers', 'With duplicates', 'Edge case focus'];
-    
-    const results = [];
-    for (let i = 0; i < count; i++) {
-      const vType = variationTypes[i % variationTypes.length];
-      const variationNum = String(Math.floor(i / variationTypes.length) + 1).padStart(3, '0');
-      const title = `${corePattern} - ${vType} Variation ${variationNum}`;
-      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + globalIdCounter++;
-      
-      results.push({
-        title: title,
-        slug: slug,
-        description: `## ${title}\n\n**Category**: ${coreCategory} -> ${coreTopic}\n${level ? `**Level**: ${level}\n\n` : ''}This is a variation of the core pattern: **${corePattern}**.\nFocus on handling the **${vType}** aspect.\n\n### Requirements\n- Ensure optimal performance.\n- Handle edge cases properly.`,
-        difficulty: baseDifficulty,
-        category: categoryTag,
-        tags: [coreTopic.toLowerCase().replace(/[^a-z0-9]+/g, '-'), corePattern.toLowerCase().replace(/[^a-z0-9]+/g, '-'), ...(level ? [level.toLowerCase()] : [])],
-        xpReward: difficulties[baseDifficulty] || 50,
-        starterCode: { javascript: '// Your optimized code here', python: '# Your optimized code here' },
-        testCases: [
-          { input: '"example_input"', expectedOutput: '"example_output"', isHidden: false }
-        ],
-        hints: [`Think about how ${vType} changes the base approach.`]
-      });
-    }
-    return results;
-  };
-
-  const plan = [
-    // 1. ALGORITHM MASTERY (2000)
-    // Level 1 - Fundamentals (500)
-    { cat: 'Algorithm Mastery', topic: 'Arrays', pattern: 'Two Sum Variations', diff: 'beginner', count: 150, tag: 'algorithms', level: 'Fundamentals' },
-    { cat: 'Algorithm Mastery', topic: 'Strings', pattern: 'Palindrome Variations', diff: 'beginner', count: 100, tag: 'algorithms', level: 'Fundamentals' },
-    { cat: 'Algorithm Mastery', topic: 'Hashing', pattern: 'Frequency Maps', diff: 'beginner', count: 150, tag: 'algorithms', level: 'Fundamentals' },
-    { cat: 'Algorithm Mastery', topic: 'Math basics', pattern: 'GCD and LCM', diff: 'beginner', count: 100, tag: 'algorithms', level: 'Fundamentals' },
-    
-    // Level 2 - Core DSA (700)
-    { cat: 'Algorithm Mastery', topic: 'Searching', pattern: 'Binary Search Variations', diff: 'intermediate', count: 350, tag: 'algorithms' },
-    { cat: 'Algorithm Mastery', topic: 'Sorting', pattern: 'Merge and Quick Sort', diff: 'intermediate', count: 350, tag: 'algorithms' },
-
-    // Level 3 - Advanced DSA (600)
-    { cat: 'Algorithm Mastery', topic: 'Recursion', pattern: 'Backtracking and Combinations', diff: 'advanced', count: 600, tag: 'algorithms' },
-
-    // Level 4 - DP and Graphs (600)
-    { cat: 'Algorithm Mastery', topic: 'Dynamic Programming', pattern: '1D and 2D DP', diff: 'advanced', count: 300, tag: 'algorithms' },
-    { cat: 'Algorithm Mastery', topic: 'Graphs', pattern: 'DFS BFS and Shortest Path', diff: 'advanced', count: 300, tag: 'algorithms' },
-
-    // Level 5 - Expert (200)
-    { cat: 'Algorithm Mastery', topic: 'Algorithm Expert', pattern: 'Advanced Data Structures', diff: 'expert', count: 200, tag: 'algorithms' },
-
-    // 2. FRONTEND ENGINEERING (1000)
-    // Level 1 - Basics (250)
-    { cat: 'Frontend Engineering', topic: 'HTML CSS layouts', pattern: 'Flexbox and Grid', diff: 'beginner', count: 100, tag: 'frontend' },
-    { cat: 'Frontend Engineering', topic: 'JS DOM manipulation', pattern: 'Event Listeners', diff: 'beginner', count: 100, tag: 'frontend' },
-    { cat: 'Frontend Engineering', topic: 'Basic UI logic', pattern: 'Form Validation', diff: 'beginner', count: 50, tag: 'frontend' },
-    // Level 2 - React Core (350)
-    { cat: 'Frontend Engineering', topic: 'Components', pattern: 'Component Lifecycle', diff: 'intermediate', count: 100, tag: 'frontend' },
-    { cat: 'Frontend Engineering', topic: 'Props and state', pattern: 'Prop Drilling Solutions', diff: 'intermediate', count: 100, tag: 'frontend' },
-    { cat: 'Frontend Engineering', topic: 'Hooks', pattern: 'Custom Hooks', diff: 'intermediate', count: 100, tag: 'frontend' },
-    { cat: 'Frontend Engineering', topic: 'Routing', pattern: 'Protected Routes', diff: 'intermediate', count: 50, tag: 'frontend' },
-    // Level 3 - Advanced Frontend (300)
-    { cat: 'Frontend Engineering', topic: 'State management', pattern: 'Redux and Zustand Patterns', diff: 'advanced', count: 100, tag: 'frontend' },
-    { cat: 'Frontend Engineering', topic: 'Performance', pattern: 'Lazy Loading and Memoization', diff: 'advanced', count: 100, tag: 'frontend' },
-    { cat: 'Frontend Engineering', topic: 'Web APIs', pattern: 'Intersection Observer', diff: 'advanced', count: 100, tag: 'frontend' },
-    // Level 4 - System UI (100)
-    { cat: 'Frontend Engineering', topic: 'System UI', pattern: 'Kanban and Spreadsheet Clone', diff: 'expert', count: 100, tag: 'frontend' },
-
-    // 3. BACKEND ENGINEERING (1000)
-    // Level 1 - APIs (250)
-    { cat: 'Backend Engineering', topic: 'CRUD APIs', pattern: 'RESTful Endpoints', diff: 'beginner', count: 100, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Authentication basics', pattern: 'JWT and Sessions', diff: 'beginner', count: 100, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Middleware logic', pattern: 'Logging and Error Handling', diff: 'beginner', count: 50, tag: 'backend' },
-    // Level 2 - Database (250)
-    { cat: 'Backend Engineering', topic: 'SQL queries', pattern: 'Joins and Aggregations', diff: 'intermediate', count: 100, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Schema design', pattern: 'Normalization and Relations', diff: 'intermediate', count: 100, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Indexing basics', pattern: 'B-Trees and Hash Indexes', diff: 'intermediate', count: 50, tag: 'backend' },
-    // Level 3 - Scalable Backend (350)
-    { cat: 'Backend Engineering', topic: 'Caching', pattern: 'Redis PubSub', diff: 'advanced', count: 100, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Rate limiting', pattern: 'Token Bucket and Sliding Log', diff: 'advanced', count: 100, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Queue systems', pattern: 'RabbitMQ and Kafka Basics', diff: 'advanced', count: 100, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'File uploads', pattern: 'S3 and GridFS Streaming', diff: 'advanced', count: 50, tag: 'backend' },
-    // Level 4 - Distributed Systems (150)
-    { cat: 'Backend Engineering', topic: 'Microservices', pattern: 'Service Discovery and Mesh', diff: 'expert', count: 50, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Load balancing', pattern: 'Consistent Hashing', diff: 'expert', count: 50, tag: 'backend' },
-    { cat: 'Backend Engineering', topic: 'Consistency models', pattern: 'Eventual and Strong Consistency', diff: 'expert', count: 50, tag: 'backend' },
-
-    // 4. SYSTEM DESIGN (1000)
-    // Level 1 - Basic Design (250)
-    { cat: 'System Design', topic: 'URL shortener', pattern: 'Base62 Encoding', diff: 'beginner', count: 100, tag: 'system-design' },
-    { cat: 'System Design', topic: 'File uploader', pattern: 'Chunked Uploads', diff: 'beginner', count: 100, tag: 'system-design' },
-    { cat: 'System Design', topic: 'Auth system', pattern: 'OAuth2 and SSO Architecture', diff: 'beginner', count: 50, tag: 'system-design' },
-    // Level 2 - Medium Systems (350)
-    { cat: 'System Design', topic: 'Chat system', pattern: 'WebSocket and Long Polling', diff: 'intermediate', count: 100, tag: 'system-design' },
-    { cat: 'System Design', topic: 'News feed', pattern: 'Fanout on Write and Read', diff: 'intermediate', count: 150, tag: 'system-design' },
-    { cat: 'System Design', topic: 'Notification system', pattern: 'Push and Email and SMS Gateway', diff: 'intermediate', count: 100, tag: 'system-design' },
-    // Level 3 - Large Scale (300)
-    { cat: 'System Design', topic: 'Instagram', pattern: 'Photo Storage and Timeline', diff: 'advanced', count: 100, tag: 'system-design' },
-    { cat: 'System Design', topic: 'YouTube', pattern: 'Video Transcoding and Streaming', diff: 'advanced', count: 100, tag: 'system-design' },
-    { cat: 'System Design', topic: 'Uber', pattern: 'Quadtree and Geospatial Indexing', diff: 'advanced', count: 100, tag: 'system-design' },
-    // Level 4 - Expert Design (100)
-    { cat: 'System Design', topic: 'Distributed cache', pattern: 'Memcached and Redis Internals', diff: 'expert', count: 30, tag: 'system-design' },
-    { cat: 'System Design', topic: 'Search engine', pattern: 'Inverted Index and Crawler', diff: 'expert', count: 40, tag: 'system-design' },
-    { cat: 'System Design', topic: 'CDN system', pattern: 'Edge Caching and Routing', diff: 'expert', count: 30, tag: 'system-design' }
-  ];
-
-  plan.forEach(p => {
-    let scaleFactor = 1;
-    if (p.cat === 'Algorithm Mastery') scaleFactor = 2.5; // 2000 * 2.5 = 5000
-    if (p.cat === 'Frontend Engineering') scaleFactor = 5; // 1000 * 5 = 5000
-    if (p.cat === 'Backend Engineering') scaleFactor = 5; // 1000 * 5 = 5000
-    if (p.cat === 'System Design') scaleFactor = 5; // 1000 * 5 = 5000
-
-    const adjustedCount = Math.round(p.count * scaleFactor);
-    const vars = createVariations(p.cat, p.topic, p.pattern, p.diff, adjustedCount, p.tag, p.level);
-    allChallenges.push(...vars);
-  });
-
-  return allChallenges;
-};
-
-module.exports = generateMassiveChallenges();
-
+module.exports = challenges;

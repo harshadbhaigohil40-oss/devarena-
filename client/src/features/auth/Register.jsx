@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 import toast from 'react-hot-toast';
 
 export default function Register() {
   const [formData, setFormData] = useState({ username: '', email: '', password: '', role: 'developer' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -24,6 +25,19 @@ export default function Register() {
       toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const success = await loginWithGoogle(credentialResponse.credential);
+      if (success) {
+        toast.success('Signed up with Google successfully!');
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Google authentication failed.';
+      toast.error(errorMsg);
     }
   };
 
@@ -55,6 +69,22 @@ export default function Register() {
             {isSubmitting ? 'Creating...' : 'Register'}
           </button>
         </form>
+
+        <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ borderBottom: '1px solid var(--border)', flexGrow: 1 }}></span>
+          <span style={{ padding: '0 1rem', color: 'var(--text-muted)' }}>OR</span>
+          <span style={{ borderBottom: '1px solid var(--border)', flexGrow: 1 }}></span>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              toast.error('Google Sign Up Failed');
+            }}
+          />
+        </div>
+
         <p className="text-center mt-md text-sm text-muted">
           Already have an account? <Link to="/login">Sign in</Link>
         </p>

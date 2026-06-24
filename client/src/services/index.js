@@ -3,12 +3,14 @@ import api from './api';
 export const authService = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  googleLogin: (credential) => api.post('/auth/google', { credential }),
   getMe: () => api.get('/auth/me'),
 };
 
 export const challengeService = {
   list: (params) => api.get('/challenges', { params }),
   get: (slug) => api.get(`/challenges/${slug}`),
+  run: (id, data) => api.post(`/challenges/${id}/run`, data),
   submit: (id, data) => api.post(`/challenges/${id}/submit`, data),
   getSubmissions: (id) => api.get(`/challenges/${id}/submissions`),
 };
