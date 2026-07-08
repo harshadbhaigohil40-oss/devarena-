@@ -465,7 +465,3 @@ exports.getSubmissions = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// TODO: For production deployment with public users, migrate code execution
-// to Docker-based sandboxing (e.g., isolate, nsjail, or firecracker) for
-// true process-level isolation. The current vm-based approach is hardened
-// but not a full security boundary.

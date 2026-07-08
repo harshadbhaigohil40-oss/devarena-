@@ -6,7 +6,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { initGemini, getModel } = require('../config/gemini');
 
 // ─── Config ───
 const OUTPUT_DIR = path.join(__dirname, '..', 'generated');
@@ -94,8 +94,8 @@ const TREE_CONFIG = {
 };
 
 // ─── Gemini Setup ───
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+initGemini();
+const model = getModel();
 
 // ─── Prompt Builder ───
 function buildPrompt(node, category, count) {

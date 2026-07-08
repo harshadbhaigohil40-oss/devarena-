@@ -1,19 +1,25 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const GeminiKeyManager = require('../services/geminiKeyManager');
 
-let genAI = null;
-let model = null;
+let keyManager = null;
+let modelWrapper = null;
 
 const initGemini = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === 'your-gemini-api-key') {
-    console.error('❌ Gemini API key not configured. AI features will fail.');
+  // Support both new GEMINI_API_KEYS (comma separated) and legacy GEMINI_API_KEY
+  const keysString = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY;
+  if (!keysString || keysString === 'your-gemini-api-key') {
+    console.error('❌ Gemini API key(s) not configured. AI features will fail.');
     return null;
   }
   try {
-    genAI = new GoogleGenerativeAI(apiKey);
-    model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    console.log('✅ Gemini AI initialized');
-    return model;
+    keyManager = new GeminiKeyManager(keysString);
+    
+    // Create a mock model object that delegates generateContent to the KeyManager
+    modelWrapper = {
+      generateContent: (prompt) => keyManager.generateContent(prompt)
+    };
+    
+    console.log('✅ Gemini AI initialized with key rotation support');
+    return modelWrapper;
   } catch (error) {
     console.error('❌ Gemini init error:', error.message);
     return null;
@@ -21,12 +27,12 @@ const initGemini = () => {
 };
 
 const getModel = () => {
-  if (!model) {
+  if (!modelWrapper) {
     throw new Error('Gemini AI is not configured or initialized.');
   }
-  return model;
+  return modelWrapper;
 };
 
-const isAvailable = () => model !== null;
+const isAvailable = () => modelWrapper !== null;
 
-module.exports = { initGemini, getModel, isAvailable };
+module.exports = { initGemini, getModel, isAvailable, GeminiKeyManager };
