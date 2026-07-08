@@ -255,11 +255,11 @@ function evaluatePython(code, testCases, category, starterCode) {
   }
 
   return testCases.map((tc, index) => {
-    const tempDir = path.join(__dirname, '..', 'tmp');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    const os = require('os');
+    const tempDir = os.tmpdir();
     // Use crypto random bytes for unique filenames to prevent collisions
     const uniqueId = crypto.randomBytes(8).toString('hex');
-    const filePath = path.join(tempDir, `py_${uniqueId}_${index}.py`);
+    const filePath = path.join(tempDir, `devarena_py_${uniqueId}_${index}.py`);
 
     try {
       // Detect function name

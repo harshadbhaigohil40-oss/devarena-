@@ -34,29 +34,52 @@ exports.listChallenges = async (req, res, next) => {
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const challenges = await Challenge.find(filter)
-      .select('-solution -testCases')
-      .sort({ _id: -1 }) // Sort by newest (insertion order reversed) to show a healthy mix
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await Challenge.countDocuments(filter);
-
-    // If user is logged in, add completion status
-    if (req.user) {
-      const userSubmissions = await Submission.find({
-        userId: req.user._id,
-        status: 'passed',
-      }).distinct('challengeId');
-
-      const completedSet = new Set(userSubmissions.map(id => id.toString()));
-      const challengesWithStatus = challenges.map(c => ({
-        ...c.toObject(),
-        completed: completedSet.has(c._id.toString()),
-      }));
-
-      return paginated(res, challengesWithStatus, total, parseInt(page), parseInt(limit));
+    
+    let pipeline = [];
+    
+    if (Object.keys(filter).length > 0) {
+      pipeline.push({ $match: filter });
     }
+    
+    pipeline.push({ $sort: { _id: -1 } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit) });
+    pipeline.push({ $project: { solution: 0, testCases: 0 } });
+
+    if (req.user) {
+      const mongoose = require('mongoose');
+      const userId = new mongoose.Types.ObjectId(req.user._id);
+      pipeline.push({
+        $lookup: {
+          from: 'submissions',
+          let: { challengeId: '$_id' },
+          pipeline: [
+            { 
+              $match: { 
+                $expr: { 
+                  $and: [
+                    { $eq: ['$challengeId', '$$challengeId'] },
+                    { $eq: ['$userId', userId] },
+                    { $eq: ['$status', 'passed'] }
+                  ]
+                }
+              }
+            },
+            { $limit: 1 }
+          ],
+          as: 'userSubmission'
+        }
+      });
+      pipeline.push({
+        $addFields: {
+          completed: { $gt: [{ $size: '$userSubmission' }, 0] }
+        }
+      });
+      pipeline.push({ $project: { userSubmission: 0 } });
+    }
+
+    const challenges = await Challenge.aggregate(pipeline);
+    const total = await Challenge.countDocuments(filter);
 
     paginated(res, challenges, total, parseInt(page), parseInt(limit));
   } catch (err) { next(err); }
