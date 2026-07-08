@@ -76,17 +76,18 @@ export default function FloatingChatbot() {
             </div>
 
             {/* Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{ alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                   <div style={{
-                    padding: '0.75rem',
-                    borderRadius: 'var(--radius-md)',
+                    padding: '0.75rem 1rem',
+                    borderRadius: msg.role === 'user' ? '1.2rem 1.2rem 0.2rem 1.2rem' : '1.2rem 1.2rem 1.2rem 0.2rem',
                     background: msg.role === 'user' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
                     color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
                     fontSize: '0.9rem',
                     lineHeight: '1.5',
-                    boxShadow: 'var(--shadow-sm)'
+                    boxShadow: 'var(--shadow-sm)',
+                    border: msg.role === 'user' ? 'none' : '1px solid var(--border-primary)'
                   }}>
                     {msg.role === 'user' ? msg.content : (
                       <div className="markdown-body" style={{ fontSize: '0.9rem' }}>
@@ -97,15 +98,19 @@ export default function FloatingChatbot() {
                 </div>
               ))}
               {isLoading && (
-                <div style={{ alignSelf: 'flex-start', padding: '0.75rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)' }}>
-                  <span className="text-muted" style={{ fontSize: '0.85rem' }}>Typing...</span>
+                <div style={{ alignSelf: 'flex-start', padding: '0.75rem 1rem', borderRadius: '1.2rem 1.2rem 1.2rem 0.2rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)' }}>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center', height: '20px' }}>
+                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-secondary)' }} />
+                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-secondary)' }} />
+                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-secondary)' }} />
+                  </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <div style={{ padding: '0.75rem', borderTop: '1px solid var(--border-primary)', background: 'var(--bg-tertiary)', display: 'flex', gap: '0.5rem' }}>
+            <div style={{ padding: '0.75rem', borderTop: '1px solid var(--border-primary)', background: 'var(--bg-tertiary)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <input
                 type="text"
                 className="input"
@@ -113,15 +118,19 @@ export default function FloatingChatbot() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Ask me anything..."
-                style={{ flex: 1, padding: '0.5rem 0.75rem', fontSize: '0.9rem', borderRadius: 'var(--radius-full)' }}
+                style={{ flex: 1, padding: '0.75rem 1rem', fontSize: '0.9rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
               />
               <button 
                 className="btn btn-primary" 
                 onClick={handleSend} 
                 disabled={isLoading} 
-                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ borderRadius: '50%', width: '42px', height: '42px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: 'none', cursor: 'pointer', background: 'var(--accent-primary)', color: 'white' }}
               >
-                {isLoading ? '...' : '↑'}
+                {isLoading ? (
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} style={{ width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                )}
               </button>
             </div>
           </motion.div>
