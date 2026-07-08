@@ -85,6 +85,30 @@ export default function Sidebar({ isOpen, onClose }) {
             {link.label}
           </NavLink>
         ))}
+
+        {/* Admin Section */}
+        {user.role === 'admin' && (
+          <>
+            <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '1.5rem', marginBottom: '0.75rem', paddingLeft: '0.75rem' }}>
+              Admin
+            </p>
+            <NavLink to="/admin/challenges"
+              onClick={() => { if (isMobile && onClose) onClose(); }}
+              style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.625rem 0.75rem', borderRadius: 10,
+                color: isActive ? '#e17055' : 'var(--text-secondary)',
+                background: isActive ? 'rgba(225,112,85,0.1)' : 'transparent',
+                fontWeight: isActive ? 600 : 500, fontSize: '0.9375rem',
+                textDecoration: 'none', marginBottom: '0.25rem',
+                transition: 'all 150ms ease',
+              })}
+            >
+              <span style={{ fontSize: '1.1rem' }}>🛡️</span>
+              Review Challenges
+            </NavLink>
+          </>
+        )}
       </div>
 
       {user.role === 'developer' && (

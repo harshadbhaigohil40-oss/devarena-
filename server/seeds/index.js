@@ -28,10 +28,10 @@ const seedDB = async () => {
     // Map node IDs → challenge tags
     const nodeTagMap = {
       // Algorithm Mastery
-      'algo-basics':    ['arrays','strings','hash-map','hash-set','bit-manipulation'],
+      'algo-basics':    ['arrays','strings','hash-map','hash-set','bit-manipulation','data-types'],
       'algo-search':    ['searching','binary-search'],
       'algo-sort':      ['sorting','merge-sort'],
-      'algo-recursion': ['recursion','backtracking'],
+      'algo-recursion': ['recursion','backtracking','divide-and-conquer'],
       'algo-dp':        ['dynamic-programming'],
       'algo-graphs':    ['graphs','dfs','bfs'],
       'algo-master':    ['algorithm-expert','design'],

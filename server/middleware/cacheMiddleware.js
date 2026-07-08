@@ -21,7 +21,13 @@ const cacheMiddleware = (duration) => (req, res, next) => {
   res.json = (body) => {
     // Only cache successful responses
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      cache.set(key, body, duration || 300);
+      try {
+        // Parse/stringify to strip Mongoose prototypes and ensure a plain object is cached
+        const plainBody = JSON.parse(JSON.stringify(body));
+        cache.set(key, plainBody, duration || 300);
+      } catch (e) {
+        console.error('Cache serialization error:', e);
+      }
     }
     originalJson.call(res, body);
   };

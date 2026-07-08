@@ -32,17 +32,28 @@ const pdfParse = require('pdf-parse');
 
 exports.analyzeResume = async (req, res, next) => {
   try {
-    if (!req.file) return error(res, 'PDF file is required.', 400);
+    if (!req.file) return error(res, 'File is required.', 400);
     const { jobDescription } = req.body;
 
-    const pdfData = await pdfParse(req.file.buffer);
-    const resumeText = pdfData.text;
-
-    if (!resumeText || resumeText.trim().length < 50) {
-      return error(res, 'Could not extract sufficient text from PDF.', 400);
+    let resumeContent;
+    if (req.file.mimetype === 'application/pdf') {
+      const pdfData = await pdfParse(req.file.buffer);
+      if (!pdfData.text || pdfData.text.trim().length < 50) {
+        return error(res, 'Could not extract sufficient text from PDF.', 400);
+      }
+      resumeContent = pdfData.text;
+    } else if (req.file.mimetype.startsWith('image/')) {
+      resumeContent = {
+        inlineData: {
+          data: req.file.buffer.toString("base64"),
+          mimeType: req.file.mimetype
+        }
+      };
+    } else {
+      return error(res, 'Unsupported file type.', 400);
     }
 
-    const analysis = await aiService.analyzeResume(resumeText, jobDescription);
+    const analysis = await aiService.analyzeResume(resumeContent, jobDescription);
     success(res, { analysis });
   } catch (err) { next(err); }
 };

@@ -77,15 +77,14 @@ Format using clean markdown.`;
   }
 };
 
-const analyzeResume = async (resumeText, jobDescription = "") => {
+const analyzeResume = async (resumeContent, jobDescription = "") => {
   try {
     const model = getModel();
-    const prompt = `You are an expert ATS (Applicant Tracking System) and Senior Technical Recruiter.
-Analyze the following resume text against industry standards for a Software Engineer role.
+    const promptText = `You are an expert ATS (Applicant Tracking System) and Senior Technical Recruiter.
+Analyze the provided resume against industry standards for a Software Engineer role.
 ${jobDescription ? `Specifically tailor your analysis to this job description: ${jobDescription}` : ''}
 
-Resume Text:
-${resumeText}
+IMPORTANT: If the provided document or image does NOT appear to be a resume (e.g., it is source code, a blank page, or a random picture), you MUST still output valid JSON. Set the score to 0, and in the summary explain that the document is not a valid resume.
 
 Provide your analysis STRICTLY in the following JSON format, do not use markdown blocks around the JSON:
 {
@@ -95,7 +94,14 @@ Provide your analysis STRICTLY in the following JSON format, do not use markdown
   "summary": "<1-2 sentence overall impression>"
 }`;
 
-    const result = await model.generateContent(prompt);
+    const promptParts = [promptText];
+    if (typeof resumeContent === 'string') {
+      promptParts.push(`\nResume Text:\n${resumeContent}`);
+    } else {
+      promptParts.push(resumeContent);
+    }
+
+    const result = await model.generateContent(promptParts);
     const text = result.response.text();
     
     // Extract JSON block using regex to ignore conversational prefixes/suffixes

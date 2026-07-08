@@ -26,10 +26,10 @@ export function ResumeAnalyzer() {
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type === 'application/pdf') {
+      if (droppedFile.type === 'application/pdf' || droppedFile.type.startsWith('image/')) {
         setFile(droppedFile);
       } else {
-        toast.error('Please upload a PDF file.');
+        toast.error('Please upload a PDF or Image file.');
       }
     }
   };
@@ -62,7 +62,7 @@ export function ResumeAnalyzer() {
         <h3>AI Resume Analyzer</h3>
       </div>
       <p className="text-muted text-sm mb-xl">
-        Upload your PDF resume to get an instant ATS score and keyword analysis from our AI Recruiter.
+        Upload your PDF or Image resume to get an instant ATS score and keyword analysis from our AI Recruiter.
       </p>
 
       {!results ? (
@@ -85,14 +85,14 @@ export function ResumeAnalyzer() {
           >
             <input 
               type="file" 
-              accept="application/pdf" 
+              accept="application/pdf,image/*" 
               ref={fileInputRef} 
               style={{ display: 'none' }} 
               onChange={handleFileSelect} 
             />
             <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>📥</span>
             <p className="font-bold mb-sm">{file ? file.name : 'Drag & Drop your resume here'}</p>
-            <p className="text-sm text-muted">or click to browse (PDF only, max 5MB)</p>
+            <p className="text-sm text-muted">or click to browse (PDF or Image, max 5MB)</p>
           </div>
 
           <motion.button 

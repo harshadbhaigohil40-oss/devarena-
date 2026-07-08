@@ -1,0 +1,497 @@
+[
+  {
+    "title": "Calculate Total Box Model Width",
+    "slug": "calculate-total-box-model-width",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Calculate Total Box Model Width\n\nIn the CSS box model (assuming `box-sizing: content-box`), an element's total rendered width on the page is influenced by its content width, padding, border, and margin. Your task is to write a function that calculates this total width.\n\nGiven an object with `width`, `padding`, `border`, and `margin` values (all assumed to be uniform for left/right/top/bottom), return the total rendered width.\n\n### Example\n`{ \"width\": 100, \"padding\": 10, \"border\": 2, \"margin\": 5 }` → `134`\n(100 (content) + 2*10 (padding) + 2*2 (border) + 2*5 (margin) = 134)",
+    "starterCode": {
+      "javascript": "function calculateTotalBoxWidth(props) {\n  // Your code here\n  // props will be an object like { width: 100, padding: 10, border: 2, margin: 5 }\n}",
+      "python": "def calculate_total_box_width(props):\n    # Your code here\n    # props will be a dictionary like { 'width': 100, 'padding': 10, 'border': 2, 'margin': 5 }\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "{\"width\": 100, \"padding\": 10, \"border\": 2, \"margin\": 5}",
+        "expectedOutput": 134,
+        "isHidden": false
+      },
+      {
+        "input": "{\"width\": 200, \"padding\": 0, \"border\": 1, \"margin\": 0}",
+        "expectedOutput": 202,
+        "isHidden": true
+      },
+      {
+        "input": "{\"width\": 50, \"padding\": 5, \"border\": 0, \"margin\": 3}",
+        "expectedOutput": 76,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Remember that padding, border, and margin are applied to both sides (left and right) for the width calculation.",
+      "The formula is: contentWidth + 2 * padding + 2 * border + 2 * margin."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Count Semantic Layout Elements",
+    "slug": "count-semantic-layout-elements",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Count Semantic Layout Elements\n\nHTML5 introduced many semantic elements that help define the structure and meaning of web content, especially for overall page layout. Your task is to count how many of the given HTML tag names are considered common semantic elements for page structure.\n\nThe semantic tags to consider are: `header`, `nav`, `main`, `footer`, `article`, `section`, `aside`.\n\n### Example\n`[\"div\", \"header\", \"span\", \"article\", \"p\", \"nav\", \"footer\"]` → `4`",
+    "starterCode": {
+      "javascript": "function countSemanticLayoutElements(tagNames) {\n  // Your code here\n  // tagNames will be an array of strings like [\"div\", \"header\", \"span\"]\n}",
+      "python": "def count_semantic_layout_elements(tag_names):\n    # Your code here\n    # tag_names will be a list of strings like [\"div\", \"header\", \"span\"]\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "[\"div\", \"header\", \"span\", \"article\", \"p\", \"nav\", \"footer\"]",
+        "expectedOutput": 4,
+        "isHidden": false
+      },
+      {
+        "input": "[\"html\", \"body\", \"head\", \"meta\", \"title\"]",
+        "expectedOutput": 0,
+        "isHidden": true
+      },
+      {
+        "input": "[\"main\", \"aside\", \"section\"]",
+        "expectedOutput": 3,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Create a list or set of the target semantic tags for easy lookup.",
+      "Iterate through the input `tagNames` array and check if each tag is present in your semantic tags list."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Check CSS Class Match",
+    "slug": "check-css-class-match",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Check CSS Class Match\n\nIn CSS, elements can have multiple classes. Your function should determine if an element, represented by its `class` attribute string, possesses a specific target CSS class.\n\nGiven an object containing `classAttribute` (a string of space-separated class names) and `targetClass` (a single class name string), return `true` if `targetClass` is present in `classAttribute`, otherwise `false`.\n\n### Example\n`{ \"classAttribute\": \"btn primary large\", \"targetClass\": \"primary\" }` → `true`\n`{ \"classAttribute\": \"card dark\", \"targetClass\": \"light\" }` → `false`",
+    "starterCode": {
+      "javascript": "function checkCssClassMatch(params) {\n  // Your code here\n  // params will be an object like { classAttribute: \"btn primary\", targetClass: \"primary\" }\n}",
+      "python": "def check_css_class_match(params):\n    # Your code here\n    # params will be a dictionary like { 'class_attribute': \"btn primary\", 'target_class': \"primary\" }\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "{\"classAttribute\": \"btn primary large\", \"targetClass\": \"primary\"}",
+        "expectedOutput": true,
+        "isHidden": false
+      },
+      {
+        "input": "{\"classAttribute\": \"card dark\", \"targetClass\": \"light\"}",
+        "expectedOutput": false,
+        "isHidden": true
+      },
+      {
+        "input": "{\"classAttribute\": \"  active   selected  \", \"targetClass\": \"selected\"}",
+        "expectedOutput": true,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "The `classAttribute` string can be split into individual class names using spaces as delimiters.",
+      "Consider using string methods to split the class attribute into an array of classes and then check for inclusion. Remember to handle potential extra spaces."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Determine Flex Wrap Necessity",
+    "slug": "determine-flex-wrap-necessity",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Determine Flex Wrap Necessity\n\nWhen a flex container has `flex-wrap: wrap`, its items will move to a new line if they exceed the container's width. Your task is to determine if flex items will wrap given the container's properties.\n\nGiven an object with `containerWidth`, an array `itemWidths` (representing content widths of flex items), and `gap` (the space between items), return `true` if the items will wrap, otherwise `false`. Assume all items are in a single row initially and `box-sizing: content-box` for items.\n\n### Example\n`{ \"containerWidth\": 300, \"itemWidths\": [100, 100, 150], \"gap\": 10 }` → `true`\n(100 + 10 + 100 + 10 + 150 = 370, which is > 300)",
+    "starterCode": {
+      "javascript": "function determineFlexWrapNecessity(params) {\n  // Your code here\n  // params will be like { containerWidth: 300, itemWidths: [100, 100, 150], gap: 10 }\n}",
+      "python": "def determine_flex_wrap_necessity(params):\n    # Your code here\n    # params will be like { 'container_width': 300, 'item_widths': [100, 100, 150], 'gap': 10 }\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "{\"containerWidth\": 300, \"itemWidths\": [100, 100, 150], \"gap\": 10}",
+        "expectedOutput": true,
+        "isHidden": false
+      },
+      {
+        "input": "{\"containerWidth\": 400, \"itemWidths\": [100, 100, 150], \"gap\": 10}",
+        "expectedOutput": false,
+        "isHidden": true
+      },
+      {
+        "input": "{\"containerWidth\": 200, \"itemWidths\": [100, 50, 60], \"gap\": 5}",
+        "expectedOutput": true,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Calculate the total width occupied by all items and the gaps between them.",
+      "If there are `N` items, there will be `N-1` gaps contributing to the total width if they are all on one line."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Validate Simple Form Field",
+    "slug": "validate-simple-form-field",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Validate Simple Form Field\n\nClient-side form validation is crucial for good user experience. Implement a basic validation logic for a single form field based on its `type` and `value`.\n\nGiven an object with `type` and `value` properties:\n- For `type=\"text\"` or `type=\"password\"`, the `value` must not be an empty string.\n- For `type=\"email\"`, the `value` must contain an `@` symbol and at least one character before and after it.\n- For `type=\"checkbox\"`, the `value` (a boolean) must be `true` (checked).\n\nReturn `true` if the field passes validation, `false` otherwise.\n\n### Example\n`{ \"type\": \"email\", \"value\": \"test@example.com\" }` → `true`\n`{ \"type\": \"text\", \"value\": \"\" }` → `false`",
+    "starterCode": {
+      "javascript": "function validateSimpleFormField(field) {\n  // Your code here\n  // field will be an object like { type: \"email\", value: \"test@example.com\" }\n}",
+      "python": "def validate_simple_form_field(field):\n    # Your code here\n    # field will be a dictionary like { 'type': \"email\", 'value': \"test@example.com\" }\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "{\"type\": \"email\", \"value\": \"test@example.com\"}",
+        "expectedOutput": true,
+        "isHidden": false
+      },
+      {
+        "input": "{\"type\": \"text\", \"value\": \"\"}",
+        "expectedOutput": false,
+        "isHidden": true
+      },
+      {
+        "input": "{\"type\": \"checkbox\", \"value\": false}",
+        "expectedOutput": false,
+        "isHidden": true
+      },
+      {
+        "input": "{\"type\": \"password\", \"value\": \"secure\"}",
+        "expectedOutput": true,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Use conditional statements (if/else or switch) to handle different input types.",
+      "For email validation, check the `indexOf('@')` (JS) or `find()` (Python) and its position to ensure there are characters before and after it."
+    ],
+    "qualityScore": 100,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 10,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Count Missing or Empty Alt Text",
+    "slug": "count-missing-or-empty-alt-text",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Count Missing or Empty Alt Text\n\nProviding `alt` text for images is a fundamental aspect of web accessibility. Screen readers use `alt` text to describe images to visually impaired users.\n\nGiven a list of image objects, each potentially having `src` and `alt` properties, count how many images are either missing the `alt` property entirely or have an `alt` property with an empty string value.\n\n### Example\n`[{\"src\": \"img1.jpg\", \"alt\": \"A landscape\"}, {\"src\": \"img2.png\"}, {\"src\": \"img3.gif\", \"alt\": \"\"}]` → `2`\n(img2.png is missing 'alt', img3.gif has an empty 'alt')",
+    "starterCode": {
+      "javascript": "function countMissingAltText(images) {\n  // Your code here\n  // images will be an array of objects like [{ src: \"a.jpg\", alt: \"Description\" }]\n}",
+      "python": "def count_missing_alt_text(images):\n    # Your code here\n    # images will be a list of dictionaries like [{'src': \"a.jpg\", 'alt': \"Description\"}]\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "[{\"src\": \"img1.jpg\", \"alt\": \"A landscape\"}, {\"src\": \"img2.png\"}, {\"src\": \"img3.gif\", \"alt\": \"\"}, {\"src\": \"img4.webp\", \"alt\": \"Another image\"}]",
+        "expectedOutput": 2,
+        "isHidden": false
+      },
+      {
+        "input": "[{\"src\": \"icon.png\", \"alt\": \"\"}, {\"src\": \"logo.svg\"}]",
+        "expectedOutput": 2,
+        "isHidden": true
+      },
+      {
+        "input": "[{\"src\": \"pic.jpg\", \"alt\": \"valid alt\"}]",
+        "expectedOutput": 0,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Iterate through each image object in the list.",
+      "For each image, check if the `alt` property is either `undefined`/`null` (or not present in Python) or an empty string."
+    ],
+    "qualityScore": 100,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 10,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Extract CSS Variable Names",
+    "slug": "extract-css-variable-names",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Extract CSS Variable Names\n\nCSS custom properties (variables) are powerful for managing styles. Your task is to extract all unique CSS variable names from a simplified CSS block string.\n\nA CSS variable name starts with `--` followed by alphanumeric characters and hyphens. The names can appear in declarations (e.g., `--primary-color: blue;`) or when being used via `var()` (e.g., `color: var(--primary-color);`).\n\nReturn an array of unique variable names, sorted alphabetically.\n\n### Example\n`\":root { --primary-color: blue; --secondary-bg: white; } .element { color: var(--primary-color); background: var(--hover-color); }\"` → `[\"--hover-color\", \"--primary-color\", \"--secondary-bg\"]`",
+    "starterCode": {
+      "javascript": "function extractCssVariableNames(cssString) {\n  // Your code here\n  // cssString will be a string like \":root { --color: red; }\"\n}",
+      "python": "import re\n\ndef extract_css_variable_names(css_string):\n    # Your code here\n    # css_string will be a string like \":root { --color: red; }\"\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "\":root { --primary-color: blue; --secondary-bg: white; } .element { color: var(--primary-color); background: var(--hover-color); }\"",
+        "expectedOutput": "[\"--hover-color\", \"--primary-color\", \"--secondary-bg\"]",
+        "isHidden": false
+      },
+      {
+        "input": "\".component { --size: 10px; margin: var(--size); padding: var(--size); }\"",
+        "expectedOutput": "[\"--size\"]",
+        "isHidden": true
+      },
+      {
+        "input": "\".empty {}\"",
+        "expectedOutput": "[]",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Regular expressions are ideal for pattern matching in strings. Look for the pattern `--[a-zA-Z0-9-]+`.",
+      "Collect all matches and then filter them to ensure only unique variable names are returned. Don't forget to sort them."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Parse Grid Column Count",
+    "slug": "parse-grid-column-count",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Parse Grid Column Count\n\nCSS Grid Layout allows precise control over item placement. The `grid-template-columns` property defines the number and size of columns. Your task is to count the explicit columns defined in a simplified `grid-template-columns` string.\n\nGiven a string representing the value of `grid-template-columns` (e.g., \"1fr 2fr auto 100px\"), return the total number of defined columns. Assume column definitions are separated by one or more spaces, and no `repeat()` function is used for this challenge.\n\n### Example\n`\"1fr 2fr auto 100px\"` → `4`\n`\"auto auto 1fr\"` → `3`",
+    "starterCode": {
+      "javascript": "function parseGridColumnCount(templateColumnsString) {\n  // Your code here\n  // templateColumnsString will be a string like \"1fr 2fr auto\"\n}",
+      "python": "def parse_grid_column_count(template_columns_string):\n    # Your code here\n    # template_columns_string will be a string like \"1fr 2fr auto\"\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "\"1fr 2fr auto 100px\"",
+        "expectedOutput": 4,
+        "isHidden": false
+      },
+      {
+        "input": "\"auto auto 1fr\"",
+        "expectedOutput": 3,
+        "isHidden": true
+      },
+      {
+        "input": "\"100px\"",
+        "expectedOutput": 1,
+        "isHidden": true
+      },
+      {
+        "input": "\"  1fr   2fr  \"",
+        "expectedOutput": 2,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "The number of columns corresponds to the number of space-separated values in the string.",
+      "Use string splitting methods to break the string into an array of individual column definitions. Remember to handle potential extra spaces at the beginning, end, or between values."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Validate Table Header Semantics",
+    "slug": "validate-table-header-semantics",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Validate Table Header Semantics\n\nFor accessibility and semantic correctness, the first row of an HTML table typically serves as the table header and should use `<th>` (table header) tags instead of `<td>` (table data) tags.\n\nGiven a simplified table structure as an array of arrays, where each inner array represents a row and each element is an object `{tag: string, content: string}`, determine if the *first row* (`index 0`) consists exclusively of `<th>` tags. An empty table or a table with no rows should be considered valid for this check.\n\n### Example\n`[[{\"tag\":\"th\",\"content\":\"Name\"}, {\"tag\":\"th\",\"content\":\"Age\"}], [{\"tag\":\"td\",\"content\":\"Alice\"}, {\"tag\":\"td\",\"content\":\"30\"}]]` → `true`\n`[[{\"tag\":\"td\",\"content\":\"Name\"}, {\"tag\":\"th\",\"content\":\"Age\"}], [{\"tag\":\"td\",\"content\":\"Alice\"}, {\"tag\":\"td\",\"content\":\"30\"}]]` → `false`",
+    "starterCode": {
+      "javascript": "function validateTableHeaderSemantics(tableData) {\n  // Your code here\n  // tableData will be an array of arrays of objects\n  // e.g., [[{tag: \"th\", content: \"Header\"}]]\n}",
+      "python": "def validate_table_header_semantics(table_data):\n    # Your code here\n    # table_data will be a list of lists of dictionaries\n    # e.g., [[{'tag': \"th\", 'content': \"Header\"}]]\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "[[{\"tag\":\"th\",\"content\":\"Name\"}, {\"tag\":\"th\",\"content\":\"Age\"}], [{\"tag\":\"td\",\"content\":\"Alice\"}, {\"tag\":\"td\",\"content\":\"30\"}]]",
+        "expectedOutput": true,
+        "isHidden": false
+      },
+      {
+        "input": "[[{\"tag\":\"td\",\"content\":\"Product\"}, {\"tag\":\"th\",\"content\":\"Price\"}], [{\"tag\":\"td\",\"content\":\"Laptop\"}, {\"tag\":\"td\",\"content\":\"1200\"}]]",
+        "expectedOutput": false,
+        "isHidden": true
+      },
+      {
+        "input": "[[{\"tag\":\"th\",\"content\":\"Only One\"}], [{\"tag\":\"td\",\"content\":\"Data\"}]]",
+        "expectedOutput": true,
+        "isHidden": true
+      },
+      {
+        "input": "[]",
+        "expectedOutput": true,
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "First, check if `tableData` is empty or has no rows. If so, it passes by default.",
+      "Access the first row (`tableData[0]`). Then, iterate through each cell in that row and check if all of their `tag` properties are exactly `\"th\"`."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  },
+  {
+    "title": "Calculate Total Box Model Outer Dimensions",
+    "slug": "calculate-total-box-model-outer-dimensions",
+    "difficulty": "beginner",
+    "category": "frontend",
+    "tags": [
+      "html-css-layouts"
+    ],
+    "xpReward": 50,
+    "description": "## Calculate Total Box Model Outer Dimensions\n\nExpanding on the basic box model, calculate an element's *total outer width* and *total outer height*, including all its content dimensions, padding, border, and margin. This gives the full space an element occupies on the page, affecting surrounding elements.\n\nGiven an object with `width`, `height`, `padding`, `border`, and `margin` values (all assumed uniform for all sides, and `box-sizing: content-box`), return an object `{ outerWidth: number, outerHeight: number }`.\n\n### Example\n`{ \"width\": 100, \"height\": 50, \"padding\": 10, \"border\": 2, \"margin\": 5 }` → `{ \"outerWidth\": 134, \"outerHeight\": 84 }`\n(Outer Width: 100 + 2*10 + 2*2 + 2*5 = 134)\n(Outer Height: 50 + 2*10 + 2*2 + 2*5 = 84)",
+    "starterCode": {
+      "javascript": "function calculateOuterDimensions(props) {\n  // Your code here\n  // props will be an object like { width: 100, height: 50, padding: 10, border: 2, margin: 5 }\n}",
+      "python": "def calculate_outer_dimensions(props):\n    # Your code here\n    # props will be a dictionary like { 'width': 100, 'height': 50, 'padding': 10, 'border': 2, 'margin': 5 }\n    pass"
+    },
+    "testCases": [
+      {
+        "input": "{\"width\": 100, \"height\": 50, \"padding\": 10, \"border\": 2, \"margin\": 5}",
+        "expectedOutput": "{\"outerWidth\": 134, \"outerHeight\": 84}",
+        "isHidden": false
+      },
+      {
+        "input": "{\"width\": 200, \"height\": 100, \"padding\": 0, \"border\": 1, \"margin\": 0}",
+        "expectedOutput": "{\"outerWidth\": 202, \"outerHeight\": 102}",
+        "isHidden": true
+      },
+      {
+        "input": "{\"width\": 75, \"height\": 25, \"padding\": 5, \"border\": 3, \"margin\": 2}",
+        "expectedOutput": "{\"outerWidth\": 103, \"outerHeight\": 53}",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "The calculation for height is analogous to the calculation for width.",
+      "Each of `padding`, `border`, and `margin` values are added twice (once for top/bottom or left/right) to the content dimensions."
+    ],
+    "qualityScore": 96,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 6,
+      "duplicate": 10
+    }
+  }
+]

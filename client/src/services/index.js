@@ -72,3 +72,17 @@ export const notificationService = {
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
   markAllAsRead: () => api.put('/notifications/mark-all-read'),
 };
+
+export const adminService = {
+  listGenerated: (params) => api.get('/admin/challenges/generated', { params }),
+  listFiles: () => api.get('/admin/challenges/generated/files'),
+  editGenerated: (slug, data) => api.put(`/admin/challenges/generated/${slug}`, data),
+  deleteGenerated: (slug) => api.delete(`/admin/challenges/generated/${slug}`),
+  approveGenerated: (slug, approved) => api.post(`/admin/challenges/generated/${slug}/approve`, { approved }),
+  approveBulk: (slugs, approved) => api.post('/admin/challenges/generated/approve-bulk', { slugs, approved }),
+  importApproved: () => api.post('/admin/challenges/import'),
+  scoreChallenge: (slug) => api.post(`/admin/challenges/generated/${slug}/quality`),
+  scoreAll: () => api.post('/admin/challenges/score-all'),
+  aiReview: (slug) => api.post(`/admin/challenges/generated/${slug}/ai-review`),
+  getAnalytics: () => api.get('/admin/challenges/analytics'),
+};

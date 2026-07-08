@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed": "node seeds/index.js"
+    "seed": "node seeds/index.js",
+    "generate:frontend": "node scripts/generateChallenges.js --tree frontend --batch 25",
+    "generate:backend": "node scripts/generateChallenges.js --tree backend --batch 25",
+    "generate:algorithms": "node scripts/generateChallenges.js --tree algorithms --batch 25",
+    "generate:systemdesign": "node scripts/generateChallenges.js --tree systemdesign --batch 25",
+    "generate:all": "node scripts/generateChallenges.js --tree frontend --batch 25 && node scripts/generateChallenges.js --tree backend --batch 25 && node scripts/generateChallenges.js --tree algorithms --batch 25 && node scripts/generateChallenges.js --tree systemdesign --batch 25",
+    "import:challenges": "node scripts/importChallenges.js --all"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
