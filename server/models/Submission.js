@@ -25,7 +25,10 @@ const submissionSchema = new mongoose.Schema({
 
 // Compound index for checking user's submissions per challenge
 submissionSchema.index({ userId: 1, challengeId: 1 });
+// Optimized for the 'already solved' check: Submission.findOne({ userId, challengeId, status: 'passed' })
+submissionSchema.index({ userId: 1, challengeId: 1, status: 1 });
 // For leaderboard queries
 submissionSchema.index({ challengeId: 1, status: 1, runtime: 1 });
 
 module.exports = mongoose.model('Submission', submissionSchema);
+

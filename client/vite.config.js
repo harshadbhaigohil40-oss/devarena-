@@ -11,6 +11,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -26,11 +29,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['framer-motion', 'react-hot-toast', 'react-icons'],
-          charts: ['recharts'],
-          utils: ['axios', 'date-fns', 'zustand'],
-          editor: ['@monaco-editor/react']
+          vendor: ['react', 'react-dom', 'react-router-dom', '@react-oauth/google'],
+          ui: ['framer-motion', 'react-hot-toast', 'react-icons', 'canvas-confetti'],
+          charts: ['recharts', 'react-calendar-heatmap'],
+          utils: ['axios', 'date-fns', 'zustand', '@tanstack/react-query', 'socket.io-client'],
+          editor: ['@monaco-editor/react'],
+          markdown: ['react-markdown']
         }
       }
     }
