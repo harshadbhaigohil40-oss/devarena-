@@ -38,6 +38,26 @@
 
 It is equipped with the **Gemini 2.5 Flash AI**, meaning every code submission, bug, and query receives instant, expert-level code review and career mentorship.
 
+### 📸 Application Previews
+
+<p align="center">
+  <img src="docs/assets/dashboard.png" alt="DevArena Dashboard UI" width="800">
+  <br>
+  <em>Modern Gamified Dashboard & Leaderboard</em>
+</p>
+
+<p align="center">
+  <img src="docs/assets/ide.png" alt="DevArena IDE UI" width="800">
+  <br>
+  <em>Interactive IDE with Gemini AI Code Assistant</em>
+</p>
+
+<p align="center">
+  <img src="docs/assets/skill_tree.png" alt="DevArena Skill Tree" width="800">
+  <br>
+  <em>Interactive Node-Based Skill Tree</em>
+</p>
+
 ---
 
 ## ✨ Key Features
