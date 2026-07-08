@@ -68,10 +68,17 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.passwordHash);
 };
 
-// Remove password from JSON output
+// Remove sensitive fields from JSON output
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.passwordHash;
+  delete obj.refreshToken;
+  delete obj.verificationToken;
+  delete obj.resetPasswordToken;
+  delete obj.resetPasswordExpires;
+  delete obj.failedLoginAttempts;
+  delete obj.lockUntil;
+  delete obj.googleId;
   return obj;
 };
 

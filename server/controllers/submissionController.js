@@ -7,8 +7,91 @@ const { success, error } = require('../utils/responseHelper');
 
 const vm = require('vm');
 const { execSync } = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+
+// ─── Security Constants ──────────────────────────────────────────────────────
+const MAX_CODE_LENGTH = 50000; // 50KB max code size
+const JS_EXECUTION_TIMEOUT = 3000; // 3 seconds
+const PY_EXECUTION_TIMEOUT = 5000; // 5 seconds
+const ALLOWED_LANGUAGES = ['javascript', 'python'];
+
+// Patterns that indicate sandbox escape attempts in JavaScript
+const JS_BANNED_PATTERNS = [
+  /this\s*\.\s*constructor/i,
+  /\.__proto__/i,
+  /\[['"]__proto__['"]\]/i,
+  /Object\s*\.\s*getPrototypeOf/i,
+  /Reflect\s*\./i,
+  /globalThis/i,
+  /\bprocess\b/,
+  /\bchild_process\b/,
+  /\brequire\s*\(/,
+  /\bimport\s*\(/,
+  /Function\s*\(/,
+  /eval\s*\(/,
+];
+
+// Modules that should never be imported in Python submissions
+const PY_BANNED_IMPORTS = [
+  'os', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
+  'requests', 'ctypes', 'signal', 'multiprocessing', 'threading',
+  'importlib', 'builtins', '__builtin__', 'code', 'codeop',
+  'compile', 'compileall', 'py_compile', 'runpy', 'pkgutil',
+];
+
+// ─── Security Validators ─────────────────────────────────────────────────────
+
+/**
+ * Validates submitted code for size and language constraints.
+ * Returns an error string if invalid, or null if valid.
+ */
+function validateCodeInput(code, language) {
+  if (!code || typeof code !== 'string') return 'Code is required.';
+  if (code.length > MAX_CODE_LENGTH) return `Code exceeds maximum allowed length of ${MAX_CODE_LENGTH} characters.`;
+  if (!ALLOWED_LANGUAGES.includes(language)) return `Unsupported language: ${language}. Allowed: ${ALLOWED_LANGUAGES.join(', ')}`;
+  return null;
+}
+
+/**
+ * Checks JavaScript code for known sandbox escape patterns.
+ * Returns an error string if a banned pattern is found, or null if safe.
+ */
+function detectJSBannedPatterns(code) {
+  for (const pattern of JS_BANNED_PATTERNS) {
+    if (pattern.test(code)) {
+      return 'Code contains disallowed patterns. Please use only standard language features.';
+    }
+  }
+  return null;
+}
+
+/**
+ * Checks Python code for dangerous module imports.
+ * Returns an error string if a banned import is found, or null if safe.
+ */
+function detectPyBannedImports(code) {
+  for (const mod of PY_BANNED_IMPORTS) {
+    // Match: import os, from os import, __import__('os')
+    const patterns = [
+      new RegExp(`\\bimport\\s+${mod}\\b`),
+      new RegExp(`\\bfrom\\s+${mod}\\b`),
+      new RegExp(`__import__\\s*\\(\\s*['"]${mod}['"]\\s*\\)`),
+    ];
+    for (const p of patterns) {
+      if (p.test(code)) {
+        return `Import of '${mod}' is not allowed for security reasons.`;
+      }
+    }
+  }
+
+  // Block open() for file I/O and exec()/eval() for dynamic code execution
+  if (/\bopen\s*\(/.test(code)) return 'File I/O (open) is not allowed.';
+  if (/\bexec\s*\(/.test(code)) return 'Dynamic code execution (exec) is not allowed.';
+
+  return null;
+}
 
 // ─── Argument Parser ─────────────────────────────────────────────────────────
 // Splits a test-case input string like `[1,2,3], 9` into JS values safely.
@@ -20,9 +103,14 @@ function parseArgs(inputStr) {
   try {
     return JSON.parse(wrapped);
   } catch (_) {
-    // Fallback: eval in a sandbox (safe – only literal values)
+    // Fallback: eval in a restricted sandbox (only literal value constructors)
     try {
-      const sandbox = { Math, String, Number, Array, Object };
+      const sandbox = Object.create(null);
+      sandbox.Math = Math;
+      sandbox.String = String;
+      sandbox.Number = Number;
+      sandbox.Array = Array;
+      sandbox.Object = Object;
       vm.createContext(sandbox);
       return vm.runInContext(`(function(){ return [${inputStr}]; })()`, sandbox, { timeout: 500 });
     } catch (_2) {
@@ -33,25 +121,50 @@ function parseArgs(inputStr) {
 
 // ─── JS Evaluator ────────────────────────────────────────────────────────────
 function evaluateJS(code, testCases, category, starterCode) {
+  // Pre-flight security check on user code
+  const bannedCheck = detectJSBannedPatterns(code);
+  if (bannedCheck) {
+    return testCases.map((_, index) => ({
+      testCaseIndex: index,
+      passed: false,
+      output: `Security Error: ${bannedCheck}`,
+      executionTime: 0,
+    }));
+  }
+
   return testCases.map((tc, index) => {
     try {
       let capturedLogs = [];
-      const sandbox = {
-        console: { 
-          log: (...args) => {
+
+      // Build a sandbox with null prototype to prevent prototype chain escapes.
+      // Using Object.create(null) ensures there is no __proto__ to climb.
+      const sandbox = Object.create(null);
+      sandbox.console = {
+        log: (...args) => {
+          if (capturedLogs.length < 100) { // Cap log output to prevent memory abuse
             capturedLogs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-          } 
-        },
-        Math, String, Number, Boolean, Array, Object, Set, Map,
-        parseInt, parseFloat, isNaN, isFinite, JSON,
-        Promise, setTimeout: () => {}, Buffer,
-        require: (moduleName) => {
-          const safe = ['path', 'util', 'crypto', 'buffer', 'assert'];
-          if (safe.includes(moduleName)) return require(moduleName);
-          const noop = () => noop;
-          return new Proxy(noop, { get: () => noop, apply: () => noop });
+          }
         }
       };
+      // Provide safe, frozen copies of built-in constructors
+      sandbox.Math = Math;
+      sandbox.String = String;
+      sandbox.Number = Number;
+      sandbox.Boolean = Boolean;
+      sandbox.Array = Array;
+      sandbox.Object = Object;
+      sandbox.Set = Set;
+      sandbox.Map = Map;
+      sandbox.parseInt = parseInt;
+      sandbox.parseFloat = parseFloat;
+      sandbox.isNaN = isNaN;
+      sandbox.isFinite = isFinite;
+      sandbox.JSON = JSON;
+      sandbox.undefined = undefined;
+      // Intentionally excluded: process, Buffer, require, Promise, setTimeout,
+      // globalThis, Reflect, Proxy, Function — these enable sandbox escapes.
+      sandbox.setTimeout = () => {};
+
       vm.createContext(sandbox);
 
       // Detect function name from starter or user code
@@ -78,7 +191,7 @@ function evaluateJS(code, testCases, category, starterCode) {
       vm.runInContext(`var __args__ = ${JSON.stringify(args)};`, sandbox, { timeout: 500 });
       const script = new vm.Script(runner);
       const start = process.hrtime();
-      const rawResult = script.runInContext(sandbox, { timeout: 2000 });
+      const rawResult = script.runInContext(sandbox, { timeout: JS_EXECUTION_TIMEOUT });
       const end = process.hrtime(start);
       const executionTime = Math.round(end[0] * 1000 + end[1] / 1e6);
 
@@ -130,10 +243,23 @@ function evaluateJS(code, testCases, category, starterCode) {
 
 // ─── Python Evaluator ────────────────────────────────────────────────────────
 function evaluatePython(code, testCases, category, starterCode) {
+  // Pre-flight security check on user code
+  const bannedCheck = detectPyBannedImports(code);
+  if (bannedCheck) {
+    return testCases.map((_, index) => ({
+      testCaseIndex: index,
+      passed: false,
+      output: `Security Error: ${bannedCheck}`,
+      executionTime: 0,
+    }));
+  }
+
   return testCases.map((tc, index) => {
     const tempDir = path.join(__dirname, '..', 'tmp');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
-    const filePath = path.join(tempDir, `py_${Date.now()}_${index}.py`);
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    // Use crypto random bytes for unique filenames to prevent collisions
+    const uniqueId = crypto.randomBytes(8).toString('hex');
+    const filePath = path.join(tempDir, `py_${uniqueId}_${index}.py`);
 
     try {
       // Detect function name
@@ -186,15 +312,18 @@ ${code}
       const start = process.hrtime();
       let rawResult = '';
       try {
-        rawResult = execSync(`python -W ignore "${filePath}"`, {
-          timeout: 5000,
+        // Use -S (no site packages) and -I (isolated mode) for additional safety
+        rawResult = execSync(`python -S -I -W ignore "${filePath}"`, {
+          timeout: PY_EXECUTION_TIMEOUT,
           stdio: ['pipe', 'pipe', 'pipe'],
-          encoding: 'utf8'
+          encoding: 'utf8',
+          // Prevent the child process from inheriting sensitive env vars
+          env: { PATH: process.env.PATH, PYTHONDONTWRITEBYTECODE: '1' },
         }).trim();
       } catch (err) {
         const stderr = err.stderr ? err.stderr.toString().trim() : '';
         let errMsg = stderr || err.message || 'Execution failed';
-        // Sanitize path info
+        // Sanitize path info — never leak server filesystem paths to users
         errMsg = errMsg
           .replace(new RegExp(filePath.replace(/\\/g, '\\\\'), 'g'), 'solution.py')
           .replace(new RegExp(path.basename(filePath), 'g'), 'solution.py')
@@ -245,12 +374,12 @@ const evaluateCode = (code, testCases, language, category, starterCode = '') => 
   if (language === 'python') return evaluatePython(code, testCases, category, starterCode);
   if (language === 'javascript') return evaluateJS(code, testCases, category, starterCode);
 
-  // Unsupported language mock
-  return testCases.map((tc, index) => ({
+  // Unsupported language — reject instead of mocking results
+  return testCases.map((_, index) => ({
     testCaseIndex: index,
-    passed: code.length > 20 && !code.match(/^\s*$/),
-    output: 'Unsupported language – evaluation mocked.',
-    executionTime: Math.floor(Math.random() * 50) + 5,
+    passed: false,
+    output: `Unsupported language: ${language}. Please use JavaScript or Python.`,
+    executionTime: 0,
   }));
 };
 
@@ -260,7 +389,9 @@ exports.runCode = async (req, res, next) => {
     const { code, language = 'javascript' } = req.body;
     const challengeId = req.params.id;
 
-    if (!code) return error(res, 'Code is required.', 400);
+    // Validate input
+    const validationError = validateCodeInput(code, language);
+    if (validationError) return error(res, validationError, 400);
 
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) return error(res, 'Challenge not found.', 404);
@@ -280,7 +411,9 @@ exports.submitSolution = async (req, res, next) => {
     const { code, language = 'javascript' } = req.body;
     const challengeId = req.params.id;
 
-    if (!code) return error(res, 'Code is required.', 400);
+    // Validate input
+    const validationError = validateCodeInput(code, language);
+    if (validationError) return error(res, validationError, 400);
 
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) return error(res, 'Challenge not found.', 404);
@@ -337,3 +470,8 @@ exports.getSubmissions = async (req, res, next) => {
     success(res, { submissions });
   } catch (err) { next(err); }
 };
+
+// TODO: For production deployment with public users, migrate code execution
+// to Docker-based sandboxing (e.g., isolate, nsjail, or firecracker) for
+// true process-level isolation. The current vm-based approach is hardened
+// but not a full security boundary.

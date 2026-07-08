@@ -28,6 +28,7 @@ const recruiterRoutes = require('./routes/recruiterRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -39,11 +40,25 @@ initSocket(server);
 initGemini();
 
 // Middleware
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}));
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow any origin
-    callback(null, true);
+    // Allow requests with no origin (mobile apps, server-to-server, curl)
+    if (!origin) return callback(null, true);
+
+    // Build allowed origins from env — supports comma-separated list
+    const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+      .split(',')
+      .map(o => o.trim());
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 }));
@@ -68,6 +83,7 @@ app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
