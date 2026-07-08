@@ -29,31 +29,16 @@ const AIAdvisor = React.lazy(() => import('@/features/ai/AIAdvisor'));
 const Projects = React.lazy(() => import('@/pages/Projects'));
 const SkillTrees = React.lazy(() => import('@/pages/SkillTrees'));
 const Leaderboard = React.lazy(() => import('@/pages/Leaderboard'));
+const AdminChallenges = React.lazy(() => import('@/pages/AdminChallenges'));
 
 // Skeletons
 import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
 import { ProfileSkeleton } from '@/components/skeletons/ProfileSkeleton';
 import { ChallengeSkeleton } from '@/components/skeletons/ChallengeSkeleton';
-// (FallbackLoader serves as the default for other pages)
+import { PageSkeleton } from '@/components/skeletons/PageSkeleton';
 
 import PageLoader from '@/components/ui/PageLoader';
-
-const RouteLoader = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-    <div style={{ 
-      width: '40px', 
-      height: '40px', 
-      border: '3px solid var(--bg-tertiary)', 
-      borderTopColor: 'var(--accent-primary)', 
-      borderRadius: '50%', 
-      animation: 'spin 1s linear infinite' 
-    }}>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-    </div>
-  </div>
-);
-
-const FallbackLoader = () => <RouteLoader />;
+import PageTransition from '@/components/layout/PageTransition';
 
 export default function App() {
   const location = useLocation();
@@ -69,34 +54,39 @@ export default function App() {
       }} />
       
       <AnimatePresence mode="wait">
-        <Suspense fallback={<FallbackLoader />}>
+        <Suspense fallback={<PageSkeleton />}>
           <Routes location={location} key={location.pathname}>
             {/* Public Layout (No Sidebar) */}
             <Route element={<AuthLayout />}>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/pricing" element={<Suspense fallback={<FallbackLoader />}><Pricing /></Suspense>} />
+              <Route path="/pricing" element={<Suspense fallback={<PageSkeleton />}><Pricing /></Suspense>} />
             </Route>
 
             {/* Main Layout (Navbar + Sidebar) */}
             <Route element={<MainLayout />}>
               {/* Protected Routes (Any logged in user) */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><Dashboard /></Suspense>} />
-                <Route path="/profile/:id" element={<Suspense fallback={<ProfileSkeleton />}><Profile /></Suspense>} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/challenges" element={<Suspense fallback={<ChallengeSkeleton />}><Challenges /></Suspense>} />
-                <Route path="/challenges/:slug" element={<Suspense fallback={<ChallengeSkeleton />}><ChallengeDetail /></Suspense>} />
-                <Route path="/ai-advisor" element={<AIAdvisor />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/skill-trees" element={<SkillTrees />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><PageTransition><Dashboard /></PageTransition></Suspense>} />
+                <Route path="/profile/:id" element={<Suspense fallback={<ProfileSkeleton />}><PageTransition><Profile /></PageTransition></Suspense>} />
+                <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
+                <Route path="/challenges" element={<Suspense fallback={<ChallengeSkeleton />}><PageTransition><Challenges /></PageTransition></Suspense>} />
+                <Route path="/challenges/:slug" element={<Suspense fallback={<ChallengeSkeleton />}><PageTransition><ChallengeDetail /></PageTransition></Suspense>} />
+                <Route path="/ai-advisor" element={<PageTransition><AIAdvisor /></PageTransition>} />
+                <Route path="/projects" element={<PageTransition><Projects /></PageTransition>} />
+                <Route path="/skill-trees" element={<PageTransition><SkillTrees /></PageTransition>} />
+                <Route path="/leaderboard" element={<PageTransition><Leaderboard /></PageTransition>} />
 
                 {/* Recruiter Only Routes */}
                 <Route element={<RoleRoute allowedRoles={['recruiter']} />}>
-                  <Route path="/recruiter" element={<RecruiterDashboard />} />
-                  <Route path="/recruiter/talent" element={<RecruiterDashboard />} />
+                  <Route path="/recruiter" element={<PageTransition><RecruiterDashboard /></PageTransition>} />
+                  <Route path="/recruiter/talent" element={<PageTransition><RecruiterDashboard /></PageTransition>} />
+                </Route>
+
+                {/* Admin Only Routes */}
+                <Route element={<RoleRoute allowedRoles={['admin']} />}>
+                  <Route path="/admin/challenges" element={<Suspense fallback={<PageSkeleton />}><PageTransition><AdminChallenges /></PageTransition></Suspense>} />
                 </Route>
               </Route>
             </Route>
