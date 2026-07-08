@@ -203,29 +203,27 @@ function evaluateJS(code, testCases, category, starterCode) {
 
       const logsOutput = capturedLogs.length > 0 ? `\nLogs:\n${capturedLogs.join('\n')}` : '';
 
-      if (category === 'algorithms') {
-        const normalizedResult = resultStr.replace(/\s+/g, '');
-        const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
-        const passed = normalizedResult === normalizedExpected;
-        return {
-          testCaseIndex: index,
-          passed,
-          output: passed
-            ? `✓ Output: ${resultStr}${logsOutput}`
-            : `Expected: ${tc.expectedOutput}\nGot:      ${resultStr}${logsOutput}`,
-          executionTime: executionTime || 1,
-        };
-      } else {
-        if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
-        if (rawResult === undefined || rawResult === null)
-          throw new Error('Function returned nothing. Make sure to use the `return` keyword.');
-        return {
-          testCaseIndex: index,
-          passed: true,
-          output: `✓ Code executed and returned: ${resultStr}${logsOutput}`,
-          executionTime: executionTime || 1,
-        };
+      if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
+      if (rawResult === undefined || rawResult === null)
+        throw new Error('Function returned nothing. Make sure to use the `return` keyword.');
+
+      let expectedStr;
+      try {
+        expectedStr = JSON.stringify(JSON.parse(tc.expectedOutput));
+      } catch (e) {
+        expectedStr = JSON.stringify(tc.expectedOutput);
       }
+      const normalizedResult = resultStr.replace(/\s+/g, '');
+      const normalizedExpected = expectedStr.replace(/\s+/g, '');
+      const passed = normalizedResult === normalizedExpected;
+      return {
+        testCaseIndex: index,
+        passed,
+        output: passed
+          ? `✓ Output: ${resultStr}${logsOutput}`
+          : `Expected: ${tc.expectedOutput}\nGot:      ${resultStr}${logsOutput}`,
+        executionTime: executionTime || 1,
+      };
     } catch (e) {
       let msg = e.message || String(e);
       if (e.stack && e.stack.includes('evalmachine')) {
@@ -340,27 +338,25 @@ ${code}
       const lastLine = lines.pop() || '';
       const logsOutput = lines.length > 0 ? `\nLogs:\n${lines.join('\n')}` : '';
 
-      if (category === 'algorithms') {
-        const normalizedResult = lastLine.replace(/\s+/g, '');
-        const normalizedExpected = tc.expectedOutput.replace(/\s+/g, '');
-        const passed = normalizedResult === normalizedExpected;
-        return {
-          testCaseIndex: index,
-          passed,
-          output: passed
-            ? `✓ Output: ${lastLine}${logsOutput}`
-            : `Expected: ${tc.expectedOutput}\nGot:      ${lastLine}${logsOutput}`,
-          executionTime: executionTime || 1,
-        };
-      } else {
-        if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
-        return {
-          testCaseIndex: index,
-          passed: true,
-          output: `✓ Code executed successfully. Output: ${lastLine}${logsOutput}`,
-          executionTime: executionTime || 1,
-        };
+      if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
+
+      let expectedStr;
+      try {
+        expectedStr = JSON.stringify(JSON.parse(tc.expectedOutput));
+      } catch (e) {
+        expectedStr = JSON.stringify(tc.expectedOutput);
       }
+      const normalizedResult = lastLine.replace(/\s+/g, '');
+      const normalizedExpected = expectedStr.replace(/\s+/g, '');
+      const passed = normalizedResult === normalizedExpected;
+      return {
+        testCaseIndex: index,
+        passed,
+        output: passed
+          ? `✓ Output: ${lastLine}${logsOutput}`
+          : `Expected: ${tc.expectedOutput}\nGot:      ${lastLine}${logsOutput}`,
+        executionTime: executionTime || 1,
+      };
     } catch (e) {
       if (fs.existsSync(filePath)) { try { fs.unlinkSync(filePath); } catch (_) {} }
       const msg = e.message || String(e);
