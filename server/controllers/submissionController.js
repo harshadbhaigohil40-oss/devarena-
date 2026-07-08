@@ -460,7 +460,7 @@ exports.getSubmissions = async (req, res, next) => {
     const submissions = await Submission.find({
       userId: req.userId,
       challengeId: req.params.id,
-    }).sort({ submittedAt: -1 }).limit(10);
+    }).sort({ submittedAt: -1 }).limit(10).lean();
     success(res, { submissions });
   } catch (err) { next(err); }
 };

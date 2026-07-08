@@ -87,18 +87,19 @@ exports.listChallenges = async (req, res, next) => {
 
 exports.getChallenge = async (req, res, next) => {
   try {
-    const challenge = await Challenge.findOne({ slug: req.params.slug });
+    const challenge = await Challenge.findOne({ slug: req.params.slug }).lean();
     if (!challenge) return error(res, 'Challenge not found.', 404);
 
     // Hide solution from non-admin users
-    const result = challenge.toObject();
     if (!req.user || req.user.role !== 'admin') {
-      delete result.solution;
+      delete challenge.solution;
       // Hide hidden test cases
-      result.testCases = result.testCases.filter(tc => !tc.isHidden);
+      if (challenge.testCases) {
+        challenge.testCases = challenge.testCases.filter(tc => !tc.isHidden);
+      }
     }
 
-    success(res, { challenge: result });
+    success(res, { challenge });
   } catch (err) { next(err); }
 };
 

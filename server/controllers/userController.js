@@ -32,12 +32,14 @@ exports.getStats = async (req, res, next) => {
     const user = await User.findById(userId).select('-passwordHash');
     if (!user) return error(res, 'User not found.', 404);
 
-    const challengesSolved = await Submission.countDocuments({ userId, status: 'passed' });
-    const totalSubmissions = await Submission.countDocuments({ userId });
+    const [challengesSolved, totalSubmissions, recentXP] = await Promise.all([
+      Submission.countDocuments({ userId, status: 'passed' }),
+      Submission.countDocuments({ userId }),
+      XPEvent.find({ userId }).sort({ createdAt: -1 }).limit(200).lean()
+    ]);
+
     const progress = progressToNextLevel(user.xp);
     const xpNeeded = xpForLevel(user.level);
-
-    const recentXP = await XPEvent.find({ userId }).sort({ createdAt: -1 }).limit(200);
 
     success(res, {
       xp: user.xp,
@@ -67,12 +69,14 @@ exports.getXPHistory = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const events = await XPEvent.find({ userId: req.params.id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const total = await XPEvent.countDocuments({ userId: req.params.id });
+    const [events, total] = await Promise.all([
+      XPEvent.find({ userId: req.params.id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      XPEvent.countDocuments({ userId: req.params.id })
+    ]);
 
     success(res, { events, total, page, limit });
   } catch (err) { next(err); }
