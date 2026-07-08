@@ -799,6 +799,8 @@ select.input {
 .mb-sm { margin-bottom: var(--space-sm); }
 .mb-md { margin-bottom: var(--space-md); }
 .mb-lg { margin-bottom: var(--space-lg); }
+.mb-xl { margin-bottom: var(--space-xl); }
+.mb-2xl { margin-bottom: var(--space-2xl); }
 .p-md { padding: var(--space-md); }
 .p-lg { padding: var(--space-lg); }
 
