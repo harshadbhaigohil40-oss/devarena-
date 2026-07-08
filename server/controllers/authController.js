@@ -5,6 +5,7 @@ const { success, error } = require('../utils/responseHelper');
 const leaderboardService = require('../services/leaderboardService');
 const emailService = require('../services/emailService');
 const { OAuth2Client } = require('google-auth-library');
+const { updateStreak } = require('../services/xpService');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -84,7 +85,6 @@ exports.login = async (req, res, next) => {
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
     
-    const { updateStreak } = require('../services/xpService');
     await updateStreak(user._id);
 
     // Tokens
@@ -271,7 +271,6 @@ exports.googleLogin = async (req, res, next) => {
       return error(res, 'Account is locked. Try again later.', 403);
     }
     
-    const { updateStreak } = require('../services/xpService');
     await updateStreak(user._id);
 
     const accessToken = generateAccessToken(user);

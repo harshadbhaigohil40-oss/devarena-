@@ -121,4 +121,46 @@ const startServer = async () => {
 
 startServer();
 
+// ─── Graceful Shutdown ───────────────────────────────────────────────────────
+const mongoose = require('mongoose');
+
+function gracefulShutdown(signal) {
+  console.log(`\n⚡ Received ${signal}. Starting graceful shutdown...`);
+  server.close(() => {
+    console.log('✅ HTTP server closed.');
+    mongoose.connection.close(false).then(() => {
+      console.log('✅ MongoDB connection closed.');
+      process.exit(0);
+    }).catch((err) => {
+      console.error('❌ Error closing MongoDB connection:', err);
+      process.exit(1);
+    });
+  });
+
+  // Force exit if graceful shutdown takes too long (10 seconds)
+  setTimeout(() => {
+    console.error('❌ Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// ─── Global Error Handlers ───────────────────────────────────────────────────
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Promise Rejection:', reason);
+  // In production, log and continue; in development, crash to surface bugs
+  if (process.env.NODE_ENV === 'production') return;
+  gracefulShutdown('unhandledRejection');
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Always exit on uncaught exceptions — the process is in an undefined state
+  gracefulShutdown('uncaughtException');
+});
+
 module.exports = app;
+

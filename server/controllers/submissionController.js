@@ -447,14 +447,12 @@ exports.submitSolution = async (req, res, next) => {
     let xpResult = null;
     if (allPassed && !alreadySolved) {
       xpResult = await awardXP(req.userId, challenge.xpReward, 'challenge', challengeId, `Solved: ${challenge.title}`);
-      challenge.completionCount += 1;
-      challenge.attemptCount += 1;
-      await challenge.save();
+      // Use atomic $inc to prevent race conditions under concurrent submissions
+      await Challenge.findByIdAndUpdate(challengeId, { $inc: { completionCount: 1, attemptCount: 1 } });
       await User.findByIdAndUpdate(req.userId, { $inc: { challengesSolved: 1 } });
       emitChallengeCompleted(req.userId, challengeId, challenge.xpReward);
     } else {
-      challenge.attemptCount += 1;
-      await challenge.save();
+      await Challenge.findByIdAndUpdate(challengeId, { $inc: { attemptCount: 1 } });
     }
 
     success(res, { submission, xpResult, allPassed });
