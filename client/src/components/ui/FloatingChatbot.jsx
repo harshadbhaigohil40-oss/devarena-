@@ -35,7 +35,9 @@ export default function FloatingChatbot() {
       const res = await api.post('/ai/chat', { prompt: contextPrompt });
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.data.reply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I am having trouble connecting right now.' }]);
+      const apiError = error.response?.data?.message;
+      const fallbackMsg = "Oops! My AI circuits are a bit scrambled right now (Server Error). Please try again in a moment! 🤖🔌";
+      setMessages(prev => [...prev, { role: 'assistant', content: apiError || fallbackMsg }]);
     } finally {
       setIsLoading(false);
     }
