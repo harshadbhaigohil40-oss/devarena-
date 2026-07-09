@@ -10,8 +10,8 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('devarena_token'));
 
   useEffect(() => {
-    // Artificial delay so the beautiful loader animation plays (reduced to 800ms)
-    const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
+    // Artificial delay so the beautiful loader animation plays
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2800));
     
     if (token) {
       Promise.all([authService.getMe(), minLoadTime])
