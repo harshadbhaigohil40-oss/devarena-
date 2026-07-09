@@ -26,6 +26,7 @@
     "express-rate-limit": "^7.4.0",
     "google-auth-library": "^10.7.0",
     "helmet": "^8.0.0",
+    "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",
@@ -35,6 +36,7 @@
     "pdf-parse": "^1.1.1",
     "socket.io": "^4.8.0",
     "uuid": "^14.0.0",
+    "xss-clean": "^0.1.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

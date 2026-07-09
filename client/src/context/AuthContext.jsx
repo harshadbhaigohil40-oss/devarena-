@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { authService } from '../services';
 
 const AuthContext = createContext(null);
@@ -9,15 +10,19 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('devarena_token'));
 
   useEffect(() => {
-    // Artificial 2-second delay so the beautiful loader animation plays
-    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
+    // Artificial delay so the beautiful loader animation plays (reduced to 800ms)
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
     
     if (token) {
       Promise.all([authService.getMe(), minLoadTime])
         .then(([res]) => {
           setUser(res.data.data.user);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error("Auth check failed:", err);
+          if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+            toast.error('Backend server is down or taking too long to wake up.');
+          }
           localStorage.removeItem('devarena_token');
           setToken(null);
         })

@@ -11,21 +11,25 @@ export default function PageLoader() {
       { at: 35, text: 'Loading challenge data' },
       { at: 55, text: 'Building skill trees' },
       { at: 75, text: 'Preparing dashboard' },
-      { at: 90, text: 'Almost ready' },
+      { at: 90, text: 'Waking up backend server (may take ~15s)' },
     ];
 
     const interval = setInterval(() => {
       setProgress(prev => {
-        const next = prev + Math.random() * 8 + 2;
-        if (next >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
+        // Asymptote towards 99% so it doesn't get stuck at 100%
+        const next = prev + (99 - prev) * 0.08 + Math.random() * 1;
+        
         const step = steps.find(s => prev < s.at && next >= s.at);
         if (step) setStatusText(step.text);
-        return next;
+        
+        // If it's been loading for a while and stuck near 99, update text
+        if (next > 95 && prev > 95) {
+          setStatusText('Waking up backend server (Render free tier)...');
+        }
+        
+        return next > 99 ? 99 : next;
       });
-    }, 120);
+    }, 200);
 
     return () => clearInterval(interval);
   }, []);
