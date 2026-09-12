@@ -67,7 +67,7 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="card"
+            className={`card ${plan.popular ? 'pricing-card-popular' : ''}`}
             style={{ 
               position: 'relative',
               padding: '2.5rem 2rem', 
@@ -77,7 +77,6 @@ export default function Pricing() {
               zIndex: plan.popular ? 2 : 1,
               boxShadow: plan.popular ? '0 10px 40px rgba(108, 92, 231, 0.2)' : 'var(--shadow-md)',
             }}
-            className={plan.popular ? 'pricing-card-popular' : ''}
           >
             {plan.popular && (
               <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-primary)', color: 'white', padding: '0.2rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '1px' }}>
