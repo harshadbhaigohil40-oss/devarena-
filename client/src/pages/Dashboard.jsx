@@ -192,7 +192,7 @@ export default function Dashboard() {
       </div>
 
       {/* Analytics Row 2 */}
-      <div className="grid grid-2 mb-xl" style={{ gridTemplateColumns: '1fr 2fr' }}>
+      <div className="dashboard-analytics-layout mb-xl">
         <ChallengePieChart stats={stats} />
         <ActivityHeatmap stats={stats} />
       </div>

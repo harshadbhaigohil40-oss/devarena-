@@ -81,7 +81,7 @@ export default function Projects() {
       {/* Premium Header */}
       <div className="flex justify-between items-center mb-xl" style={{ flexWrap: 'wrap', gap: '1rem', position: 'relative', zIndex: 10 }}>
         <div style={{ marginBottom: 0 }}>
-          <h1 className="mb-sm flex items-center gap-sm" style={{ fontSize: '2.5rem' }}>
+          <h1 className="mb-sm flex items-center gap-sm" style={{ fontSize: 'clamp(1.75rem, 5vw, 2.5rem)' }}>
             <motion.span 
               initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
               style={{ display: 'inline-block', filter: 'drop-shadow(0 0 10px rgba(0,206,201,0.5))' }}

@@ -185,29 +185,31 @@ export default function AdminChallenges() {
               </div>
 
               {/* Skill Trees Table */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <div className="admin-grid-layout" style={{ gap: '1.5rem', flexWrap: 'wrap' }}>
                 <div style={{ ...cardStyle }}>
                   <h3 style={{ marginBottom: '1rem' }}>🌳 Challenges Per Skill Tree</h3>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border-primary)', textAlign: 'left' }}>
-                        <th style={{ padding: '0.5rem' }}>Tree</th>
-                        <th style={{ padding: '0.5rem' }}>Total</th>
-                        <th style={{ padding: '0.5rem' }}>Approved</th>
-                        <th style={{ padding: '0.5rem' }}>Avg Score</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(analytics.perTree).map(([treeKey, data]) => (
-                        <tr key={treeKey} style={{ borderBottom: '1px solid var(--border-primary)' }}>
-                          <td style={{ padding: '0.5rem', textTransform: 'capitalize', fontWeight: 600 }}>{treeKey}</td>
-                          <td style={{ padding: '0.5rem' }}>{data.total}</td>
-                          <td style={{ padding: '0.5rem', color: '#00b894' }}>{data.approved}</td>
-                          <td style={{ padding: '0.5rem', fontWeight: 700, color: data.avgScore >= 75 ? '#00b894' : '#e17055' }}>{data.avgScore}</td>
+                  <div className="table-scroll-container">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border-primary)', textAlign: 'left' }}>
+                          <th style={{ padding: '0.5rem' }}>Tree</th>
+                          <th style={{ padding: '0.5rem' }}>Total</th>
+                          <th style={{ padding: '0.5rem' }}>Approved</th>
+                          <th style={{ padding: '0.5rem' }}>Avg Score</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {Object.entries(analytics.perTree).map(([treeKey, data]) => (
+                          <tr key={treeKey} style={{ borderBottom: '1px solid var(--border-primary)' }}>
+                            <td style={{ padding: '0.5rem', textTransform: 'capitalize', fontWeight: 600 }}>{treeKey}</td>
+                            <td style={{ padding: '0.5rem' }}>{data.total}</td>
+                            <td style={{ padding: '0.5rem', color: '#00b894' }}>{data.approved}</td>
+                            <td style={{ padding: '0.5rem', fontWeight: 700, color: data.avgScore >= 75 ? '#00b894' : '#e17055' }}>{data.avgScore}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 <div style={{ ...cardStyle }}>
@@ -401,7 +403,7 @@ export default function AdminChallenges() {
                             </div>
                           )}
 
-                          <div style={{ padding: '1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          <div className="admin-grid-layout" style={{ padding: '1.25rem', gap: '1rem' }}>
                             {/* Left Column */}
                             <div>
                               <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Description</p>

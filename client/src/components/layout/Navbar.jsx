@@ -16,14 +16,7 @@ export default function Navbar({ onMenuClick }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const notifRef = useRef(null);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -69,52 +62,42 @@ export default function Navbar({ onMenuClick }) {
     <motion.nav
       initial={{ y: -64 }}
       animate={{ y: 0 }}
-      className="navbar"
-      style={{
-        position: 'fixed', top: 0, left: isLanding ? 0 : 'var(--sidebar-width)', right: 0, height: 'var(--navbar-height)',
-        background: 'var(--bg-secondary)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--border-primary)', zIndex: 40,
-        display: 'flex', alignItems: 'center', padding: '0 1.5rem',
-        justifyContent: isLanding ? 'space-between' : 'flex-end',
-        transition: 'left var(--transition-normal)'
-      }}
+      className={`navbar ${isLanding ? 'navbar-landing' : 'navbar-app'}`}
     >
-      {/* Show Logo only on Landing/Auth pages where sidebar is hidden */}
-      {(isLanding || isMobile) && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {onMenuClick && !isLanding && (
-            <button 
-              className="btn btn-icon" 
-              onClick={onMenuClick}
-              style={{ fontSize: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-primary)' }}
-            >
-              ☰
-            </button>
-          )}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: 'var(--accent-gradient)', display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
-              fontWeight: 900, fontSize: '0.75rem', color: 'white',
-            }}>DA</div>
-            <span style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>
-              DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
-            </span>
-          </Link>
-        </div>
-      )}
+      {/* Logo + hamburger: visible on landing always, on app pages via CSS (mobile only) */}
+      <div className={isLanding ? '' : 'mobile-only'} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {onMenuClick && !isLanding && (
+          <button 
+            className="btn btn-icon" 
+            onClick={onMenuClick}
+            aria-label="Open navigation menu"
+            style={{ fontSize: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-primary)', minWidth: 44, minHeight: 44 }}
+          >
+            ☰
+          </button>
+        )}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: 'var(--accent-gradient)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            fontWeight: 900, fontSize: '0.75rem', color: 'white',
+          }}>DA</div>
+          <span className="desktop-only" style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>
+            DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
+          </span>
+        </Link>
+      </div>
 
       {/* Top Navbar Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div className="navbar-actions">
         {!isLanding && (
           <button 
             onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-            className="btn btn-ghost btn-sm flex items-center gap-sm" 
-            style={{ color: 'var(--text-secondary)', background: 'var(--bg-secondary)', borderRadius: '20px', padding: '0.35rem 1rem', border: '1px solid var(--border-primary)' }}
+            className="btn btn-ghost btn-sm flex items-center gap-sm navbar-search-btn desktop-only"
           >
             <span>🔍 Search...</span>
-            <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.3rem', background: 'var(--bg-tertiary)', borderRadius: '4px', border: '1px solid var(--border-secondary)' }}>Ctrl K</span>
+            <span className="navbar-search-shortcut">Ctrl K</span>
           </button>
         )}
         
@@ -122,13 +105,13 @@ export default function Navbar({ onMenuClick }) {
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
             className="btn btn-icon" 
-            style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }} 
+            style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative', minWidth: 44, minHeight: 44 }} 
             aria-label="Notifications"
           >
             🔔
             {unreadCount > 0 && (
               <span style={{
-                position: 'absolute', top: 0, right: 0, background: 'var(--accent-primary)',
+                position: 'absolute', top: 2, right: 2, background: 'var(--accent-primary)',
                 color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '0.1rem 0.3rem',
                 borderRadius: '10px', transform: 'translate(25%, -25%)'
               }}>
@@ -138,12 +121,7 @@ export default function Navbar({ onMenuClick }) {
           </button>
 
           {showNotifications && (
-            <div style={{
-              position: 'absolute', top: '120%', right: 0, width: '320px',
-              background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)',
-              borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-              overflow: 'hidden', zIndex: 100
-            }}>
+            <div className="notification-dropdown">
               <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Notifications</h3>
                 {unreadCount > 0 && (
@@ -179,7 +157,7 @@ export default function Navbar({ onMenuClick }) {
           )}
         </div>
         
-        <button onClick={toggleTheme} className="btn btn-icon" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle theme">
+        <button onClick={toggleTheme} className="btn btn-icon desktop-only" style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44 }} aria-label="Toggle theme">
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
 

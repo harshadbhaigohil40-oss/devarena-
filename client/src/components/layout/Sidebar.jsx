@@ -1,7 +1,6 @@
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 
 const devLinks = [
   { to: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -21,30 +20,28 @@ export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuth();
   const location = useLocation();
   const hiddenPaths = ['/', '/login', '/register'];
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   if (!user || hiddenPaths.includes(location.pathname)) return null;
 
   const links = user.role === 'recruiter' ? recruiterLinks : devLinks;
 
+  // Close sidebar on mobile when a link is clicked
+  const handleLinkClick = () => {
+    // Only close if we're on a mobile viewport (sidebar is in overlay mode)
+    if (window.matchMedia('(max-width: 768px)').matches && onClose) {
+      onClose();
+    }
+  };
+
+  // On desktop (>768px), sidebar is always visible. On mobile, it's controlled by isOpen.
+  const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 769px)').matches;
+
   return (
     <motion.aside
-      initial={{ x: -260 }}
-      animate={{ x: isOpen ? 0 : (isMobile ? -260 : 0) }}
+      initial={{ x: isDesktop ? 0 : -280 }}
+      animate={{ x: (isDesktop || isOpen) ? 0 : -280 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0,
-        width: 'var(--sidebar-width)', background: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border-primary)', padding: '1.5rem 0',
-        overflowY: 'auto', zIndex: 50,
-        display: 'flex', flexDirection: 'column',
-      }}
+      className="sidebar"
     >
       <div style={{ padding: '0 1.5rem', marginBottom: '2rem' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
@@ -68,9 +65,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <NavLink
             key={link.to}
             to={link.to}
-            onClick={() => {
-              if (isMobile && onClose) onClose();
-            }}
+            onClick={handleLinkClick}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '0.75rem',
               padding: '0.625rem 0.75rem', borderRadius: 10,
@@ -78,7 +73,7 @@ export default function Sidebar({ isOpen, onClose }) {
               background: isActive ? 'var(--accent-primary-glow)' : 'transparent',
               fontWeight: isActive ? 600 : 500, fontSize: '0.9375rem',
               textDecoration: 'none', marginBottom: '0.25rem',
-              transition: 'all 150ms ease',
+              transition: 'all 150ms ease', minHeight: '44px',
             })}
           >
             <span style={{ fontSize: '1.1rem' }}>{link.icon}</span>
@@ -93,7 +88,7 @@ export default function Sidebar({ isOpen, onClose }) {
               Admin
             </p>
             <NavLink to="/admin/challenges"
-              onClick={() => { if (isMobile && onClose) onClose(); }}
+              onClick={handleLinkClick}
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: '0.75rem',
                 padding: '0.625rem 0.75rem', borderRadius: 10,
@@ -101,7 +96,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 background: isActive ? 'rgba(225,112,85,0.1)' : 'transparent',
                 fontWeight: isActive ? 600 : 500, fontSize: '0.9375rem',
                 textDecoration: 'none', marginBottom: '0.25rem',
-                transition: 'all 150ms ease',
+                transition: 'all 150ms ease', minHeight: '44px',
               })}
             >
               <span style={{ fontSize: '1.1rem' }}>🛡️</span>
@@ -128,3 +123,4 @@ export default function Sidebar({ isOpen, onClose }) {
     </motion.aside>
   );
 }
+

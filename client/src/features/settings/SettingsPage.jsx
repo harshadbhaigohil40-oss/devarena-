@@ -93,7 +93,7 @@ export default function SettingsPage() {
           These actions are irreversible. Please proceed with caution.
         </p>
 
-        <div className="flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,107,107,0.2)', paddingTop: '1rem' }}>
+        <div className="flex items-center justify-between settings-danger-actions" style={{ borderTop: '1px solid rgba(255,107,107,0.2)', paddingTop: '1rem' }}>
           <div>
             <h4 style={{ fontSize: '1rem' }}>Delete Account</h4>
             <p className="text-xs text-muted">Permanently delete your account and all associated data.</p>

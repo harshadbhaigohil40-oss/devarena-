@@ -55,7 +55,7 @@ export default function AIAdvisor() {
         ))}
       </div>
 
-      <div className="grid grid-2" style={{ gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="ai-advisor-layout">
         <div className="card">
           <h3 style={{ marginBottom: '1rem' }}>
             {tab === 'career' ? '💬 Ask a Question' : tab === 'skills' ? '📊 Your Profile' : '💻 Paste Your Code'}

@@ -60,7 +60,7 @@ export default function Pricing() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '3rem' }}>
+      <div className="pricing-grid" style={{ marginTop: '3rem' }}>
         {plans.map((plan, idx) => (
           <motion.div 
             key={plan.name}
@@ -74,10 +74,10 @@ export default function Pricing() {
               display: 'flex', 
               flexDirection: 'column',
               border: plan.popular ? '2px solid var(--accent-primary)' : '1px solid var(--border-primary)',
-              transform: plan.popular ? 'scale(1.05)' : 'scale(1)',
               zIndex: plan.popular ? 2 : 1,
               boxShadow: plan.popular ? '0 10px 40px rgba(108, 92, 231, 0.2)' : 'var(--shadow-md)',
             }}
+            className={plan.popular ? 'pricing-card-popular' : ''}
           >
             {plan.popular && (
               <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-primary)', color: 'white', padding: '0.2rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '1px' }}>

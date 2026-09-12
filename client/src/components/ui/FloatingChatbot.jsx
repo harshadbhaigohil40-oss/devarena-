@@ -44,7 +44,7 @@ export default function FloatingChatbot() {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999 }}>
+    <div className="chatbot-container">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -52,21 +52,7 @@ export default function FloatingChatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            style={{
-              position: 'absolute',
-              bottom: '4.5rem',
-              right: 0,
-              width: '350px',
-              height: '500px',
-              background: 'rgba(var(--bg-secondary-rgb, 18, 18, 26), 0.95)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid var(--border-primary)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-lg)',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
+            className="chatbot-panel"
           >
             {/* Header */}
             <div style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

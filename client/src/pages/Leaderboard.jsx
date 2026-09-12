@@ -71,12 +71,12 @@ export default function Leaderboard() {
         <>
           {/* Podium Section */}
           {top3.length > 0 && (
-            <section style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: '1.5rem', marginBottom: '4rem', marginTop: '3rem', flexWrap: 'wrap' }}>
+            <section className="leaderboard-podium">
               
               {/* Rank 2: Silver */}
               {top3[1] && (
                 <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '260px', order: window.innerWidth < 768 ? 2 : 1, cursor: 'pointer' }}
+                  className="leaderboard-podium-card leaderboard-podium-silver"
                   onClick={() => navigate(`/profile/${top3[1].userId}`)}
                 >
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
@@ -99,7 +99,8 @@ export default function Leaderboard() {
               {/* Rank 1: Gold */}
               {top3[0] && (
                 <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: -30, opacity: 1 }} transition={{ delay: 0.1 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '280px', order: window.innerWidth < 768 ? 1 : 2, transform: 'translateY(-30px)', zIndex: 10, cursor: 'pointer' }}
+                  className="leaderboard-podium-card leaderboard-podium-gold"
+                  style={{ transform: 'translateY(-30px)', zIndex: 10 }}
                   onClick={() => navigate(`/profile/${top3[0].userId}`)}
                 >
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
@@ -125,7 +126,7 @@ export default function Leaderboard() {
               {/* Rank 3: Bronze */}
               {top3[2] && (
                 <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '260px', order: 3, cursor: 'pointer' }}
+                  className="leaderboard-podium-card leaderboard-podium-bronze"
                   onClick={() => navigate(`/profile/${top3[2].userId}`)}
                 >
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
@@ -151,7 +152,7 @@ export default function Leaderboard() {
           {rest.length > 0 && (
             <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} 
               style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', overflow: 'hidden' }}>
-              <div style={{ overflowX: 'auto' }}>
+              <div className="leaderboard-table-container">
                 <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>

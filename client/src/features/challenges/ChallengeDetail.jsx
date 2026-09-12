@@ -91,7 +91,7 @@ export default function ChallengeDetail() {
   if (loading) return (
     <div className="page-container">
       <div className="skeleton" style={{ height: 60, marginBottom: '1rem' }} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="challenge-detail-layout">
         <div className="skeleton" style={{ height: 500 }} />
         <div className="skeleton" style={{ height: 500 }} />
       </div>
@@ -145,7 +145,7 @@ export default function ChallengeDetail() {
       </div>
 
       {/* ── Main Layout ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="challenge-detail-layout">
 
         {/* ── Left Panel: Description / Results ── */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -283,7 +283,7 @@ export default function ChallengeDetail() {
               </button>
             </div>
 
-            <div style={{ height: '420px' }}>
+            <div className="challenge-editor-wrapper">
               <Editor
                 height="100%"
                 language={language}
@@ -308,7 +308,7 @@ export default function ChallengeDetail() {
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
+          <div className="challenge-actions-grid">
             <button
               onClick={handleRun}
               disabled={running || submitting}
