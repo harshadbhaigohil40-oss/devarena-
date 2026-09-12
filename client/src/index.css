@@ -1237,6 +1237,17 @@ select.input {
   z-index: 100;
 }
 
+@media (max-width: 480px) {
+  .notification-dropdown {
+    position: fixed;
+    top: calc(var(--navbar-height) + 0.5rem);
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    z-index: 200;
+  }
+}
+
 /* --- Sidebar Responsive --- */
 .sidebar {
   position: fixed;
