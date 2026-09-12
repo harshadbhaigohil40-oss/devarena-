@@ -1913,3 +1913,36 @@ select.input {
     margin-bottom: 1.5rem;
   }
 }
+
+/* --- Skill Trees Responsive --- */
+.skill-tree-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+  z-index: 10;
+}
+.skill-tree-header-icon {
+  font-size: 3.5rem;
+}
+.skill-tree-header-title {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.skill-tree-header-desc {
+  font-size: 1.1rem;
+  max-width: 600px;
+}
+@media (max-width: 768px) {
+  .skill-tree-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  .skill-tree-header-title {
+    font-size: 2rem;
+  }
+  .skill-tree-header-desc {
+    font-size: 0.9rem;
+  }
+}

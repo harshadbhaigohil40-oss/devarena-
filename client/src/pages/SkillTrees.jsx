@@ -131,16 +131,17 @@ export default function SkillTrees() {
                 
                 {/* Header */}
                 <div style={{ padding: '2rem', background: `linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), ${selected.color}20`, position: 'relative' }}>
-                  <div className="flex items-center gap-lg position-relative z-10">
+                  <div className="skill-tree-header">
                     <motion.div 
                       initial={{ rotate: -180, scale: 0 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: "spring", stiffness: 100 }}
-                      style={{ fontSize: '3.5rem', filter: `drop-shadow(0 0 10px ${selected.color}80)` }}
+                      className="skill-tree-header-icon"
+                      style={{ filter: `drop-shadow(0 0 10px ${selected.color}80)` }}
                     >
                       {selected.icon}
                     </motion.div>
                     <div>
-                      <h2 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)', textShadow: `0 0 10px ${selected.color}40` }}>{selected.name}</h2>
-                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem', maxWidth: '600px' }}>{selected.description}</p>
+                      <h2 className="skill-tree-header-title" style={{ color: 'var(--text-primary)', textShadow: `0 0 10px ${selected.color}40` }}>{selected.name}</h2>
+                      <p className="skill-tree-header-desc" style={{ color: 'rgba(255,255,255,0.7)' }}>{selected.description}</p>
                     </div>
                   </div>
                   {/* Background Grid for header */}
