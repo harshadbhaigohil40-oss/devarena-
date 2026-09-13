@@ -119,9 +119,9 @@ export default function Challenges() {
 
       {/* Active search indicator */}
       {debouncedSearch && (
-        <div className="search-active-indicator">
+        <div className="search-active-indicator" style={{ flexWrap: 'wrap', gap: '0.35rem' }}>
           <span>Showing results for</span>
-          <span className="search-active-term">"{debouncedSearch}"</span>
+          <span className="search-active-term" style={{ wordBreak: 'break-all' }}>"{debouncedSearch}"</span>
           <span className="text-tertiary">({result.total} found)</span>
         </div>
       )}

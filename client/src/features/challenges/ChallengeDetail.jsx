@@ -20,6 +20,7 @@ export default function ChallengeDetail() {
   const [running, setRunning]         = useState(false);
   const [submitting, setSubmitting]   = useState(false);
   const [activeTab, setActiveTab]     = useState('description'); // 'description' | 'results'
+  const [mobileView, setMobileView]   = useState('problem'); // 'problem' | 'editor' | 'results'
 
   const { data: challenge, isLoading: loading } = useQuery({
     queryKey: ['challenge', slug],
@@ -49,6 +50,19 @@ export default function ChallengeDetail() {
     setResult(null);
   };
 
+  const handleMobileTabSwitch = (view) => {
+    setMobileView(view);
+    if (view === 'problem') {
+      setActiveTab('description');
+    } else if (view === 'results') {
+      setActiveTab('results');
+    } else if (view === 'editor') {
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
+    }
+  };
+
   // ── Run (visible tests only, no auth needed) ───────────────────────────────
   const handleRun = async () => {
     if (!activeCode.trim()) return toast.error('Please write some code first.');
@@ -59,6 +73,7 @@ export default function ChallengeDetail() {
       const data = res.data.data;
       setResult({ ...data, isRun: true });
       setActiveTab('results');
+      setMobileView('results');
       if (data.allPassed) toast.success('All visible tests passed! 🎉');
       else toast.error('Some tests failed. Check the results.');
     } catch (err) {
@@ -79,6 +94,7 @@ export default function ChallengeDetail() {
       const data = res.data.data;
       setResult({ ...data, isRun: false });
       setActiveTab('results');
+      setMobileView('results');
       if (data.allPassed) toast.success(`🏆 All tests passed! +${data.xpResult?.xpEarned || challenge.xpReward} XP`);
       else toast.error('Some tests failed. Keep trying!');
     } catch (err) {
@@ -111,7 +127,7 @@ export default function ChallengeDetail() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container">
 
       {/* ── Header ── */}
-      <div className="flex justify-between items-center mb-lg" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="flex justify-between items-center mb-lg challenge-detail-header">
         <div style={{ maxWidth: '100%' }}>
           <div className="flex items-center gap-sm mb-sm" style={{ flexWrap: 'wrap' }}>
             <span style={{ textTransform: 'capitalize', background: `${diffColor}18`, border: `1px solid ${diffColor}40`, color: diffColor, padding: '0.2rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
@@ -120,15 +136,16 @@ export default function ChallengeDetail() {
             <span className="badge badge-primary" style={{ textTransform: 'capitalize' }}>{challenge.category}</span>
             <span style={{ color: 'var(--xp-gold)', fontWeight: 700, fontSize: '0.875rem' }}>⚡ {challenge.xpReward} XP</span>
           </div>
-          <h1 style={{ fontSize: 'clamp(1.35rem, 4vw, 1.75rem)', margin: 0, wordBreak: 'break-word' }}>{challenge.title}</h1>
+          <h1 style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', margin: 0, wordBreak: 'break-word' }}>{challenge.title}</h1>
         </div>
 
         {/* Language Selector */}
-        <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
+        <div className="flex gap-sm challenge-lang-selector">
           {['javascript', 'python'].map(lang => (
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
+              className="challenge-lang-btn"
               style={{
                 padding: '0.45rem 1rem', borderRadius: '100px', fontWeight: 600, cursor: 'pointer',
                 border: language === lang ? `1px solid ${diffColor}80` : '1px solid rgba(255,255,255,0.1)',
@@ -145,13 +162,36 @@ export default function ChallengeDetail() {
         </div>
       </div>
 
+      {/* ── Mobile View Switcher (Visible only on screens <= 768px) ── */}
+      <div className="challenge-mobile-nav mobile-only">
+        <button
+          onClick={() => handleMobileTabSwitch('problem')}
+          className={`challenge-mobile-nav-btn ${mobileView === 'problem' ? 'active' : ''}`}
+        >
+          📋 Problem
+        </button>
+        <button
+          onClick={() => handleMobileTabSwitch('editor')}
+          className={`challenge-mobile-nav-btn ${mobileView === 'editor' ? 'active' : ''}`}
+        >
+          💻 Code
+        </button>
+        <button
+          onClick={() => handleMobileTabSwitch('results')}
+          className={`challenge-mobile-nav-btn ${mobileView === 'results' ? 'active' : ''}`}
+        >
+          {result ? (result.allPassed ? '✅ Results' : '❌ Results') : '📊 Results'}
+          {result && <span className="challenge-result-indicator" />}
+        </button>
+      </div>
+
       {/* ── Main Layout ── */}
       <div className="challenge-detail-layout">
 
         {/* ── Left Panel: Description / Results ── */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className={`card challenge-panel-problem ${mobileView !== 'editor' ? 'mobile-visible' : ''}`} style={{ padding: 0, overflow: 'hidden' }}>
           {/* Tabs */}
-          <div className="flex" style={{ borderBottom: '1px solid var(--border-primary)' }}>
+          <div className="flex desktop-only" style={{ borderBottom: '1px solid var(--border-primary)' }}>
             {[
               { id: 'description', label: '📋 Problem' },
               { id: 'results',     label: result ? (result.allPassed ? '✅ Results' : '❌ Results') : '📊 Results' },
@@ -172,7 +212,7 @@ export default function ChallengeDetail() {
             ))}
           </div>
 
-          <div style={{ padding: '1.5rem', maxHeight: '62vh', overflowY: 'auto' }}>
+          <div className="challenge-description-content">
             <AnimatePresence mode="wait">
               {activeTab === 'description' ? (
                 <motion.div key="desc" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
@@ -185,9 +225,15 @@ export default function ChallengeDetail() {
                     <div style={{ marginTop: '1.5rem' }}>
                       <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-primary)' }}>📝 Examples</h4>
                       {challenge.testCases.filter(tc => !tc.isHidden).map((tc, i) => (
-                        <div key={i} style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '0.85rem', marginBottom: '0.75rem', border: '1px solid var(--border-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
-                          <p style={{ marginBottom: '0.3rem' }}><span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>Input:</span> <code style={{ color: 'var(--accent-primary)' }}>{tc.input}</code></p>
-                          <p><span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>Output:</span> <code style={{ color: 'var(--color-success)' }}>{tc.expectedOutput}</code></p>
+                        <div key={i} className="challenge-example-box">
+                          <p style={{ marginBottom: '0.3rem', wordBreak: 'break-word' }}>
+                            <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>Input: </span> 
+                            <code style={{ color: 'var(--accent-primary)', wordBreak: 'break-all' }}>{tc.input}</code>
+                          </p>
+                          <p style={{ wordBreak: 'break-word', margin: 0 }}>
+                            <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>Output: </span> 
+                            <code style={{ color: 'var(--color-success)', wordBreak: 'break-all' }}>{tc.expectedOutput}</code>
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -204,6 +250,17 @@ export default function ChallengeDetail() {
                       ))}
                     </div>
                   )}
+
+                  {/* Quick Jump to Code Editor on Mobile */}
+                  <div className="mobile-only" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>
+                    <button
+                      onClick={() => handleMobileTabSwitch('editor')}
+                      className="btn btn-primary"
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minHeight: 44, fontWeight: 700 }}
+                    >
+                      💻 Start Coding ▶
+                    </button>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div key="results" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
@@ -211,6 +268,13 @@ export default function ChallengeDetail() {
                     <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-tertiary)' }}>
                       <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⌛</div>
                       <p>Run or Submit your code to see results here.</p>
+                      <button
+                        onClick={() => handleMobileTabSwitch('editor')}
+                        className="btn btn-primary"
+                        style={{ marginTop: '1rem', minHeight: 40 }}
+                      >
+                        Go to Editor
+                      </button>
                     </div>
                   ) : (
                     <>
@@ -220,14 +284,14 @@ export default function ChallengeDetail() {
                         background: result.allPassed ? 'rgba(0,184,148,0.1)' : 'rgba(255,71,87,0.1)',
                         border: `1px solid ${result.allPassed ? 'var(--color-success)' : 'var(--color-danger)'}40`
                       }}>
-                        <h3 style={{ color: result.allPassed ? 'var(--color-success)' : 'var(--color-danger)', marginBottom: '0.25rem' }}>
+                        <h3 style={{ color: result.allPassed ? 'var(--color-success)' : 'var(--color-danger)', marginBottom: '0.25rem', fontSize: '1.1rem', wordBreak: 'break-word' }}>
                           {result.allPassed ? '✅ All Tests Passed!' : '❌ Some Tests Failed'}
                         </h3>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
                           {result.isRun ? 'Visible test cases only — Submit to save your score.' : 'Full test suite evaluated.'}
                         </p>
                         {result.xpResult && (
-                          <p style={{ color: 'var(--xp-gold)', fontWeight: 700, marginTop: '0.4rem' }}>
+                          <p style={{ color: 'var(--xp-gold)', fontWeight: 700, marginTop: '0.4rem', marginBottom: 0 }}>
                             ⚡ +{result.xpResult.xpEarned} XP earned!
                           </p>
                         )}
@@ -242,6 +306,7 @@ export default function ChallengeDetail() {
                         }}>
                           <div style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            flexWrap: 'wrap', gap: '0.5rem',
                             padding: '0.6rem 0.85rem',
                             background: tr.passed ? 'rgba(0,184,148,0.08)' : 'rgba(255,71,87,0.08)'
                           }}>
@@ -255,13 +320,25 @@ export default function ChallengeDetail() {
                               margin: 0, padding: '0.75rem 0.85rem',
                               fontFamily: 'var(--font-mono)', fontSize: '0.8rem',
                               color: tr.passed ? 'var(--color-success)' : 'var(--color-danger)',
-                              background: 'rgba(0,0,0,0.2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word'
+                              background: 'rgba(0,0,0,0.2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                              maxWidth: '100%', overflowX: 'auto'
                             }}>
                               {tr.output}
                             </pre>
                           )}
                         </div>
                       ))}
+
+                      {/* Quick Jump back to Editor on Mobile */}
+                      <div className="mobile-only" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>
+                        <button
+                          onClick={() => handleMobileTabSwitch('editor')}
+                          className="btn btn-secondary"
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minHeight: 44, fontWeight: 700 }}
+                        >
+                          💻 Back to Code Editor
+                        </button>
+                      </div>
                     </>
                   )}
                 </motion.div>
@@ -271,7 +348,7 @@ export default function ChallengeDetail() {
         </div>
 
         {/* ── Right Panel: Editor + Actions ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className={`challenge-panel-editor ${mobileView === 'editor' ? 'mobile-visible' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Editor Card */}
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             {/* Editor header */}
@@ -293,16 +370,21 @@ export default function ChallengeDetail() {
                 onChange={handleEditorChange}
                 options={{
                   minimap: { enabled: false },
-                  fontSize: 14,
+                  fontSize: 13,
                   fontFamily: "'Fira Code', 'Cascadia Code', monospace",
-                  lineHeight: 1.7,
-                  padding: { top: 12 },
+                  lineHeight: 1.6,
+                  padding: { top: 12, bottom: 12 },
                   scrollBeyondLastLine: false,
                   smoothScrolling: true,
                   cursorBlinking: 'smooth',
                   bracketPairColorization: { enabled: true },
                   suggest: { showKeywords: true },
                   tabSize: language === 'python' ? 4 : 2,
+                  wordWrap: 'on',
+                  automaticLayout: true,
+                  lineNumbersMinChars: 3,
+                  glyphMargin: false,
+                  folding: false,
                 }}
               />
             </div>
@@ -313,14 +395,7 @@ export default function ChallengeDetail() {
             <button
               onClick={handleRun}
               disabled={running || submitting}
-              style={{
-                padding: '0.85rem', border: '1px solid rgba(255,255,255,0.15)',
-                background: running ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
-                color: 'var(--text-primary)', borderRadius: 'var(--radius-md)',
-                cursor: running || submitting ? 'not-allowed' : 'pointer',
-                fontWeight: 700, fontSize: '0.9rem', transition: 'all 0.2s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
-              }}
+              className="challenge-btn-run"
             >
               {running ? (
                 <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Running...</>
@@ -332,15 +407,7 @@ export default function ChallengeDetail() {
             <button
               onClick={handleSubmit}
               disabled={running || submitting}
-              style={{
-                padding: '0.85rem',
-                background: submitting ? 'rgba(108,92,231,0.5)' : 'var(--accent-primary)',
-                border: 'none', color: '#fff', borderRadius: 'var(--radius-md)',
-                cursor: running || submitting ? 'not-allowed' : 'pointer',
-                fontWeight: 700, fontSize: '0.9rem', transition: 'all 0.2s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                boxShadow: submitting ? 'none' : '0 4px 15px rgba(108,92,231,0.4)'
-              }}
+              className="challenge-btn-submit"
             >
               {submitting ? (
                 <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Submitting...</>
@@ -351,7 +418,7 @@ export default function ChallengeDetail() {
           </div>
 
           {/* Info Bar */}
-          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.78rem', color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
+          <div className="challenge-info-bar">
             <span>▶ Run = visible tests only</span>
             <span>•</span>
             <span>🚀 Submit = all tests + save score</span>
