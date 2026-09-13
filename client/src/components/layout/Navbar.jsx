@@ -129,7 +129,7 @@ export default function Navbar({ onMenuClick }) {
         </div>
 
         {/* Right Side: Navbar Actions */}
-        <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="navbar-actions">
           {/* Quick Search Ctrl+K Button on App Pages */}
           {!isPublic && (
             <button 
@@ -146,17 +146,16 @@ export default function Navbar({ onMenuClick }) {
             <div style={{ position: 'relative' }} ref={notifRef}>
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="btn btn-icon" 
-                style={{ fontSize: '1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative', minWidth: 44, minHeight: 44 }} 
+                className="navbar-notif-btn" 
                 aria-label="Notifications"
+                title="Notifications"
               >
-                🔔
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="navbar-notif-icon">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
                 {unreadCount > 0 && (
-                  <span style={{
-                    position: 'absolute', top: 2, right: 2, background: 'var(--accent-primary)',
-                    color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '0.1rem 0.3rem',
-                    borderRadius: '10px', transform: 'translate(25%, -25%)'
-                  }}>
+                  <span className="navbar-notif-badge">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
@@ -164,18 +163,19 @@ export default function Navbar({ onMenuClick }) {
 
               {showNotifications && (
                 <div className="notification-dropdown">
-                  <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Notifications</h3>
+                  <div style={{ padding: '0.875rem 1rem', borderBottom: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>🔔 Notifications</h3>
                     {unreadCount > 0 && (
-                      <button onClick={handleMarkAllAsRead} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '0.8rem' }}>
+                      <button onClick={handleMarkAllAsRead} style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
                         Mark all read
                       </button>
                     )}
                   </div>
                   <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
-                      <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                        No notifications yet.
+                      <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
+                        <p style={{ margin: 0, fontSize: '0.875rem' }}>No notifications yet.</p>
                       </div>
                     ) : (
                       notifications.map(n => (
@@ -183,14 +183,15 @@ export default function Navbar({ onMenuClick }) {
                           key={n._id} 
                           onClick={() => !n.isRead && handleMarkAsRead(n._id)}
                           style={{ 
-                            padding: '1rem', borderBottom: '1px solid var(--border-secondary)', 
-                            background: n.isRead ? 'transparent' : 'var(--bg-tertiary)',
+                            padding: '0.875rem 1rem', borderBottom: '1px solid var(--border-secondary)', 
+                            background: n.isRead ? 'transparent' : 'rgba(108, 92, 231, 0.08)',
                             cursor: n.isRead ? 'default' : 'pointer',
-                            transition: 'background 0.2s'
+                            transition: 'background 0.2s',
+                            wordBreak: 'break-word'
                           }}
                         >
-                          <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{n.title}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{n.message}</div>
+                          <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{n.title}</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</div>
                         </div>
                       ))
                     )}
@@ -203,9 +204,9 @@ export default function Navbar({ onMenuClick }) {
           {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme} 
-            className="btn btn-icon" 
-            style={{ fontSize: '1.2rem', background: 'transparent', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44 }} 
+            className="navbar-theme-btn" 
             aria-label="Toggle theme"
+            title="Toggle theme"
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
