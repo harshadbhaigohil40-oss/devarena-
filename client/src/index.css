@@ -1228,15 +1228,14 @@ select.input {
   }
 }
 
-/* --- Notification Bell & Dropdown Responsive --- */
+/* --- Notification Bell (Old Emoji Style, Fully Responsive, Non-Overlapping) --- */
 .navbar-notif-btn {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
   color: var(--text-primary);
   width: 40px;
   height: 40px;
@@ -1244,69 +1243,71 @@ select.input {
   min-height: 40px;
   padding: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: background 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
 }
 
 .navbar-notif-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .navbar-notif-btn:active {
   transform: scale(0.95);
 }
 
-.navbar-notif-icon {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.2s ease;
-}
-
-.navbar-notif-btn:hover .navbar-notif-icon {
-  transform: rotate(15deg);
+.navbar-notif-bell-icon {
+  display: inline-block;
+  font-size: 1.25rem;
+  line-height: 1;
+  user-select: none;
 }
 
 .navbar-notif-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  background: var(--color-danger, #ff4757);
+  top: 1px;
+  right: 1px;
+  background: var(--accent-primary);
   color: #fff;
   font-size: 0.65rem;
-  font-weight: 800;
-  min-width: 18px;
-  height: 18px;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
   padding: 0 4px;
   border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--bg-secondary);
-  box-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
+  border: 1.5px solid var(--bg-primary);
   line-height: 1;
+  pointer-events: none;
+  box-sizing: border-box;
 }
 
 .navbar-theme-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
   width: 40px;
   height: 40px;
   min-width: 40px;
   min-height: 40px;
   padding: 0;
   cursor: pointer;
-  font-size: 1.1rem;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: background 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
 }
 
 .navbar-theme-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar-theme-btn:active {
+  transform: scale(0.95);
 }
 
 .notification-dropdown {
@@ -1329,24 +1330,23 @@ select.input {
     height: 36px;
     min-width: 36px;
     min-height: 36px;
-    border-radius: 8px;
   }
   
-  .navbar-notif-icon {
-    width: 17px;
-    height: 17px;
+  .navbar-notif-bell-icon {
+    font-size: 1.15rem;
   }
 
   .navbar-theme-btn {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 
   .navbar-notif-badge {
-    top: -3px;
-    right: -3px;
-    min-width: 16px;
-    height: 16px;
+    top: 0px;
+    right: 0px;
+    min-width: 15px;
+    height: 15px;
     font-size: 0.6rem;
+    padding: 0 3px;
   }
 
   .notification-dropdown {
@@ -1369,13 +1369,21 @@ select.input {
     min-height: 32px;
   }
 
-  .navbar-notif-icon {
-    width: 15px;
-    height: 15px;
+  .navbar-notif-bell-icon {
+    font-size: 1.05rem;
   }
 
   .navbar-theme-btn {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .navbar-notif-badge {
+    top: -1px;
+    right: -1px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 0.55rem;
+    padding: 0 2px;
   }
 
   .notification-dropdown {

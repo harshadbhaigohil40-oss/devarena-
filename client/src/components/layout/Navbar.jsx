@@ -74,14 +74,14 @@ export default function Navbar({ onMenuClick }) {
         className={`navbar ${isPublic ? 'navbar-landing' : 'navbar-app'}`}
       >
         {/* Left Side: Hamburger & Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+        <div className={isPublic ? '' : 'mobile-only'} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, marginRight: 'auto' }}>
           {/* App Sidebar Hamburger (Only for pages with sidebar) */}
           {!isPublic && onMenuClick && (
             <button 
               className="btn btn-icon mobile-only" 
               onClick={onMenuClick}
               aria-label="Open navigation menu"
-              style={{ fontSize: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-primary)', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              style={{ fontSize: '1.4rem', background: 'transparent', border: 'none', color: 'var(--text-primary)', width: 36, height: 36, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
             >
               ☰
             </button>
@@ -90,24 +90,24 @@ export default function Navbar({ onMenuClick }) {
           {/* Public Hamburger (Only for public pages on mobile) */}
           {isPublic && (
             <button
-              className="btn btn-icon mobile-only"
+              className="btn btn-icon mobile-only" 
               onClick={() => setPublicMenuOpen(!publicMenuOpen)}
               aria-label="Toggle public navigation"
-              style={{ fontSize: '1.35rem', background: 'transparent', border: 'none', color: 'var(--text-primary)', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              style={{ fontSize: '1.35rem', background: 'transparent', border: 'none', color: 'var(--text-primary)', width: 36, height: 36, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
             >
               {publicMenuOpen ? '✕' : '☰'}
             </button>
           )}
 
           {/* Logo */}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', flexShrink: 0 }}>
+          <Link to={isAuthenticated ? "/dashboard" : "/"} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', flexShrink: 0 }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
               background: 'var(--accent-gradient)', display: 'flex',
               alignItems: 'center', justifyContent: 'center',
               fontWeight: 900, fontSize: '0.75rem', color: 'white', flexShrink: 0
             }}>DA</div>
-            <span className="navbar-logo-text" style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+            <span className={isPublic ? "navbar-logo-text" : "desktop-only"} style={{ fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
               DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
             </span>
           </Link>
@@ -146,14 +146,11 @@ export default function Navbar({ onMenuClick }) {
             <div style={{ position: 'relative' }} ref={notifRef}>
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="navbar-notif-btn" 
+                className="btn btn-icon navbar-notif-btn" 
                 aria-label="Notifications"
                 title="Notifications"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="navbar-notif-icon">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
+                <span className="navbar-notif-bell-icon">🔔</span>
                 {unreadCount > 0 && (
                   <span className="navbar-notif-badge">
                     {unreadCount > 99 ? '99+' : unreadCount}
@@ -204,7 +201,7 @@ export default function Navbar({ onMenuClick }) {
           {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme} 
-            className="navbar-theme-btn" 
+            className="btn btn-icon navbar-theme-btn" 
             aria-label="Toggle theme"
             title="Toggle theme"
           >
@@ -216,7 +213,7 @@ export default function Navbar({ onMenuClick }) {
             <button 
               onClick={logout} 
               className="btn btn-ghost btn-sm" 
-              style={{ color: 'var(--text-secondary)', minHeight: 38, padding: '0.35rem 0.75rem' }}
+              style={{ color: 'var(--text-secondary)', minHeight: 34, padding: '0.35rem 0.65rem', whiteSpace: 'nowrap' }}
             >
               Logout
             </button>
