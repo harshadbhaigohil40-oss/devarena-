@@ -1811,6 +1811,13 @@ select.input {
   align-items: start;
 }
 
+@media (min-width: 1025px) {
+  .challenge-detail-layout.has-splitter {
+    grid-template-columns: var(--split-left, 1fr) 12px var(--split-right, 1fr);
+    gap: 0;
+  }
+}
+
 .challenge-mobile-nav {
   display: none;
 }
@@ -2000,27 +2007,190 @@ select.input {
   }
 }
 
-/* Challenge editor container */
+/* Challenge editor container & dynamic resizing */
 .challenge-editor-wrapper {
-  height: 450px;
+  height: var(--editor-height, 450px);
+  position: relative;
+  min-height: 220px;
+  max-height: calc(100dvh - 120px);
+  transition: height 0.05s ease-out;
 }
 
-@media (max-width: 768px) {
-  .challenge-editor-wrapper {
-    height: 380px;
+.challenge-editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.challenge-editor-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.challenge-editor-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.editor-ctrl-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+}
+
+.editor-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editor-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.editor-ctrl-label {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  padding: 0 4px;
+  user-select: none;
+  min-width: 32px;
+  text-align: center;
+}
+
+/* Draggable Bottom Resize Handle */
+.challenge-editor-resize-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 0;
+  background: var(--bg-tertiary);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: ns-resize;
+  user-select: none;
+  touch-action: none;
+  transition: all 0.15s ease;
+}
+
+.challenge-editor-resize-handle:hover,
+.challenge-editor-resize-handle.active {
+  background: rgba(138, 43, 226, 0.15);
+  border-top-color: var(--accent-primary);
+}
+
+.resize-handle-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  transition: color 0.15s ease;
+}
+
+.challenge-editor-resize-handle:hover .resize-handle-bar,
+.challenge-editor-resize-handle.active .resize-handle-bar {
+  color: var(--accent-primary);
+}
+
+.resize-handle-icon {
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.resize-handle-text {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  opacity: 0.7;
+}
+
+/* Desktop Horizontal Splitter Divider */
+.challenge-horizontal-resizer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  width: 12px;
+  margin: 0 -4px;
+  z-index: 10;
+  user-select: none;
+  touch-action: none;
+  position: relative;
+  align-self: stretch;
+}
+
+.challenge-horizontal-resizer::after {
+  content: '';
+  width: 2px;
+  height: 100%;
+  min-height: 400px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  transition: background 0.15s, width 0.15s;
+}
+
+.challenge-horizontal-resizer:hover::after,
+.challenge-horizontal-resizer.active::after {
+  background: var(--accent-primary);
+  width: 4px;
+  box-shadow: 0 0 8px rgba(138, 43, 226, 0.6);
+}
+
+@media (max-width: 1024px) {
+  .challenge-horizontal-resizer {
+    display: none !important;
   }
 }
 
-@media (max-width: 480px) {
-  .challenge-editor-wrapper {
-    height: 330px;
-  }
+/* Fullscreen Focus Mode */
+.editor-card-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--bg-primary) !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
-@media (max-width: 360px) {
-  .challenge-editor-wrapper {
-    height: 290px;
-  }
+.editor-card-fullscreen .challenge-editor-wrapper {
+  flex: 1 !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.editor-card-fullscreen .challenge-editor-resize-handle {
+  display: none !important;
 }
 
 @media (max-width: 640px) {

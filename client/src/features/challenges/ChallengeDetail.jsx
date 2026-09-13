@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -22,6 +22,57 @@ export default function ChallengeDetail() {
   const [activeTab, setActiveTab]     = useState('description'); // 'description' | 'results'
   const [mobileView, setMobileView]   = useState('problem'); // 'problem' | 'editor' | 'results'
 
+  // Monaco Editor Resizing & Customization States
+  const editorRef = useRef(null);
+  const layoutContainerRef = useRef(null);
+  const dragStartY = useRef(0);
+  const dragStartHeight = useRef(0);
+
+  const getDefaultHeight = () => {
+    if (typeof window === 'undefined') return 460;
+    if (window.innerWidth < 480) return 330;
+    if (window.innerWidth < 768) return 390;
+    return 460;
+  };
+
+  const [editorHeight, setEditorHeight] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('devarena_editor_height');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 220 && parsed <= 1200) return parsed;
+      }
+      return getDefaultHeight();
+    }
+    return 460;
+  });
+
+  const [editorFontSize, setEditorFontSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('devarena_editor_fontsize');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 11 && parsed <= 24) return parsed;
+      }
+    }
+    return 13;
+  });
+
+  const [splitRatio, setSplitRatio] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('devarena_editor_split');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 25 && parsed <= 75) return parsed;
+      }
+    }
+    return 50;
+  });
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDraggingHeight, setIsDraggingHeight] = useState(false);
+  const [isDraggingSplit, setIsDraggingSplit] = useState(false);
+
   const { data: challenge, isLoading: loading } = useQuery({
     queryKey: ['challenge', slug],
     queryFn: async () => {
@@ -39,6 +90,138 @@ export default function ChallengeDetail() {
       setResult(null);
     }
   }, [challenge]);
+
+  // Handle Fullscreen Escape key listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+        setTimeout(() => editorRef.current?.layout(), 100);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+
+  // Vertical Dragging (Height)
+  const startHeightDrag = (e) => {
+    e.preventDefault();
+    setIsDraggingHeight(true);
+    const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? 0;
+    dragStartY.current = clientY;
+    dragStartHeight.current = editorHeight;
+  };
+
+  useEffect(() => {
+    if (!isDraggingHeight) return;
+
+    const onMove = (e) => {
+      const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+      if (clientY === undefined) return;
+      const delta = clientY - dragStartY.current;
+      const minH = 220;
+      const maxH = Math.max(minH, window.innerHeight - 140);
+      const newHeight = Math.max(minH, Math.min(maxH, dragStartHeight.current + delta));
+      setEditorHeight(newHeight);
+      editorRef.current?.layout();
+    };
+
+    const onEnd = () => {
+      setIsDraggingHeight(false);
+      setEditorHeight((current) => {
+        try {
+          localStorage.setItem('devarena_editor_height', String(current));
+        } catch (err) {}
+        return current;
+      });
+      editorRef.current?.layout();
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [isDraggingHeight]);
+
+  // Horizontal Dragging (Split ratio on desktop)
+  const startSplitDrag = (e) => {
+    e.preventDefault();
+    setIsDraggingSplit(true);
+  };
+
+  useEffect(() => {
+    if (!isDraggingSplit) return;
+
+    const onMove = (e) => {
+      if (!layoutContainerRef.current) return;
+      const rect = layoutContainerRef.current.getBoundingClientRect();
+      const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX);
+      if (clientX === undefined) return;
+      const offsetX = clientX - rect.left;
+      const percentage = (offsetX / rect.width) * 100;
+      const clamped = Math.max(28, Math.min(72, Math.round(percentage * 10) / 10));
+      setSplitRatio(clamped);
+      editorRef.current?.layout();
+    };
+
+    const onEnd = () => {
+      setIsDraggingSplit(false);
+      setSplitRatio((current) => {
+        try {
+          localStorage.setItem('devarena_editor_split', String(current));
+        } catch (err) {}
+        return current;
+      });
+      editorRef.current?.layout();
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+    };
+  }, [isDraggingSplit]);
+
+  const adjustHeight = (delta) => {
+    setEditorHeight(h => {
+      const next = Math.max(220, Math.min(950, h + delta));
+      try { localStorage.setItem('devarena_editor_height', String(next)); } catch (err) {}
+      setTimeout(() => editorRef.current?.layout(), 50);
+      return next;
+    });
+  };
+
+  const adjustFontSize = (delta) => {
+    setEditorFontSize(fs => {
+      const next = Math.max(11, Math.min(22, fs + delta));
+      try { localStorage.setItem('devarena_editor_fontsize', String(next)); } catch (err) {}
+      return next;
+    });
+  };
+
+  const resetHeight = () => {
+    const def = getDefaultHeight();
+    setEditorHeight(def);
+    try { localStorage.setItem('devarena_editor_height', String(def)); } catch (err) {}
+    setTimeout(() => editorRef.current?.layout(), 50);
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(prev => {
+      const next = !prev;
+      setTimeout(() => editorRef.current?.layout(), 100);
+      return next;
+    });
+  };
 
   const activeCode = userCode[language] || '';
 
@@ -59,7 +242,8 @@ export default function ChallengeDetail() {
     } else if (view === 'editor') {
       setTimeout(() => {
         window.dispatchEvent(new Event('resize'));
-      }, 50);
+        editorRef.current?.layout();
+      }, 60);
     }
   };
 
@@ -144,7 +328,10 @@ export default function ChallengeDetail() {
           {['javascript', 'python'].map(lang => (
             <button
               key={lang}
-              onClick={() => setLanguage(lang)}
+              onClick={() => {
+                setLanguage(lang);
+                setTimeout(() => editorRef.current?.layout(), 50);
+              }}
               className="challenge-lang-btn"
               style={{
                 padding: '0.45rem 1rem', borderRadius: '100px', fontWeight: 600, cursor: 'pointer',
@@ -185,8 +372,16 @@ export default function ChallengeDetail() {
         </button>
       </div>
 
-      {/* ── Main Layout ── */}
-      <div className="challenge-detail-layout">
+      {/* ── Main Layout with Resizable Panels ── */}
+      <div 
+        ref={layoutContainerRef}
+        className="challenge-detail-layout has-splitter"
+        style={{
+          '--split-left': `${splitRatio}%`,
+          '--split-right': `${100 - splitRatio}%`,
+          '--editor-height': `${editorHeight}px`
+        }}
+      >
 
         {/* ── Left Panel: Description / Results ── */}
         <div className={`card challenge-panel-problem ${mobileView !== 'editor' ? 'mobile-visible' : ''}`} style={{ padding: 0, overflow: 'hidden' }}>
@@ -199,20 +394,15 @@ export default function ChallengeDetail() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                style={{
-                  flex: 1, padding: '0.85rem', border: 'none', background: 'transparent',
-                  color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                  fontWeight: activeTab === tab.id ? 700 : 500,
-                  borderBottom: activeTab === tab.id ? `2px solid ${diffColor}` : '2px solid transparent',
-                  cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.9rem',
-                }}
+                className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+                style={{ borderRadius: 0, borderBottom: activeTab === tab.id ? '2px solid var(--accent-primary)' : 'none', padding: '0.85rem 1.25rem', fontWeight: 600, fontSize: '0.9rem' }}
               >
                 {tab.label}
               </button>
             ))}
           </div>
 
-          <div className="challenge-description-content">
+          <div style={{ padding: '1.25rem', maxHeight: '70vh', overflowY: 'auto' }}>
             <AnimatePresence mode="wait">
               {activeTab === 'description' ? (
                 <motion.div key="desc" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
@@ -234,6 +424,11 @@ export default function ChallengeDetail() {
                             <span style={{ color: 'var(--text-tertiary)', fontWeight: 600 }}>Output: </span> 
                             <code style={{ color: 'var(--color-success)', wordBreak: 'break-all' }}>{tc.expectedOutput}</code>
                           </p>
+                          {tc.explanation && (
+                            <p className="text-muted text-sm" style={{ marginTop: '0.4rem', borderTop: '1px solid var(--border-primary)', paddingTop: '0.4rem' }}>
+                              {tc.explanation}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -242,89 +437,100 @@ export default function ChallengeDetail() {
                   {/* Hints */}
                   {challenge.hints?.length > 0 && (
                     <div style={{ marginTop: '1.5rem' }}>
-                      <h4 style={{ marginBottom: '0.5rem' }}>💡 Hints</h4>
-                      {challenge.hints.map((h, i) => (
-                        <p key={i} className="text-sm" style={{ color: 'var(--text-muted)', marginBottom: '0.4rem', paddingLeft: '0.75rem', borderLeft: `2px solid ${diffColor}60` }}>
-                          {h}
-                        </p>
+                      <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-primary)' }}>💡 Hints</h4>
+                      {challenge.hints.map((hint, i) => (
+                        <details key={i} style={{ marginBottom: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '0.75rem', border: '1px solid var(--border-primary)', cursor: 'pointer' }}>
+                          <summary style={{ fontWeight: 600, color: 'var(--accent-secondary)' }}>Hint {i + 1}</summary>
+                          <p style={{ marginTop: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{hint}</p>
+                        </details>
                       ))}
                     </div>
                   )}
 
-                  {/* Quick Jump to Code Editor on Mobile */}
+                  {/* Quick Jump back to Editor on Mobile */}
                   <div className="mobile-only" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>
                     <button
                       onClick={() => handleMobileTabSwitch('editor')}
-                      className="btn btn-primary"
+                      className="btn btn-secondary"
                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minHeight: 44, fontWeight: 700 }}
                     >
-                      💻 Start Coding ▶
+                      💻 Back to Code Editor
                     </button>
                   </div>
                 </motion.div>
               ) : (
+                /* Results tab */
                 <motion.div key="results" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
                   {!result ? (
-                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-tertiary)' }}>
-                      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⌛</div>
-                      <p>Run or Submit your code to see results here.</p>
-                      <button
-                        onClick={() => handleMobileTabSwitch('editor')}
-                        className="btn btn-primary"
-                        style={{ marginTop: '1rem', minHeight: 40 }}
-                      >
-                        Go to Editor
-                      </button>
+                    <div className="empty-state" style={{ padding: '2rem' }}>
+                      <p>Run your code to see results here.</p>
                     </div>
                   ) : (
                     <>
-                      {/* Summary */}
+                      {/* Overall summary */}
                       <div style={{
-                        padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem',
-                        background: result.allPassed ? 'rgba(0,184,148,0.1)' : 'rgba(255,71,87,0.1)',
-                        border: `1px solid ${result.allPassed ? 'var(--color-success)' : 'var(--color-danger)'}40`
+                        padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem',
+                        background: result.allPassed ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        border: `1px solid ${result.allPassed ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                        display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'
                       }}>
-                        <h3 style={{ color: result.allPassed ? 'var(--color-success)' : 'var(--color-danger)', marginBottom: '0.25rem', fontSize: '1.1rem', wordBreak: 'break-word' }}>
-                          {result.allPassed ? '✅ All Tests Passed!' : '❌ Some Tests Failed'}
-                        </h3>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                          {result.isRun ? 'Visible test cases only — Submit to save your score.' : 'Full test suite evaluated.'}
-                        </p>
+                        <span style={{ fontSize: '1.5rem' }}>{result.allPassed ? '🎉' : '❌'}</span>
+                        <div style={{ flex: 1, minWidth: '160px' }}>
+                          <h4 style={{ margin: 0, color: result.allPassed ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                            {result.allPassed ? 'All Tests Passed!' : 'Tests Failed'}
+                          </h4>
+                          <span className="text-muted text-sm">
+                            {result.passedCount} / {result.totalCount} test cases passed
+                            {result.isRun ? ' (visible only)' : ''}
+                          </span>
+                        </div>
                         {result.xpResult && (
-                          <p style={{ color: 'var(--xp-gold)', fontWeight: 700, marginTop: '0.4rem', marginBottom: 0 }}>
-                            ⚡ +{result.xpResult.xpEarned} XP earned!
-                          </p>
+                          <div style={{ color: 'var(--xp-gold)', fontWeight: 800, fontSize: '1rem' }}>
+                            +{result.xpResult.xpEarned} XP
+                          </div>
                         )}
                       </div>
 
-                      {/* Per-test results */}
-                      {(result.testResults || result.submission?.testResults)?.map((tr, i) => (
+                      {/* Execution error */}
+                      {result.error && (
+                        <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-md)', marginBottom: '1rem' }}>
+                          <span style={{ fontWeight: 700, color: 'var(--color-danger)', display: 'block', marginBottom: '0.25rem' }}>Runtime Error:</span>
+                          <pre style={{ color: 'var(--color-danger)', fontSize: '0.8rem', whiteSpace: 'pre-wrap', margin: 0 }}>{result.error}</pre>
+                        </div>
+                      )}
+
+                      {/* Individual test results */}
+                      {result.results?.map((tc, i) => (
                         <div key={i} style={{
-                          marginBottom: '0.75rem', borderRadius: 'var(--radius-sm)',
-                          border: `1px solid ${tr.passed ? 'rgba(0,184,148,0.3)' : 'rgba(255,71,87,0.3)'}`,
-                          overflow: 'hidden'
+                          padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', marginBottom: '0.6rem',
+                          background: 'var(--bg-tertiary)',
+                          borderLeft: `4px solid ${tc.passed ? 'var(--color-success)' : 'var(--color-danger)'}`,
+                          border: '1px solid var(--border-primary)',
+                          borderLeftWidth: '4px',
                         }}>
-                          <div style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            flexWrap: 'wrap', gap: '0.5rem',
-                            padding: '0.6rem 0.85rem',
-                            background: tr.passed ? 'rgba(0,184,148,0.08)' : 'rgba(255,71,87,0.08)'
-                          }}>
-                            <span style={{ fontWeight: 600, fontSize: '0.85rem', color: tr.passed ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                              {tr.passed ? '✅' : '❌'} Test Case {i + 1}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.25rem' }}>
+                            <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                              Test {i + 1} {tc.isHidden ? '(Hidden)' : ''}
                             </span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{tr.executionTime}ms</span>
-                          </div>
-                          {tr.output && (
-                            <pre style={{
-                              margin: 0, padding: '0.75rem 0.85rem',
-                              fontFamily: 'var(--font-mono)', fontSize: '0.8rem',
-                              color: tr.passed ? 'var(--color-success)' : 'var(--color-danger)',
-                              background: 'rgba(0,0,0,0.2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                              maxWidth: '100%', overflowX: 'auto'
+                            <span style={{
+                              fontSize: '0.75rem', fontWeight: 700,
+                              color: tc.passed ? 'var(--color-success)' : 'var(--color-danger)',
                             }}>
-                              {tr.output}
-                            </pre>
+                              {tc.passed ? 'PASSED' : 'FAILED'}
+                            </span>
+                          </div>
+
+                          {!tc.isHidden && (
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                              <div><span className="text-muted">Input: </span><code style={{ wordBreak: 'break-all' }}>{tc.input}</code></div>
+                              <div><span className="text-muted">Expected: </span><code style={{ color: 'var(--color-success)', wordBreak: 'break-all' }}>{tc.expectedOutput}</code></div>
+                              {!tc.passed && (
+                                <div><span className="text-muted">Got: </span><code style={{ color: 'var(--color-danger)', wordBreak: 'break-all' }}>{tc.actualOutput || 'no output'}</code></div>
+                              )}
+                            </div>
+                          )}
+                          {tc.error && (
+                            <p style={{ color: 'var(--color-danger)', fontSize: '0.75rem', marginTop: '0.3rem', margin: 0 }}>{tc.error}</p>
                           )}
                         </div>
                       ))}
@@ -347,30 +553,132 @@ export default function ChallengeDetail() {
           </div>
         </div>
 
+        {/* ── Desktop Splitter Handle (Col-resize divider between panels) ── */}
+        <div 
+          className={`challenge-horizontal-resizer desktop-only ${isDraggingSplit ? 'active' : ''}`}
+          onMouseDown={startSplitDrag}
+          title="Drag left/right to resize panels (Double-click to reset 50/50)"
+          onDoubleClick={() => {
+            setSplitRatio(50);
+            try { localStorage.setItem('devarena_editor_split', '50'); } catch (e) {}
+            setTimeout(() => editorRef.current?.layout(), 50);
+          }}
+        />
+
         {/* ── Right Panel: Editor + Actions ── */}
         <div className={`challenge-panel-editor ${mobileView === 'editor' ? 'mobile-visible' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Editor Card */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            {/* Editor header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem 1rem', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)' }}>
-              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {LANG_ICONS[language]} {LANG_LABELS[language]}
-              </span>
-              <button onClick={handleReset} style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                🔄 Reset
-              </button>
+          {/* Editor Card with Dynamic Resizing & Fullscreen */}
+          <div className={`card ${isFullscreen ? 'editor-card-fullscreen' : ''}`} style={{ padding: 0, overflow: 'hidden' }}>
+            {/* Editor Toolbar with Sizing Controls */}
+            <div className="challenge-editor-toolbar">
+              <div className="challenge-editor-toolbar-left">
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {LANG_ICONS[language]} {LANG_LABELS[language]}
+                </span>
+                {isFullscreen && (
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '0.75rem' }}>
+                    {challenge?.title}
+                  </span>
+                )}
+                <button 
+                  type="button"
+                  onClick={handleReset} 
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, padding: '2px 6px', borderRadius: '4px' }}
+                  title="Reset code to starter template"
+                >
+                  🔄 Reset
+                </button>
+              </div>
+
+              <div className="challenge-editor-toolbar-right">
+                {/* Font Size Scaling Controls */}
+                <div className="editor-ctrl-group" title="Adjust code font size">
+                  <button 
+                    type="button" 
+                    className="editor-ctrl-btn" 
+                    onClick={() => adjustFontSize(-1)}
+                    disabled={editorFontSize <= 11}
+                    aria-label="Decrease font size"
+                  >
+                    A−
+                  </button>
+                  <span className="editor-ctrl-label">{editorFontSize}px</span>
+                  <button 
+                    type="button" 
+                    className="editor-ctrl-btn" 
+                    onClick={() => adjustFontSize(1)}
+                    disabled={editorFontSize >= 22}
+                    aria-label="Increase font size"
+                  >
+                    A+
+                  </button>
+                </div>
+
+                {/* Height Stepping Controls (visible when not fullscreen) */}
+                {!isFullscreen && (
+                  <div className="editor-ctrl-group" title="Adjust editor height">
+                    <button 
+                      type="button" 
+                      className="editor-ctrl-btn" 
+                      onClick={() => adjustHeight(-60)}
+                      disabled={editorHeight <= 220}
+                      aria-label="Decrease editor height"
+                    >
+                      −
+                    </button>
+                    <span className="editor-ctrl-label">{editorHeight}px</span>
+                    <button 
+                      type="button" 
+                      className="editor-ctrl-btn" 
+                      onClick={() => adjustHeight(60)}
+                      disabled={editorHeight >= 900}
+                      aria-label="Increase editor height"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+
+                {/* Fullscreen / Focus Mode Toggle */}
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={toggleFullscreen}
+                  style={{ 
+                    padding: '0.25rem 0.55rem', 
+                    fontSize: '0.8rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.35rem', 
+                    borderRadius: 'var(--radius-md)', 
+                    background: isFullscreen ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255,255,255,0.04)', 
+                    color: isFullscreen ? '#fff' : 'var(--text-secondary)' 
+                  }}
+                  title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Maximize Editor (Focus Mode)'}
+                >
+                  {isFullscreen ? (
+                    <><span>⤓</span> <span>Exit Focus</span></>
+                  ) : (
+                    <><span>⛶</span> <span className="desktop-only">Focus</span></>
+                  )}
+                </button>
+              </div>
             </div>
 
-            <div className="challenge-editor-wrapper">
+            {/* Monaco Editor Container */}
+            <div className="challenge-editor-wrapper" style={{ height: isFullscreen ? '100%' : `${editorHeight}px` }}>
               <Editor
                 height="100%"
                 language={language}
                 theme="vs-dark"
                 value={activeCode}
                 onChange={handleEditorChange}
+                onMount={(editor) => {
+                  editorRef.current = editor;
+                }}
                 options={{
-                  minimap: { enabled: false },
-                  fontSize: 13,
+                  minimap: { enabled: isFullscreen },
+                  fontSize: editorFontSize,
                   fontFamily: "'Fira Code', 'Cascadia Code', monospace",
                   lineHeight: 1.6,
                   padding: { top: 12, bottom: 12 },
@@ -384,45 +692,82 @@ export default function ChallengeDetail() {
                   automaticLayout: true,
                   lineNumbersMinChars: 3,
                   glyphMargin: false,
-                  folding: false,
+                  folding: true,
                 }}
               />
             </div>
+
+            {/* Draggable Bottom Height Resizer Handle */}
+            {!isFullscreen && (
+              <div
+                className={`challenge-editor-resize-handle ${isDraggingHeight ? 'active' : ''}`}
+                onMouseDown={startHeightDrag}
+                onTouchStart={startHeightDrag}
+                title="Drag up or down to resize editor height • Double-click to reset"
+                onDoubleClick={resetHeight}
+              >
+                <div className="resize-handle-bar">
+                  <span className="resize-handle-icon">⠿</span>
+                  <span className="resize-handle-text">Drag to resize ({editorHeight}px)</span>
+                </div>
+              </div>
+            )}
+
+            {/* In Fullscreen mode: integrated action bar */}
+            {isFullscreen && (
+              <div style={{ padding: '0.75rem 1.5rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div className="text-sm text-muted">
+                  Press <kbd style={{ padding: '0.2rem 0.4rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.75rem' }}>Esc</kbd> to exit fullscreen
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button onClick={handleRun} disabled={running || submitting} className="btn btn-secondary btn-sm" style={{ minHeight: 38 }}>
+                    {running ? '⟳ Running...' : '▶ Run Code'}
+                  </button>
+                  <button onClick={handleSubmit} disabled={running || submitting} className="btn btn-primary btn-sm" style={{ minHeight: 38 }}>
+                    {submitting ? '⟳ Submitting...' : '🚀 Submit Solution'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="challenge-actions-grid">
-            <button
-              onClick={handleRun}
-              disabled={running || submitting}
-              className="challenge-btn-run"
-            >
-              {running ? (
-                <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Running...</>
-              ) : (
-                <>▶ Run Code</>
-              )}
-            </button>
+          {/* Action Buttons (visible in normal view) */}
+          {!isFullscreen && (
+            <div className="challenge-actions-grid">
+              <button
+                onClick={handleRun}
+                disabled={running || submitting}
+                className="challenge-btn-run"
+              >
+                {running ? (
+                  <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Running...</>
+                ) : (
+                  <>▶ Run Code</>
+                )}
+              </button>
 
-            <button
-              onClick={handleSubmit}
-              disabled={running || submitting}
-              className="challenge-btn-submit"
-            >
-              {submitting ? (
-                <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Submitting...</>
-              ) : (
-                <>🚀 Submit Solution</>
-              )}
-            </button>
-          </div>
+              <button
+                onClick={handleSubmit}
+                disabled={running || submitting}
+                className="challenge-btn-submit"
+              >
+                {submitting ? (
+                  <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Submitting...</>
+                ) : (
+                  <>🚀 Submit Solution</>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Info Bar */}
-          <div className="challenge-info-bar">
-            <span>▶ Run = visible tests only</span>
-            <span>•</span>
-            <span>🚀 Submit = all tests + save score</span>
-          </div>
+          {!isFullscreen && (
+            <div className="challenge-info-bar">
+              <span>▶ Run = visible tests only</span>
+              <span>•</span>
+              <span>🚀 Submit = all tests + save score</span>
+            </div>
+          )}
         </div>
       </div>
 
