@@ -76,6 +76,7 @@ export default function Pricing() {
               border: plan.popular ? '2px solid var(--accent-primary)' : '1px solid var(--border-primary)',
               zIndex: plan.popular ? 2 : 1,
               boxShadow: plan.popular ? '0 10px 40px rgba(108, 92, 231, 0.2)' : 'var(--shadow-md)',
+              overflow: plan.popular ? 'visible' : 'hidden',
             }}
           >
             {plan.popular && (

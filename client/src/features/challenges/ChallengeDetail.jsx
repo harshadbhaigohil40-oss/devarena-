@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { challengeService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
+import { useThemeStore } from '../theme/useThemeStore';
 import toast from 'react-hot-toast';
 import ChatMarkdown from '@/components/ui/ChatMarkdown';
 import Editor from '@monaco-editor/react';
@@ -14,6 +15,7 @@ const LANG_ICONS  = { javascript: '🟨', python: '🐍' };
 export default function ChallengeDetail() {
   const { slug } = useParams();
   const { user } = useAuth();
+  const { theme } = useThemeStore();
   const [language, setLanguage]       = useState('javascript');
   const [userCode, setUserCode]       = useState({ javascript: '', python: '' });
   const [result, setResult]           = useState(null);
@@ -255,7 +257,17 @@ export default function ChallengeDetail() {
     try {
       const res = await challengeService.run(challenge._id, { code: activeCode, language });
       const data = res.data.data;
-      setResult({ ...data, isRun: true });
+      const rawResults = data.results || data.testResults || [];
+      const passedCount = data.passedCount ?? rawResults.filter(r => r.passed).length;
+      const totalCount = data.totalCount ?? rawResults.length;
+      setResult({
+        ...data,
+        results: rawResults,
+        testResults: rawResults,
+        passedCount,
+        totalCount,
+        isRun: true
+      });
       setActiveTab('results');
       setMobileView('results');
       if (data.allPassed) toast.success('All visible tests passed! 🎉');
@@ -276,7 +288,17 @@ export default function ChallengeDetail() {
     try {
       const res = await challengeService.submit(challenge._id, { code: activeCode, language });
       const data = res.data.data;
-      setResult({ ...data, isRun: false });
+      const rawResults = data.results || data.testResults || data.submission?.testResults || [];
+      const passedCount = data.passedCount ?? rawResults.filter(r => r.passed).length;
+      const totalCount = data.totalCount ?? rawResults.length;
+      setResult({
+        ...data,
+        results: rawResults,
+        testResults: rawResults,
+        passedCount,
+        totalCount,
+        isRun: false
+      });
       setActiveTab('results');
       setMobileView('results');
       if (data.allPassed) toast.success(`🏆 All tests passed! +${data.xpResult?.xpEarned || challenge.xpReward} XP`);
@@ -500,7 +522,7 @@ export default function ChallengeDetail() {
                       )}
 
                       {/* Individual test results */}
-                      {result.results?.map((tc, i) => (
+                      {(result.results || result.testResults || []).map((tc, i) => (
                         <div key={i} style={{
                           padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', marginBottom: '0.6rem',
                           background: 'var(--bg-tertiary)',
@@ -512,23 +534,32 @@ export default function ChallengeDetail() {
                             <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>
                               Test {i + 1} {tc.isHidden ? '(Hidden)' : ''}
                             </span>
-                            <span style={{
-                              fontSize: '0.75rem', fontWeight: 700,
-                              color: tc.passed ? 'var(--color-success)' : 'var(--color-danger)',
-                            }}>
-                              {tc.passed ? 'PASSED' : 'FAILED'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              {tc.executionTime !== undefined && (
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{tc.executionTime}ms</span>
+                              )}
+                              <span style={{
+                                fontSize: '0.75rem', fontWeight: 700,
+                                color: tc.passed ? 'var(--color-success)' : 'var(--color-danger)',
+                              }}>
+                                {tc.passed ? 'PASSED' : 'FAILED'}
+                              </span>
+                            </div>
                           </div>
 
-                          {!tc.isHidden && (
+                          {!tc.isHidden && (tc.input || tc.expectedOutput || tc.actualOutput) ? (
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                              <div><span className="text-muted">Input: </span><code style={{ wordBreak: 'break-all' }}>{tc.input}</code></div>
-                              <div><span className="text-muted">Expected: </span><code style={{ color: 'var(--color-success)', wordBreak: 'break-all' }}>{tc.expectedOutput}</code></div>
-                              {!tc.passed && (
-                                <div><span className="text-muted">Got: </span><code style={{ color: 'var(--color-danger)', wordBreak: 'break-all' }}>{tc.actualOutput || 'no output'}</code></div>
+                              {tc.input && <div><span className="text-muted">Input: </span><code style={{ wordBreak: 'break-all' }}>{tc.input}</code></div>}
+                              {tc.expectedOutput && <div><span className="text-muted">Expected: </span><code style={{ color: 'var(--color-success)', wordBreak: 'break-all' }}>{tc.expectedOutput}</code></div>}
+                              {!tc.passed && tc.actualOutput && (
+                                <div><span className="text-muted">Got: </span><code style={{ color: 'var(--color-danger)', wordBreak: 'break-all' }}>{tc.actualOutput}</code></div>
                               )}
                             </div>
-                          )}
+                          ) : tc.output ? (
+                            <pre style={{ margin: 0, padding: '0.5rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tc.passed ? 'var(--color-success)' : 'var(--color-danger)', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                              {tc.output}
+                            </pre>
+                          ) : null}
                           {tc.error && (
                             <p style={{ color: 'var(--color-danger)', fontSize: '0.75rem', marginTop: '0.3rem', margin: 0 }}>{tc.error}</p>
                           )}
@@ -614,31 +645,6 @@ export default function ChallengeDetail() {
                   </button>
                 </div>
 
-                {/* Height Stepping Controls (visible when not fullscreen) */}
-                {!isFullscreen && (
-                  <div className="editor-ctrl-group" title="Adjust editor height">
-                    <button 
-                      type="button" 
-                      className="editor-ctrl-btn" 
-                      onClick={() => adjustHeight(-60)}
-                      disabled={editorHeight <= 220}
-                      aria-label="Decrease editor height"
-                    >
-                      −
-                    </button>
-                    <span className="editor-ctrl-label">{editorHeight}px</span>
-                    <button 
-                      type="button" 
-                      className="editor-ctrl-btn" 
-                      onClick={() => adjustHeight(60)}
-                      disabled={editorHeight >= 900}
-                      aria-label="Increase editor height"
-                    >
-                      +
-                    </button>
-                  </div>
-                )}
-
                 {/* Fullscreen / Focus Mode Toggle */}
                 <button
                   type="button"
@@ -670,7 +676,7 @@ export default function ChallengeDetail() {
               <Editor
                 height="100%"
                 language={language}
-                theme="vs-dark"
+                theme={theme === 'light' ? 'light' : 'vs-dark'}
                 value={activeCode}
                 onChange={handleEditorChange}
                 onMount={(editor) => {

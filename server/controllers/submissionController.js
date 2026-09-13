@@ -204,8 +204,12 @@ function evaluateJS(code, testCases, category, starterCode) {
       const logsOutput = capturedLogs.length > 0 ? `\nLogs:\n${capturedLogs.join('\n')}` : '';
 
       if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
-      if (rawResult === undefined || rawResult === null)
+      if (rawResult === undefined && tc.expectedOutput !== 'undefined') {
         throw new Error('Function returned nothing. Make sure to use the `return` keyword.');
+      }
+      if (rawResult === null && tc.expectedOutput !== 'null' && tc.expectedOutput !== null) {
+        throw new Error('Function returned nothing. Make sure to use the `return` keyword.');
+      }
 
       let expectedStr;
       try {
@@ -219,6 +223,10 @@ function evaluateJS(code, testCases, category, starterCode) {
       return {
         testCaseIndex: index,
         passed,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: tc.isHidden ? '[Hidden]' : (resultStr === undefined ? 'undefined' : resultStr),
         output: passed
           ? `✓ Output: ${resultStr}${logsOutput}`
           : `Expected: ${tc.expectedOutput}\nGot:      ${resultStr}${logsOutput}`,
@@ -234,7 +242,17 @@ function evaluateJS(code, testCases, category, starterCode) {
            msg = `${e.name || 'Error'}: ${e.message}\n${snippet}`;
         }
       }
-      return { testCaseIndex: index, passed: false, output: msg.startsWith('Error') ? msg : `Error: ${msg}`, executionTime: 0 };
+      return {
+        testCaseIndex: index,
+        passed: false,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: 'Error',
+        error: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        output: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        executionTime: 0
+      };
     }
   });
 }
@@ -352,6 +370,10 @@ ${code}
       return {
         testCaseIndex: index,
         passed,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: tc.isHidden ? '[Hidden]' : lastLine,
         output: passed
           ? `✓ Output: ${lastLine}${logsOutput}`
           : `Expected: ${tc.expectedOutput}\nGot:      ${lastLine}${logsOutput}`,
@@ -360,7 +382,17 @@ ${code}
     } catch (e) {
       if (fs.existsSync(filePath)) { try { fs.unlinkSync(filePath); } catch (_) {} }
       const msg = e.message || String(e);
-      return { testCaseIndex: index, passed: false, output: msg.startsWith('Error') ? msg : `Error: ${msg}`, executionTime: 0 };
+      return {
+        testCaseIndex: index,
+        passed: false,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: 'Error',
+        error: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        output: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        executionTime: 0
+      };
     }
   });
 }
@@ -396,8 +428,17 @@ exports.runCode = async (req, res, next) => {
     const visibleTests = challenge.testCases.filter(tc => !tc.isHidden);
     const testResults = evaluateCode(code, visibleTests, language, challenge.category, challenge.starterCode?.[language] || '');
     const allPassed = testResults.every(r => r.passed);
+    const passedCount = testResults.filter(r => r.passed).length;
+    const totalCount = testResults.length;
 
-    success(res, { testResults, allPassed, isRun: true });
+    success(res, {
+      testResults,
+      results: testResults,
+      passedCount,
+      totalCount,
+      allPassed,
+      isRun: true
+    });
   } catch (err) { next(err); }
 };
 
@@ -428,6 +469,8 @@ exports.submitSolution = async (req, res, next) => {
 
     const testResults = evaluateCode(code, challenge.testCases, language, challenge.category, challenge.starterCode?.[language] || '');
     const allPassed = testResults.every(r => r.passed);
+    const passedCount = testResults.filter(r => r.passed).length;
+    const totalCount = testResults.length;
     const status = allPassed ? 'passed' : 'failed';
 
     const submission = await Submission.create({
@@ -451,7 +494,15 @@ exports.submitSolution = async (req, res, next) => {
       await Challenge.findByIdAndUpdate(challengeId, { $inc: { attemptCount: 1 } });
     }
 
-    success(res, { submission, xpResult, allPassed });
+    success(res, {
+      submission,
+      testResults,
+      results: testResults,
+      passedCount,
+      totalCount,
+      xpResult,
+      allPassed
+    });
   } catch (err) { next(err); }
 };
 

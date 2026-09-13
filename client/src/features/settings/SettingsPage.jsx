@@ -32,11 +32,11 @@ export default function SettingsPage() {
         <h3 className="mb-md">Profile Information</h3>
         <div className="input-group mb-sm">
           <label>Username</label>
-          <input className="input" value={user.username} disabled />
+          <input className="input" value={user?.username || ''} disabled />
         </div>
         <div className="input-group mb-sm">
           <label>Email Address</label>
-          <input className="input" value={user.email} disabled />
+          <input className="input" value={user?.email || ''} disabled />
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function SettingsPage() {
               }}
             >
               <div style={{ width: 30, height: 30, borderRadius: '50%', background: t.accent, marginBottom: '0.5rem' }} />
-              <span style={{ color: theme === t.id ? t.accent : 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem' }}>{t.name}</span>
+              <span style={{ color: theme === t.id ? t.accent : (t.id === 'light' ? '#334155' : '#cbd5e1'), fontWeight: 600, fontSize: '0.9rem' }}>{t.name}</span>
               {theme === t.id && (
                 <div style={{ position: 'absolute', top: 5, right: 5, color: t.accent }}>✓</div>
               )}

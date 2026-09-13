@@ -50,7 +50,7 @@ export default function FloatingChatbot() {
       const res = await api.post('/ai/chat', { prompt: contextPrompt });
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.data.reply }]);
     } catch (error) {
-      const apiError = error.response?.data?.message;
+      const apiError = error.response?.data?.error || error.response?.data?.message;
       const fallbackMsg = "Oops! My AI circuits are a bit scrambled right now (Server Error). Please try again in a moment! 🤖🔌";
       setMessages(prev => [...prev, { role: 'assistant', content: apiError || fallbackMsg }]);
     } finally {
@@ -85,7 +85,7 @@ export default function FloatingChatbot() {
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.2 }}>DevArena AI</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>Gemini Assistant • Online</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>Online</div>
                 </div>
               </div>
 

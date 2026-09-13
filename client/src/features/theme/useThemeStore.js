@@ -10,17 +10,26 @@ const getInitialTheme = () => {
   return 'dark'; // Default to dark if no preference
 };
 
+const initialTheme = getInitialTheme();
+if (typeof document !== 'undefined') {
+  document.documentElement.setAttribute('data-theme', initialTheme);
+}
+
 export const useThemeStore = create((set) => ({
-  theme: getInitialTheme(),
+  theme: initialTheme,
   setTheme: (newTheme) => {
     localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', newTheme);
+    }
     set({ theme: newTheme });
   },
   toggleTheme: () => set((state) => {
     const newTheme = state.theme === 'dark' ? 'light' : 'dark';
     localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', newTheme);
+    }
     return { theme: newTheme };
   })
 }));

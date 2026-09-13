@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { recruiterService } from '@/services';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -23,7 +24,10 @@ export default function RecruiterDashboard() {
         recruiterService.searchTalent(filters)
       ]);
       setAnalytics(analyticsRes.data.data);
-      setCandidates(candidatesRes.data.data.data);
+      const list = Array.isArray(candidatesRes.data.data)
+        ? candidatesRes.data.data
+        : (candidatesRes.data.data?.data || candidatesRes.data.data?.developers || []);
+      setCandidates(list);
     } catch (error) {
       toast.error('Failed to load dashboard data');
     } finally {
@@ -106,7 +110,7 @@ export default function RecruiterDashboard() {
       </div>
 
       <div className="grid grid-3">
-        {candidates.map((candidate, i) => (
+        {(candidates || []).map((candidate, i) => (
           <motion.div key={candidate._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card card-glass">
             <div className="flex items-center gap-md mb-sm">
               <div className="level-badge" style={{ width: 48, height: 48, fontSize: '1.2rem', flexShrink: 0 }}>{candidate.level}</div>
@@ -125,11 +129,11 @@ export default function RecruiterDashboard() {
             </div>
             <div className="flex justify-between items-center border-t border-primary pt-sm mt-sm" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
               <span className="text-xs font-bold text-gradient">{formatNumber(candidate.xp)} XP</span>
-              <a href={`/profile/${candidate._id}`} className="btn btn-sm btn-ghost">View Profile</a>
+              <Link to={`/profile/${candidate._id}`} className="btn btn-sm btn-ghost">View Profile</Link>
             </div>
           </motion.div>
         ))}
-        {candidates.length === 0 && !loading && (
+        {(!candidates || candidates.length === 0) && !loading && (
           <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
             <div className="empty-icon">🔍</div>
             <h3>No candidates found</h3>

@@ -8,6 +8,7 @@ const devLinks = [
   { to: '/challenges', icon: '⚔️', label: 'Challenges' },
   { to: '/skill-trees', icon: '🌳', label: 'Skill Trees' },
   { to: '/projects', icon: '🚀', label: 'Projects' },
+  { to: '/dsa', icon: '🧩', label: 'Data Structures & DSA' },
   { to: '/leaderboard', icon: '🏆', label: 'Leaderboard' },
   { to: '/ai-advisor', icon: '🤖', label: 'AI Advisor' },
 ];

@@ -13,6 +13,11 @@ const submissionSchema = new mongoose.Schema({
     passed: Boolean,
     output: String,
     executionTime: Number,
+    isHidden: Boolean,
+    input: String,
+    expectedOutput: String,
+    actualOutput: String,
+    error: String,
   }],
 
   // Performance metrics

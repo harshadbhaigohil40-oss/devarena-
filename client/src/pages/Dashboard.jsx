@@ -35,18 +35,18 @@ const xpCardStyle = {
   marginBottom: '2rem',
   background: 'linear-gradient(135deg, rgba(108,92,231,0.15) 0%, rgba(0,206,201,0.05) 100%)',
   border: '1px solid rgba(108,92,231,0.3)',
-  boxShadow: '0 20px 40px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05)',
+  boxShadow: 'var(--shadow-md), inset 0 0 0 1px var(--border-primary)',
   position: 'relative',
   overflow: 'hidden',
 };
 const glowStyle = { position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'var(--accent-primary)', filter: 'blur(100px)', opacity: 0.2, zIndex: 0 };
 const levelBadgeStyle = { width: 'clamp(56px, 12vw, 80px)', height: 'clamp(56px, 12vw, 80px)', fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', boxShadow: '0 0 30px rgba(108,92,231,0.4), inset 0 0 15px rgba(255,255,255,0.3)', flexShrink: 0 };
-const streakContainerStyle = { background: 'rgba(0,0,0,0.2)', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' };
-const xpBarContainerStyle = { height: 16, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' };
+const streakContainerStyle = { background: 'var(--bg-tertiary)', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-primary)' };
+const xpBarContainerStyle = { height: 16, background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' };
 const xpBarFillStyle = { background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 0 15px var(--accent-primary), inset 0 0 10px rgba(255,255,255,0.5)' };
-const statCardStyle = { position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' };
-const quickActionCardStyle = { cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' };
-const conversationCardStyle = { cursor: 'pointer', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' };
+const statCardStyle = { position: 'relative', overflow: 'hidden', border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' };
+const quickActionCardStyle = { cursor: 'pointer', border: '1px solid var(--border-primary)', transition: 'all 0.3s ease', background: 'var(--bg-secondary)' };
+const conversationCardStyle = { cursor: 'pointer', padding: '1rem', border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' };
 const messageClampStyle = { display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
 
 export default function Dashboard() {
@@ -133,7 +133,7 @@ export default function Dashboard() {
           
           <div style={{ marginTop: '2rem' }}>
             <div className="flex justify-between mb-sm">
-              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>Progress to Level {user.level + 1}</span>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Progress to Level {user.level + 1}</span>
               <span className="text-sm font-bold" style={{ color: 'var(--accent-secondary)', textShadow: '0 0 10px var(--accent-secondary)' }}>{Math.round(progress)}%</span>
             </div>
             <div className="xp-bar-container" style={xpBarContainerStyle}>

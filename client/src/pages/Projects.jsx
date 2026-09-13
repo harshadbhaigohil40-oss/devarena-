@@ -108,7 +108,14 @@ export default function Projects() {
               }
             }} 
             className="btn btn-primary"
-            style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', fontWeight: 600, background: showForm && !editingId ? 'var(--bg-tertiary)' : 'var(--accent-primary)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ 
+              padding: '0.75rem 1.5rem', 
+              fontSize: '1rem', 
+              fontWeight: 600, 
+              background: showForm && !editingId ? 'var(--bg-tertiary)' : 'var(--accent-primary)', 
+              color: showForm && !editingId ? 'var(--text-primary)' : '#ffffff', 
+              border: '1px solid var(--border-primary)' 
+            }}
           >
             {showForm && !editingId ? 'Close Form' : '✨ Launch Project'}
           </motion.button>
@@ -127,50 +134,49 @@ export default function Projects() {
           >
             <div className="card" style={{ 
               display: 'flex', flexDirection: 'column', gap: '1.5rem', 
-              background: 'linear-gradient(135deg, rgba(30,30,40,0.9), rgba(20,20,30,0.95))', 
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(108,92,231,0.3)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 40px rgba(108,92,231,0.1)',
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--border-accent)',
+              boxShadow: 'var(--shadow-lg)',
               position: 'relative'
             }}>
               {/* Form Glow */}
               <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '60%', height: '2px', background: 'linear-gradient(90deg, transparent, var(--accent-primary), transparent)', opacity: 0.5 }} />
               
-              <h3 style={{ fontSize: '1.5rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.5rem', color: 'var(--text-heading, var(--text-primary))', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {editingId ? '✏️ Edit Project Details' : '🌟 Launch New Project'}
               </h3>
               
               <div className="input-group">
                 <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Project Title</label>
-                <input className="input" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem' }} value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="E.g., Devarena AI Integration" required />
+                <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', padding: '0.75rem' }} value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="E.g., Devarena AI Integration" required />
               </div>
               
               <div className="input-group">
                 <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Description</label>
-                <textarea className="input" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', minHeight: '100px' }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What does this project do?" required />
+                <textarea className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', padding: '0.75rem', minHeight: '100px' }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What does this project do?" required />
               </div>
               
               <div className="grid grid-2" style={{ gap: '1.5rem' }}>
                 <div className="input-group">
                   <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Live URL <span className="text-muted">(Optional)</span></label>
-                  <input className="input" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }} value={form.liveUrl} onChange={e => setForm({...form, liveUrl: e.target.value})} placeholder="https://myapp.com" />
+                  <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.liveUrl} onChange={e => setForm({...form, liveUrl: e.target.value})} placeholder="https://myapp.com" />
                 </div>
                 <div className="input-group">
                   <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Repository URL <span className="text-muted">(Optional)</span></label>
-                  <input className="input" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }} value={form.repoUrl} onChange={e => setForm({...form, repoUrl: e.target.value})} placeholder="https://github.com/username/repo" />
+                  <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.repoUrl} onChange={e => setForm({...form, repoUrl: e.target.value})} placeholder="https://github.com/username/repo" />
                 </div>
               </div>
               
               <div className="input-group">
                 <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Tech Stack (comma-separated)</label>
-                <input className="input" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }} value={form.techStack} onChange={e => setForm({...form, techStack: e.target.value})} placeholder="React, Node.js, MongoDB, TailwindCSS" />
+                <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.techStack} onChange={e => setForm({...form, techStack: e.target.value})} placeholder="React, Node.js, MongoDB, TailwindCSS" />
               </div>
               
               <div className="flex gap-sm mt-sm" style={{ flexWrap: 'wrap' }}>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn btn-primary" style={{ flex: '1 1 180px', padding: '0.75rem', fontSize: '1rem' }}>
                   {editingId ? 'Save Changes' : '🚀 Publish Project'}
                 </motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="button" onClick={handleCancel} className="btn" style={{ flex: '1 1 100px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="button" onClick={handleCancel} className="btn btn-secondary" style={{ flex: '1 1 100px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)' }}>
                   Cancel
                 </motion.button>
               </div>
@@ -260,9 +266,9 @@ export default function Projects() {
                       ))}
                     </div>
                     
-                    <div className="flex justify-between items-center pt-md" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div className="flex justify-between items-center pt-md" style={{ borderTop: '1px solid var(--border-primary)', flexWrap: 'wrap', gap: '0.5rem' }}>
                       <div className="flex items-center gap-md text-sm text-muted">
-                        <span className="flex items-center gap-xs" title="Views"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> {p.views || 0}</span>
+                        <span className="flex items-center gap-xs" title="Views"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> {p.views || 0}</span>
                         <motion.button 
                           whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.8 }}
                           onClick={() => handleLike(p._id)} 
@@ -275,7 +281,7 @@ export default function Projects() {
                       </div>
                       <div className="flex gap-sm">
                         {p.repoUrl && (
-                          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href={p.repoUrl} target="_blank" rel="noreferrer" className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }}>
+                          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href={p.repoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', borderRadius: '8px' }}>
                             Code
                           </motion.a>
                         )}

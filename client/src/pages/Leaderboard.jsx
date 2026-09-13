@@ -39,7 +39,7 @@ export default function Leaderboard() {
       
       {/* Header Section */}
       <header style={{ textAlign: 'center', marginBottom: '2.5rem', paddingTop: '1rem' }}>
-        <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem', color: '#fff' }}>
+        <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem', color: 'var(--text-heading, var(--text-primary))' }}>
           Global Leaderboard
         </motion.h1>
         <motion.p initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.125rem)', color: 'var(--text-secondary)' }}>
@@ -49,7 +49,7 @@ export default function Leaderboard() {
 
       {/* Filters and Options */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '100px', padding: '0.25rem', overflowX: 'auto', maxWidth: '100%' }}>
+        <div style={{ display: 'flex', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '100px', padding: '0.25rem', overflowX: 'auto', maxWidth: '100%' }}>
           {['all', 'weekly', 'monthly'].map(p => (
             <button key={p} 
               className={`tab ${period === p ? 'active' : ''}`} 
@@ -60,8 +60,8 @@ export default function Leaderboard() {
                 padding: '0.45rem clamp(0.75rem, 2.5vw, 1.25rem)', 
                 fontSize: 'clamp(0.8rem, 2.5vw, 0.9rem)',
                 borderRadius: '100px', 
-                background: period === p ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                color: period === p ? '#fff' : 'var(--text-secondary)', 
+                background: period === p ? 'var(--accent-primary)' : 'transparent', 
+                color: period === p ? '#ffffff' : 'var(--text-secondary)', 
                 border: 'none', 
                 fontWeight: 600, 
                 transition: 'all 0.2s', 
@@ -97,10 +97,10 @@ export default function Leaderboard() {
                     </div>
                     <div style={{ position: 'absolute', bottom: '-6px', right: '-6px', width: '30px', height: '30px', background: '#958ea0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 800, color: '#fff', fontSize: '0.9rem' }}>2</div>
                   </div>
-                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.5rem 1rem', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(149, 142, 160, 0.2)', borderRadius: '16px', transition: 'transform 0.2s' }}>
-                    <p style={{ fontSize: 'clamp(1.05rem, 3vw, 1.25rem)', fontWeight: 700, color: '#fff', wordBreak: 'break-word' }}>{top3[1].username}</p>
+                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.5rem 1rem', background: 'var(--bg-secondary)', backdropFilter: 'blur(16px)', border: '1px solid rgba(149, 142, 160, 0.3)', borderRadius: '16px', transition: 'transform 0.2s' }}>
+                    <p style={{ fontSize: 'clamp(1.05rem, 3vw, 1.25rem)', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{top3[1].username}</p>
                     <p style={{ fontSize: '0.875rem', color: '#958ea0', fontWeight: 600, marginBottom: '0.5rem' }}>LVL {top3[1].level}</p>
-                    <div style={{ paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--border-primary)' }}>
                       <span style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: 'clamp(1.1rem, 3vw, 1.25rem)' }}>{formatNumber(top3[1].totalXp)}</span>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>TOTAL XP</span>
                     </div>
@@ -124,10 +124,10 @@ export default function Leaderboard() {
                     </div>
                     <div style={{ position: 'absolute', bottom: '-6px', right: '-6px', width: '36px', height: '36px', background: '#ca801e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 900, color: '#fff', fontSize: '1.1rem' }}>1</div>
                   </div>
-                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.75rem 1.25rem', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', border: '1px solid rgba(202, 128, 30, 0.3)', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
-                    <p style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)', fontWeight: 800, color: '#fff', wordBreak: 'break-word' }}>{top3[0].username}</p>
+                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.75rem 1.25rem', background: 'var(--bg-secondary)', backdropFilter: 'blur(16px)', border: '1px solid rgba(202, 128, 30, 0.4)', borderRadius: '24px', boxShadow: 'var(--shadow-lg)' }}>
+                    <p style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)', fontWeight: 800, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{top3[0].username}</p>
                     <p style={{ fontSize: '0.875rem', color: '#ca801e', fontWeight: 700, marginBottom: '0.75rem' }}>LVL {top3[0].level} Master</p>
-                    <div style={{ paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ paddingTop: '0.75rem', borderTop: '1px solid var(--border-primary)' }}>
                       <span style={{ color: '#ca801e', fontWeight: 900, fontSize: 'clamp(1.35rem, 4vw, 1.75rem)' }}>{formatNumber(top3[0].totalXp)}</span>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>TOTAL XP</span>
                     </div>
@@ -147,10 +147,10 @@ export default function Leaderboard() {
                     </div>
                     <div style={{ position: 'absolute', bottom: '-6px', right: '-6px', width: '30px', height: '30px', background: '#b07235', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 800, color: '#fff', fontSize: '0.9rem' }}>3</div>
                   </div>
-                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.5rem 1rem', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(176, 114, 53, 0.2)', borderRadius: '16px' }}>
-                    <p style={{ fontSize: 'clamp(1.05rem, 3vw, 1.25rem)', fontWeight: 700, color: '#fff', wordBreak: 'break-word' }}>{top3[2].username}</p>
+                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.5rem 1rem', background: 'var(--bg-secondary)', backdropFilter: 'blur(16px)', border: '1px solid rgba(176, 114, 53, 0.3)', borderRadius: '16px' }}>
+                    <p style={{ fontSize: 'clamp(1.05rem, 3vw, 1.25rem)', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{top3[2].username}</p>
                     <p style={{ fontSize: '0.875rem', color: '#b07235', fontWeight: 600, marginBottom: '0.5rem' }}>LVL {top3[2].level}</p>
-                    <div style={{ paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--border-primary)' }}>
                       <span style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: 'clamp(1.1rem, 3vw, 1.25rem)' }}>{formatNumber(top3[2].totalXp)}</span>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>TOTAL XP</span>
                     </div>
@@ -163,15 +163,15 @@ export default function Leaderboard() {
           {/* Data Table Section */}
           {rest.length > 0 && (
             <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} 
-              style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', overflow: 'hidden' }}>
+              style={{ background: 'var(--bg-secondary)', backdropFilter: 'blur(16px)', border: '1px solid var(--border-primary)', borderRadius: '16px', overflow: 'hidden' }}>
               <div className="leaderboard-table-container">
                 <table className="leaderboard-table">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
-                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</th>
-                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</th>
-                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Level</th>
-                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Total XP</th>
+                    <tr style={{ borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-tertiary)' }}>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</th>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</th>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Level</th>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Total XP</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -181,24 +181,24 @@ export default function Leaderboard() {
                       return (
                         <tr key={entry._id} 
                           style={{ 
-                            background: isMe ? 'rgba(138, 43, 226, 0.1)' : (index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'),
-                            borderBottom: '1px solid rgba(255,255,255,0.03)',
+                            background: isMe ? 'var(--accent-primary-glow)' : 'transparent',
+                            borderBottom: '1px solid var(--border-primary)',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease'
                           }}
-                          onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
-                          onMouseOut={(e) => { e.currentTarget.style.background = isMe ? 'rgba(138, 43, 226, 0.1)' : (index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'); e.currentTarget.style.transform = 'translateX(0)'; }}
+                          onMouseOver={(e) => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.background = isMe ? 'var(--accent-primary-glow)' : 'transparent'; e.currentTarget.style.transform = 'translateX(0)'; }}
                           onClick={() => navigate(`/profile/${entry.userId}`)}
                         >
                           <td className="leaderboard-td" style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{rank}</td>
                           <td className="leaderboard-td">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                              <img src={getAvatar(entry.username)} alt={entry.username} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-secondary)', flexShrink: 0 }} />
-                              <span style={{ fontWeight: 600, color: '#fff', wordBreak: 'break-word' }}>{entry.username} {isMe && '(You)'}</span>
+                              <img src={getAvatar(entry.username)} alt={entry.username} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', flexShrink: 0 }} />
+                              <span style={{ fontWeight: 600, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{entry.username} {isMe && '(You)'}</span>
                             </div>
                           </td>
                           <td className="leaderboard-td">
-                            <span style={{ padding: '0.2rem 0.6rem', borderRadius: '100px', background: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>LVL {entry.level}</span>
+                            <span style={{ padding: '0.2rem 0.6rem', borderRadius: '100px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>LVL {entry.level}</span>
                           </td>
                           <td className="leaderboard-td" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>
                             {formatNumber(entry.totalXp)}
@@ -210,8 +210,8 @@ export default function Leaderboard() {
                 </table>
               </div>
               
-              <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', flexWrap: 'wrap', gap: '0.75rem' }}>
-                <span style={{ color: 'var(--text-tertiary)', fontSize: '0.875rem', fontWeight: 600 }}>Showing Top {entries.length}</span>
+              <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600 }}>Showing Top {entries.length}</span>
                 {entries.length === limit && (
                   <button 
                     onClick={() => setLimit(l => l + 50)}
