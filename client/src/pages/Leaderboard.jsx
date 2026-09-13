@@ -48,13 +48,25 @@ export default function Leaderboard() {
       </header>
 
       {/* Filters and Options */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '100px', padding: '0.25rem', overflowX: 'auto', maxWidth: '100%' }}>
           {['all', 'weekly', 'monthly'].map(p => (
             <button key={p} 
               className={`tab ${period === p ? 'active' : ''}`} 
               onClick={() => setPeriod(p)} 
-              style={{ textTransform: 'capitalize', margin: 0, padding: '0.5rem 1.25rem', borderRadius: '100px', background: period === p ? 'rgba(255,255,255,0.1)' : 'transparent', color: period === p ? '#fff' : 'var(--text-secondary)', border: 'none', fontWeight: 600, transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
+              style={{ 
+                textTransform: 'capitalize', 
+                margin: 0, 
+                padding: '0.45rem clamp(0.75rem, 2.5vw, 1.25rem)', 
+                fontSize: 'clamp(0.8rem, 2.5vw, 0.9rem)',
+                borderRadius: '100px', 
+                background: period === p ? 'rgba(255,255,255,0.1)' : 'transparent', 
+                color: period === p ? '#fff' : 'var(--text-secondary)', 
+                border: 'none', 
+                fontWeight: 600, 
+                transition: 'all 0.2s', 
+                whiteSpace: 'nowrap' 
+              }}>
               {p === 'all' ? 'All Time' : p}
             </button>
           ))}
@@ -62,8 +74,8 @@ export default function Leaderboard() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', height: '300px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ width: 200, height: i === 2 ? 250 : 200, borderRadius: 16 }} />)}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', minHeight: '300px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ width: 'min(200px, 80%)', height: i === 2 ? 250 : 200, borderRadius: 16 }} />)}
         </div>
       ) : entries.length === 0 ? (
         <div className="empty-state"><h3>No entries yet</h3><p>Complete challenges to appear on the leaderboard!</p></div>
@@ -80,16 +92,16 @@ export default function Leaderboard() {
                   onClick={() => navigate(`/profile/${top3[1].userId}`)}
                 >
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
-                    <div style={{ width: '96px', height: '96px', borderRadius: '50%', padding: '4px', background: 'var(--bg-primary)', boxShadow: '0 0 20px rgba(149, 142, 160, 0.2)', border: '2px solid #958ea0', overflow: 'hidden' }}>
+                    <div style={{ width: 'clamp(80px, 15vw, 96px)', height: 'clamp(80px, 15vw, 96px)', borderRadius: '50%', padding: '4px', background: 'var(--bg-primary)', boxShadow: '0 0 20px rgba(149, 142, 160, 0.2)', border: '2px solid #958ea0', overflow: 'hidden' }}>
                       <img src={getAvatar(top3[1].username)} alt="Rank 2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', width: '32px', height: '32px', background: '#958ea0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 800, color: '#fff' }}>2</div>
+                    <div style={{ position: 'absolute', bottom: '-6px', right: '-6px', width: '30px', height: '30px', background: '#958ea0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 800, color: '#fff', fontSize: '0.9rem' }}>2</div>
                   </div>
-                  <div style={{ textAlign: 'center', width: '100%', padding: '1.5rem', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(149, 142, 160, 0.2)', borderRadius: '16px', transition: 'transform 0.2s', ':hover': { transform: 'translateY(-5px)' } }}>
-                    <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>{top3[1].username}</p>
+                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.5rem 1rem', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(149, 142, 160, 0.2)', borderRadius: '16px', transition: 'transform 0.2s' }}>
+                    <p style={{ fontSize: 'clamp(1.05rem, 3vw, 1.25rem)', fontWeight: 700, color: '#fff', wordBreak: 'break-word' }}>{top3[1].username}</p>
                     <p style={{ fontSize: '0.875rem', color: '#958ea0', fontWeight: 600, marginBottom: '0.5rem' }}>LVL {top3[1].level}</p>
                     <div style={{ paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                      <span style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: '1.25rem' }}>{formatNumber(top3[1].totalXp)}</span>
+                      <span style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: 'clamp(1.1rem, 3vw, 1.25rem)' }}>{formatNumber(top3[1].totalXp)}</span>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>TOTAL XP</span>
                     </div>
                   </div>
@@ -104,19 +116,19 @@ export default function Leaderboard() {
                   onClick={() => navigate(`/profile/${top3[0].userId}`)}
                 >
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
-                    <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', color: '#ca801e', animation: 'bounce 2s infinite' }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.25L16.25 17.75L15.1 12.9L19 9.55L14.05 9.1L12 4.5L9.95 9.1L5 9.55L8.9 12.9L7.75 17.75L12 15.25Z"/></svg>
+                    <div style={{ position: 'absolute', top: '-36px', left: '50%', transform: 'translateX(-50%)', color: '#ca801e', animation: 'bounce 2s infinite' }}>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.25L16.25 17.75L15.1 12.9L19 9.55L14.05 9.1L12 4.5L9.95 9.1L5 9.55L8.9 12.9L7.75 17.75L12 15.25Z"/></svg>
                     </div>
-                    <div style={{ width: '128px', height: '128px', borderRadius: '50%', padding: '4px', background: 'var(--bg-primary)', boxShadow: '0 0 30px rgba(202, 128, 30, 0.4)', border: '2px solid #ca801e', overflow: 'hidden' }}>
+                    <div style={{ width: 'clamp(96px, 18vw, 128px)', height: 'clamp(96px, 18vw, 128px)', borderRadius: '50%', padding: '4px', background: 'var(--bg-primary)', boxShadow: '0 0 30px rgba(202, 128, 30, 0.4)', border: '2px solid #ca801e', overflow: 'hidden' }}>
                       <img src={getAvatar(top3[0].username)} alt="Rank 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', width: '40px', height: '40px', background: '#ca801e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 900, color: '#fff', fontSize: '1.2rem' }}>1</div>
+                    <div style={{ position: 'absolute', bottom: '-6px', right: '-6px', width: '36px', height: '36px', background: '#ca801e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 900, color: '#fff', fontSize: '1.1rem' }}>1</div>
                   </div>
-                  <div style={{ textAlign: 'center', width: '100%', padding: '2rem 1.5rem', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', border: '1px solid rgba(202, 128, 30, 0.3)', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>{top3[0].username}</p>
+                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.75rem 1.25rem', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', border: '1px solid rgba(202, 128, 30, 0.3)', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+                    <p style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)', fontWeight: 800, color: '#fff', wordBreak: 'break-word' }}>{top3[0].username}</p>
                     <p style={{ fontSize: '0.875rem', color: '#ca801e', fontWeight: 700, marginBottom: '0.75rem' }}>LVL {top3[0].level} Master</p>
                     <div style={{ paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span style={{ color: '#ca801e', fontWeight: 900, fontSize: '1.75rem' }}>{formatNumber(top3[0].totalXp)}</span>
+                      <span style={{ color: '#ca801e', fontWeight: 900, fontSize: 'clamp(1.35rem, 4vw, 1.75rem)' }}>{formatNumber(top3[0].totalXp)}</span>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>TOTAL XP</span>
                     </div>
                   </div>
@@ -130,16 +142,16 @@ export default function Leaderboard() {
                   onClick={() => navigate(`/profile/${top3[2].userId}`)}
                 >
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
-                    <div style={{ width: '96px', height: '96px', borderRadius: '50%', padding: '4px', background: 'var(--bg-primary)', boxShadow: '0 0 15px rgba(176, 114, 53, 0.2)', border: '2px solid #b07235', overflow: 'hidden' }}>
+                    <div style={{ width: 'clamp(80px, 15vw, 96px)', height: 'clamp(80px, 15vw, 96px)', borderRadius: '50%', padding: '4px', background: 'var(--bg-primary)', boxShadow: '0 0 15px rgba(176, 114, 53, 0.2)', border: '2px solid #b07235', overflow: 'hidden' }}>
                       <img src={getAvatar(top3[2].username)} alt="Rank 3" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', width: '32px', height: '32px', background: '#b07235', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 800, color: '#fff' }}>3</div>
+                    <div style={{ position: 'absolute', bottom: '-6px', right: '-6px', width: '30px', height: '30px', background: '#b07235', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)', fontWeight: 800, color: '#fff', fontSize: '0.9rem' }}>3</div>
                   </div>
-                  <div style={{ textAlign: 'center', width: '100%', padding: '1.5rem', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(176, 114, 53, 0.2)', borderRadius: '16px' }}>
-                    <p style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>{top3[2].username}</p>
+                  <div className="leaderboard-podium-inner" style={{ textAlign: 'center', width: '100%', padding: '1.5rem 1rem', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(176, 114, 53, 0.2)', borderRadius: '16px' }}>
+                    <p style={{ fontSize: 'clamp(1.05rem, 3vw, 1.25rem)', fontWeight: 700, color: '#fff', wordBreak: 'break-word' }}>{top3[2].username}</p>
                     <p style={{ fontSize: '0.875rem', color: '#b07235', fontWeight: 600, marginBottom: '0.5rem' }}>LVL {top3[2].level}</p>
                     <div style={{ paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                      <span style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: '1.25rem' }}>{formatNumber(top3[2].totalXp)}</span>
+                      <span style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: 'clamp(1.1rem, 3vw, 1.25rem)' }}>{formatNumber(top3[2].totalXp)}</span>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>TOTAL XP</span>
                     </div>
                   </div>
@@ -153,13 +165,13 @@ export default function Leaderboard() {
             <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} 
               style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', overflow: 'hidden' }}>
               <div className="leaderboard-table-container">
-                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '480px' }}>
+                <table className="leaderboard-table">
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
-                      <th style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</th>
-                      <th style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</th>
-                      <th style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Level</th>
-                      <th style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Total XP</th>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</th>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</th>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Level</th>
+                      <th className="leaderboard-th" style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Total XP</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -178,17 +190,17 @@ export default function Leaderboard() {
                           onMouseOut={(e) => { e.currentTarget.style.background = isMe ? 'rgba(138, 43, 226, 0.1)' : (index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'); e.currentTarget.style.transform = 'translateX(0)'; }}
                           onClick={() => navigate(`/profile/${entry.userId}`)}
                         >
-                          <td style={{ padding: '1rem 1.5rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{rank}</td>
-                          <td style={{ padding: '1rem 1.5rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                              <img src={getAvatar(entry.username)} alt={entry.username} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-secondary)' }} />
-                              <span style={{ fontWeight: 600, color: '#fff' }}>{entry.username} {isMe && '(You)'}</span>
+                          <td className="leaderboard-td" style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{rank}</td>
+                          <td className="leaderboard-td">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                              <img src={getAvatar(entry.username)} alt={entry.username} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-secondary)', flexShrink: 0 }} />
+                              <span style={{ fontWeight: 600, color: '#fff', wordBreak: 'break-word' }}>{entry.username} {isMe && '(You)'}</span>
                             </div>
                           </td>
-                          <td style={{ padding: '1rem 1.5rem' }}>
-                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '100px', background: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600 }}>LVL {entry.level}</span>
+                          <td className="leaderboard-td">
+                            <span style={{ padding: '0.2rem 0.6rem', borderRadius: '100px', background: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>LVL {entry.level}</span>
                           </td>
-                          <td style={{ padding: '1rem 1.5rem', textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontWeight: 700 }}>
+                          <td className="leaderboard-td" style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>
                             {formatNumber(entry.totalXp)}
                           </td>
                         </tr>
@@ -198,12 +210,14 @@ export default function Leaderboard() {
                 </table>
               </div>
               
-              <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <span style={{ color: 'var(--text-tertiary)', fontSize: '0.875rem', fontWeight: 600 }}>Showing Top {entries.length}</span>
                 {entries.length === limit && (
                   <button 
                     onClick={() => setLimit(l => l + 50)}
-                    style={{ padding: '0.5rem 1.5rem', background: 'var(--accent-primary)', color: '#fff', borderRadius: '8px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                    className="btn btn-primary btn-sm"
+                    style={{ minHeight: 38 }}
+                  >
                     Load More
                   </button>
                 )}
