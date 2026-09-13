@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { challengeService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
-import ReactMarkdown from 'react-markdown';
+import ChatMarkdown from '@/components/ui/ChatMarkdown';
 import Editor from '@monaco-editor/react';
 
 const LANG_LABELS = { javascript: 'JavaScript', python: 'Python' };
@@ -217,7 +217,7 @@ export default function ChallengeDetail() {
               {activeTab === 'description' ? (
                 <motion.div key="desc" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
                   <div style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
-                    <ReactMarkdown>{challenge.description}</ReactMarkdown>
+                    <ChatMarkdown>{challenge.description}</ChatMarkdown>
                   </div>
 
                   {/* Visible test cases */}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { aiService } from '../services';
 import { useAuth } from '../context/AuthContext';
-import ReactMarkdown from 'react-markdown';
+import ChatMarkdown from '../components/ui/ChatMarkdown';
 import toast from 'react-hot-toast';
 
 export default function AIAdvisor() {
@@ -87,7 +87,7 @@ export default function AIAdvisor() {
             </div>
           ) : response ? (
             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '0.9375rem' }}>
-              <ReactMarkdown>{response}</ReactMarkdown>
+              <ChatMarkdown>{response}</ChatMarkdown>
             </div>
           ) : (
             <div className="empty-state" style={{ padding: '3rem 1rem' }}>
