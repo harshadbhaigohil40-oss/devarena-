@@ -43,19 +43,15 @@ export default function DSA() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container">
       {/* Header Banner */}
       <div 
-        className="dsa-header mb-xl"
+        className="dsa-header mb-xl dsa-header-flex"
         style={{
-          position: 'relative',
-          padding: 'clamp(2rem, 5vw, 3rem)',
+          padding: 'clamp(1.5rem, 5vw, 3rem)',
           borderRadius: '24px',
           background: isLight 
             ? 'linear-gradient(135deg, #FFF1F8 0%, #FCE7F3 100%)' 
             : 'linear-gradient(135deg, rgba(232, 67, 147, 0.1) 0%, rgba(232, 67, 147, 0.02) 100%)',
           border: isLight ? '1px solid #FBCFE8' : '1px solid rgba(232, 67, 147, 0.2)',
           overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '2rem'
         }}
       >
         {/* Glow */}
@@ -70,7 +66,8 @@ export default function DSA() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '2.5rem', flexShrink: 0,
           boxShadow: isLight ? '0 10px 25px rgba(232, 67, 147, 0.2)' : '0 10px 30px rgba(0,0,0,0.5)',
-          border: isLight ? '1px solid #F9A8D4' : '1px solid rgba(232, 67, 147, 0.3)'
+          border: isLight ? '1px solid #F9A8D4' : '1px solid rgba(232, 67, 147, 0.3)',
+          zIndex: 1
         }}>
           🧩
         </div>
@@ -98,17 +95,21 @@ export default function DSA() {
       <div style={{ position: 'relative', maxWidth: '800px', margin: '0 auto', padding: '2rem 0' }}>
         
         {/* Vertical Line */}
-        <div style={{
-          position: 'absolute',
-          top: '2rem', bottom: '2rem',
-          left: '39px',
-          width: '2px',
-          background: isLight ? '#FCE7F3' : 'rgba(232, 67, 147, 0.1)',
-          zIndex: 0
-        }} />
+        <div 
+          className="dsa-timeline-line"
+          style={{
+            position: 'absolute',
+            top: '2rem', bottom: '2rem',
+            left: '39px',
+            width: '2px',
+            background: isLight ? '#FCE7F3' : 'rgba(232, 67, 147, 0.1)',
+            zIndex: 0
+          }} 
+        />
 
         {/* Active Line Progress */}
         <motion.div 
+          className="dsa-timeline-line"
           initial={{ height: 0 }}
           animate={{ height: `${(currentModuleIndex / (DSA_MODULES.length - 1)) * 100}%` }}
           transition={{ duration: 1.5, ease: "easeOut" }}
@@ -156,12 +157,8 @@ export default function DSA() {
                 onClick={() => handleModuleClick(mod, index)}
                 whileHover={!isLocked ? { scale: 1.02, x: 5 } : {}}
                 whileTap={!isLocked ? { scale: 0.98 } : {}}
-                className="card"
+                className="card dsa-card-wrapper"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1.5rem',
-                  padding: '1.25rem',
                   background: cardBg,
                   border: `1px solid ${borderColor}`,
                   boxShadow: isCurrent 
@@ -172,20 +169,21 @@ export default function DSA() {
                 }}
               >
                 {/* Status Node */}
-                <div style={{
+                <div 
+                  className="dsa-status-node"
+                  style={{
                   width: '32px', height: '32px', borderRadius: '50%',
                   background: isCompleted ? '#E84393' : isCurrent ? '#E84393' : (isLight ? '#E2E8F0' : '#334155'),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'white', fontSize: '0.8rem', flexShrink: 0,
                   boxShadow: isCurrent ? '0 0 0 6px rgba(232, 67, 147, 0.2)' : 'none',
-                  zIndex: 2,
-                  marginLeft: '-8px' // Align with the line
+                  zIndex: 2
                 }}>
                   {isCompleted ? '✓' : isLocked ? '🔒' : '●'}
                 </div>
 
                 {/* Module Icon */}
-                <div style={{
+                <div className="dsa-icon-container" style={{
                   width: '48px', height: '48px', borderRadius: '12px',
                   background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '1.5rem', flexShrink: 0

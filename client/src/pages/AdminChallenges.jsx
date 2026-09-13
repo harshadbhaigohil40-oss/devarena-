@@ -94,6 +94,7 @@ export default function AdminChallenges() {
     },
     onError: (e) => toast.error(e.response?.data?.error || 'Import failed'),
   });
+
   const editMut = useMutation({
     mutationFn: ({ slug, data }) => adminService.editGenerated(slug, data),
     onSuccess: () => { qc.invalidateQueries(['admin-challenges']); setEditing(null); toast.success('Saved'); },
@@ -128,7 +129,8 @@ export default function AdminChallenges() {
           </h1>
           <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>Review, edit, approve, and import AI-generated challenges</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+
           <button onClick={() => setViewTab('list')} style={btnStyle(viewTab === 'list' ? 'var(--accent-primary)' : 'var(--bg-secondary)', 'var(--text-primary)')}>
             📋 Challenges List
           </button>
@@ -301,15 +303,15 @@ export default function AdminChallenges() {
                 <button onClick={() => bulkMut.mutate({ slugs: [...selected], approved: false })} style={btnStyle('#e17055')}>❌ Bulk Reject</button>
               </>
             )}
-            <button onClick={() => { if (confirm('Recalculate quality scores for all generated files?')) scoreAllMut.mutate(); }} style={btnStyle('var(--bg-tertiary)', 'var(--text-primary)')} disabled={scoreAllMut.isLoading}>
-              {scoreAllMut.isLoading ? '⏳ Scoring...' : '⚙️ Recalculate Quality Scores'}
+            <button onClick={() => { if (confirm('Recalculate quality scores for all generated files?')) scoreAllMut.mutate(); }} style={btnStyle('var(--bg-tertiary)', 'var(--text-primary)')} disabled={scoreAllMut.isPending}>
+              {scoreAllMut.isPending ? '⏳ Scoring...' : '⚙️ Recalculate Quality Scores'}
             </button>
             
             <div style={{ marginLeft: 'auto' }}>
               <button onClick={() => { if (confirm(`Import ${stats.approved} approved challenges into MongoDB? Rejected items will have validation errors detailed in console.`)) importMut.mutate(); }}
-                disabled={stats.approved === 0 || importMut.isLoading}
+                disabled={stats.approved === 0 || importMut.isPending}
                 style={{ ...btnStyle(stats.approved > 0 ? 'linear-gradient(135deg, #6c5ce7, #a29bfe)' : '#555'), opacity: stats.approved === 0 ? 0.5 : 1 }}>
-                {importMut.isLoading ? '⏳ Importing...' : `🚀 Import ${stats.approved} Approved`}
+                {importMut.isPending ? '⏳ Importing...' : `🚀 Import ${stats.approved} Approved`}
               </button>
             </div>
           </div>
@@ -433,9 +435,9 @@ export default function AdminChallenges() {
                                 {c.testCases?.map((tc, i) => (
                                   <div key={i} style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: 6, display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                     <span style={{ color: tc.isHidden ? '#e17055' : '#00b894', fontWeight: 700 }}>{tc.isHidden ? '🔒' : '👁️'}</span>
-                                    <span style={{ color: 'var(--text-secondary)' }}>{tc.input?.substring(0, 40)}</span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{String(tc.input || '').substring(0, 40)}</span>
                                     <span style={{ color: 'var(--text-tertiary)' }}>→</span>
-                                    <span style={{ color: '#00b894' }}>{tc.expectedOutput?.substring(0, 30)}</span>
+                                    <span style={{ color: '#00b894' }}>{String(tc.expectedOutput || '').substring(0, 30)}</span>
                                   </div>
                                 ))}
                               </div>
@@ -449,8 +451,8 @@ export default function AdminChallenges() {
                               {c.approved ? '❌ Reject / Unapprove' : '✅ Approve Challenge'}
                             </button>
                             <button onClick={() => setEditing({ ...c })} style={btnStyle('#0984e3')}>✏️ Edit Details</button>
-                            <button onClick={() => aiReviewMut.mutate(c.slug)} style={btnStyle('linear-gradient(135deg, #6c5ce7, #a29bfe)')} disabled={aiReviewMut.isLoading}>
-                              {aiReviewMut.isLoading && aiReviewMut.variables === c.slug ? '⏳ Analyzing...' : '🤖 AI Review & Improve'}
+                            <button onClick={() => aiReviewMut.mutate(c.slug)} style={btnStyle('linear-gradient(135deg, #6c5ce7, #a29bfe)')} disabled={aiReviewMut.isPending}>
+                              {aiReviewMut.isPending && aiReviewMut.variables === c.slug ? '⏳ Analyzing...' : '🤖 AI Review & Improve'}
                             </button>
                             <button onClick={() => { if (confirm(`Delete "${c.title}"?`)) deleteMut.mutate(c.slug); }}
                               style={{ ...btnStyle('#d63031'), marginLeft: 'auto' }}>🗑️ Delete</button>
@@ -503,8 +505,8 @@ export default function AdminChallenges() {
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                 <button onClick={() => setEditing(null)} style={btnStyle('var(--bg-tertiary)', 'var(--text-primary)')}>Cancel</button>
                 <button onClick={() => { const { _sourceFile, ...data } = editing; editMut.mutate({ slug: editing.slug, data }); }}
-                  disabled={editMut.isLoading} style={btnStyle('linear-gradient(135deg, #6c5ce7, #a29bfe)')}>
-                  {editMut.isLoading ? 'Saving...' : '💾 Save Changes'}
+                  disabled={editMut.isPending} style={btnStyle('linear-gradient(135deg, #6c5ce7, #a29bfe)')}>
+                  {editMut.isPending ? 'Saving...' : '💾 Save Changes'}
                 </button>
               </div>
             </motion.div>
@@ -603,6 +605,8 @@ export default function AdminChallenges() {
           </motion.div>
         )}
       </AnimatePresence>
+
+
     </motion.div>
   );
 }

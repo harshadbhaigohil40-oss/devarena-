@@ -12,7 +12,12 @@
     "generate:algorithms": "node scripts/generateChallenges.js --tree algorithms --batch 25",
     "generate:systemdesign": "node scripts/generateChallenges.js --tree systemdesign --batch 25",
     "generate:all": "node scripts/generateChallenges.js --tree frontend --batch 25 && node scripts/generateChallenges.js --tree backend --batch 25 && node scripts/generateChallenges.js --tree algorithms --batch 25 && node scripts/generateChallenges.js --tree systemdesign --batch 25",
-    "import:challenges": "node scripts/importChallenges.js --all"
+    "import:challenges": "node scripts/importChallenges.js --all",
+    "seed:dsa": "node scripts/seed_dsa.js",
+    "seed:systemdesign": "node scripts/seed_systemdesign.js",
+    "seed:frontend": "node scripts/seed_frontend.js",
+    "seed:backend": "node scripts/seed_backend.js",
+    "seed:algorithms": "node scripts/seed_algorithms.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

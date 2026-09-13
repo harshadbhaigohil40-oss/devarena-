@@ -1,0 +1,261 @@
+[
+  {
+    "title": "Build Balanced BST from Sorted Array",
+    "slug": "build-balanced-bst-from-sorted-array",
+    "difficulty": "intermediate",
+    "category": "datastructures",
+    "tags": [
+      "Binary Tree",
+      "BST",
+      "Recursion",
+      "Divide and Conquer"
+    ],
+    "xpReward": 120,
+    "description": "Given a sorted array `nums` where elements are unique, construct a height-balanced binary search tree (BST) from it. A height-balanced binary tree is a binary tree in which the depth of the two subtrees of every node never differs by more than one.\n\nYour task is to implement the `sortedArrayToBST` function, which takes the sorted array as input and returns the root of the constructed BST.\n\n**Constraints:**\n* `1 <= nums.length <= 10^4`\n* `-10^4 <= nums[i] <= 10^4`\n* `nums` is sorted in strictly increasing order.\n* All the values in `nums` are unique.\n\n**Example:**\n**Input:** `nums = [-10,-3,0,5,9]`\n\n**Expected Output (one possible balanced BST structure):**\n```\n     0\n    / \\\n  -3   9\n  /   /\n-10  5\n```\n(Represented as a serialized tree string for comparison, e.g., `[0, -3, 9, -10, null, 5, null]`). Note that multiple valid balanced BSTs can be formed; any correct one is acceptable. The test cases will validate the structure, not a specific serialization order beyond its correctness.\n",
+    "starterCode": {
+      "javascript": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {number[]} nums\n * @return {TreeNode}\n */\nfunction TreeNode(val, left, right) {\n    this.val = (val === undefined ? 0 : val);\n    this.left = (left === undefined ? null : left);\n    this.right = (right === undefined ? null : right);\n}\n\nfunction sortedArrayToBST(nums) {\n  // Implement your solution here\n}"
+    },
+    "testCases": [
+      {
+        "input": "[-10,-3,0,5,9]",
+        "expectedOutput": "[0,-3,9,-10,null,5,null]",
+        "isHidden": false
+      },
+      {
+        "input": "[1,3]",
+        "expectedOutput": "[3,1,null]",
+        "isHidden": false
+      },
+      {
+        "input": "[0]",
+        "expectedOutput": "[0]",
+        "isHidden": false
+      },
+      {
+        "input": "[1,2,3,4,5,6,7]",
+        "expectedOutput": "[4,2,6,1,3,5,7]",
+        "isHidden": true
+      },
+      {
+        "input": "[]",
+        "expectedOutput": "null",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Think about what element from a sorted array should be the root of a BST to ensure balance.",
+      "Consider a recursive approach. How would you determine the sub-arrays for the left and right children?",
+      "The middle element of a sorted array makes a good root for a balanced BST."
+    ],
+    "source": "ai_generator",
+    "importedAt": "2026-09-13T16:35:35.972Z",
+    "status": "pending",
+    "approved": false
+  },
+  {
+    "title": "Kth Smallest Element in a BST",
+    "slug": "kth-smallest-element-in-bst",
+    "difficulty": "intermediate",
+    "category": "datastructures",
+    "tags": [
+      "Binary Tree",
+      "BST",
+      "Traversal",
+      "In-order",
+      "Recursion",
+      "Iteration"
+    ],
+    "xpReward": 110,
+    "description": "Given the `root` of a binary search tree (BST) and an integer `k`, return the `k`-th smallest value (1-indexed) of all the values of the nodes in the tree.\n\nYou should implement the `kthSmallest` function.\n\n**Constraints:**\n* The number of nodes in the tree is `n`.\n* `1 <= k <= n <= 10^4`\n* `0 <= Node.val <= 10^4`\n\n**Example 1:**\n**Input:** `root = [3,1,4,null,2]`, `k = 1`\n(Tree structure: `3` is root, `1` left child, `4` right child, `2` right child of `1`)\n\n**Expected Output:** `1`\n\n**Example 2:**\n**Input:** `root = [5,3,6,2,4,null,null,1]`, `k = 3`\n(Tree structure: `5` is root, `3` left, `6` right; `2` left of `3`, `4` right of `3`; `1` left of `2`)\n\n**Expected Output:** `3`\n",
+    "starterCode": {
+      "javascript": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n/**\n * @param {TreeNode} root\n * @param {number} k\n * @return {number}\n */\nfunction kthSmallest(root, k) {\n  // Implement your solution here\n}"
+    },
+    "testCases": [
+      {
+        "input": "{\"root\":[3,1,4,null,2],\"k\":1}",
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "input": "{\"root\":[5,3,6,2,4,null,null,1],\"k\":3}",
+        "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "input": "{\"root\":[1],\"k\":1}",
+        "expectedOutput": "1",
+        "isHidden": true
+      },
+      {
+        "input": "{\"root\":[7,3,9,1,5,8,10,null,2,4,6],\"k\":6}",
+        "expectedOutput": "6",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "What kind of traversal visits nodes in increasing order for a BST?",
+      "You can store the visited nodes in a list or count them directly.",
+      "Consider using an iterative in-order traversal with a stack to avoid recursion depth limits for very tall trees."
+    ],
+    "source": "ai_generator",
+    "importedAt": "2026-09-13T16:35:35.972Z",
+    "status": "pending",
+    "approved": false
+  },
+  {
+    "title": "Merge K Sorted Linked Lists",
+    "slug": "merge-k-sorted-linked-lists",
+    "difficulty": "intermediate",
+    "category": "datastructures",
+    "tags": [
+      "Linked List",
+      "Heap",
+      "Priority Queue",
+      "Merge",
+      "Divide and Conquer"
+    ],
+    "xpReward": 140,
+    "description": "You are given an array of `k` linked-lists, where each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it. You should implement the `mergeKLists` function.\n\n**Constraints:**\n* `k == lists.length`\n* `0 <= k <= 10^4`\n* `0 <= lists[i].length <= 500`\n* `-10^4 <= Node.val <= 10^4`\n* `lists[i]` is sorted in ascending order.\n* The total number of nodes in all linked lists will not exceed `10^4`.\n\n**Example 1:**\n**Input:** `lists = [[1,4,5],[1,3,4],[2,6]]`\n\n**Expected Output:** `[1,1,2,3,4,4,5,6]`\n\n**Example 2:**\n**Input:** `lists = []`\n\n**Expected Output:** `[]`\n\n**Example 3:**\n**Input:** `lists = [[]]`\n\n**Expected Output:** `[]`\n",
+    "starterCode": {
+      "javascript": "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\n/**\n * @param {ListNode[]} lists\n * @return {ListNode}\n */\nfunction ListNode(val, next) {\n    this.val = (val === undefined ? 0 : val);\n    this.next = (next === undefined ? null : next);\n}\n\nfunction mergeKLists(lists) {\n  // Implement your solution here\n}"
+    },
+    "testCases": [
+      {
+        "input": "[[1,4,5],[1,3,4],[2,6]]",
+        "expectedOutput": "[1,1,2,3,4,4,5,6]",
+        "isHidden": false
+      },
+      {
+        "input": "[]",
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "input": "[[]]",
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "input": "[[null],[1]]",
+        "expectedOutput": "[1]",
+        "isHidden": true
+      },
+      {
+        "input": "[[1,2,3],[4,5,6],[7,8,9]]",
+        "expectedOutput": "[1,2,3,4,5,6,7,8,9]",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "A naive approach of repeatedly merging two lists might be too slow. Think about a more efficient way to always pick the smallest element among all `k` lists.",
+      "Consider using a data structure that can efficiently give you the minimum element among a collection of elements. A min-heap (priority queue) is suitable for this.",
+      "Alternatively, think about a divide-and-conquer approach. Can you merge two lists at a time, reducing the problem size iteratively?"
+    ],
+    "source": "ai_generator",
+    "importedAt": "2026-09-13T16:35:35.972Z",
+    "status": "pending",
+    "approved": false
+  },
+  {
+    "title": "LRU Cache",
+    "slug": "lru-cache",
+    "difficulty": "intermediate",
+    "category": "datastructures",
+    "tags": [
+      "Hash Map",
+      "Doubly Linked List",
+      "Cache",
+      "Design"
+    ],
+    "xpReward": 150,
+    "description": "Design and implement a data structure for a Least Recently Used (LRU) cache. It should support the following operations: `get` and `put`.\n\nImplement the `LRUCache` class:\n\n*   `LRUCache(int capacity)` initializes the LRU cache with a positive `capacity`.\n*   `int get(int key)`: Return the value of the `key` if the `key` exists in the cache. Otherwise, return `-1`. When a `get` operation occurs, the accessed item becomes the most recently used.\n*   `void put(int key, int value)`: Update the value of the `key` if the `key` exists. Otherwise, add the `key-value` pair to the cache. If the number of keys exceeds the `capacity` from this operation, evict the least recently used `key` before inserting the new item.\n\nAll operations should be `O(1)` average time complexity.\n\n**Constraints:**\n* `1 <= capacity <= 3000`\n* `0 <= key <= 10^4`\n* `0 <= value <= 10^5`\n* At most `2 * 10^5` calls will be made to `get` and `put`.\n\n**Example:**\n```\nLRUCache lRUCache = new LRUCache(2);\nlRUCache.put(1, 1); // cache is {1=1}\nlRUCache.put(2, 2); // cache is {1=1, 2=2}\nlRUCache.get(1);    // return 1 (key 1 becomes MRU) cache is {2=2, 1=1}\nlRUCache.put(3, 3); // LRU key 2 is evicted, cache is {1=1, 3=3}\nlRUCache.get(2);    // return -1 (not found)\nlRUCache.put(4, 4); // LRU key 1 is evicted, cache is {3=3, 4=4}\nlRUCache.get(1);    // return -1 (not found)\nlRUCache.get(3);    // return 3 (key 3 becomes MRU) cache is {4=4, 3=3}\nlRUCache.get(4);    // return 4 (key 4 becomes MRU) cache is {3=3, 4=4}\n```\n",
+    "starterCode": {
+      "javascript": "/**\n * @param {number} capacity\n */\nvar LRUCache = function(capacity) {\n  // Initialize your LRU Cache here\n};\n\n/** \n * @param {number} key\n * @return {number}\n */\nLRUCache.prototype.get = function(key) {\n  // Implement get operation\n};\n\n/** \n * @param {number} key \n * @param {number} value\n * @return {void}\n */\nLRUCache.prototype.put = function(key, value) {\n  // Implement put operation\n};\n\n/**\n * Your LRUCache object will be instantiated and called as such:\n * var obj = new LRUCache(capacity)\n * var param_1 = obj.get(key)\n * obj.put(key,value)\n */"
+    },
+    "testCases": [
+      {
+        "input": "[\"LRUCache\", \"put\", \"put\", \"get\", \"put\", \"get\", \"put\", \"get\", \"get\", \"get\"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]",
+        "expectedOutput": "[null, null, null, 1, null, -1, null, -1, 3, 4]",
+        "isHidden": false
+      },
+      {
+        "input": "[\"LRUCache\",\"put\",\"get\"]\n[[1],[2,1],[2]]",
+        "expectedOutput": "[null,null,1]",
+        "isHidden": false
+      },
+      {
+        "input": "[\"LRUCache\",\"put\",\"put\",\"get\",\"put\",\"put\",\"get\"]\n[[2],[2,1],[2,2],[2],[1,1],[4,1],[2]]",
+        "expectedOutput": "[null,null,null,2,null,null,-1]",
+        "isHidden": true
+      },
+      {
+        "input": "[\"LRUCache\",\"put\",\"put\",\"put\",\"put\",\"get\",\"get\"]\n[[2],[1,1],[2,2],[3,3],[4,4],[4],[3]]",
+        "expectedOutput": "[null,null,null,null,null,4,3]",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "To achieve O(1) for `get` and `put`, you'll likely need a hash map to store `key` to `value` mappings. But how do you handle LRU eviction efficiently?",
+      "For LRU eviction and updating 'most recently used' status, a doubly linked list is often used. The head represents the MRU, and the tail represents the LRU.",
+      "The hash map can store the `key` and a reference to its corresponding node in the doubly linked list. This allows quick access to move nodes within the list."
+    ],
+    "source": "ai_generator",
+    "importedAt": "2026-09-13T16:35:35.972Z",
+    "status": "pending",
+    "approved": false
+  },
+  {
+    "title": "Course Schedule (Topological Sort)",
+    "slug": "course-schedule-topological-sort",
+    "difficulty": "intermediate",
+    "category": "datastructures",
+    "tags": [
+      "Graph",
+      "DFS",
+      "BFS",
+      "Topological Sort",
+      "Directed Acyclic Graph (DAG)"
+    ],
+    "xpReward": 130,
+    "description": "There are a total of `numCourses` courses you have to take, labeled from `0` to `numCourses - 1`. You are given an array `prerequisites` where `prerequisites[i] = [ai, bi]` indicates that you must take course `bi` first if you want to take course `ai`.\n\nFor example, the pair `[0, 1]` indicates that to take course `0` you have to first take course `1`.\n\nReturn `true` if you can finish all courses. Otherwise, return `false`.\n\nYour task is to implement the `canFinish` function.\n\n**Constraints:**\n* `1 <= numCourses <= 2000`\n* `0 <= prerequisites.length <= 5000`\n* `prerequisites[i].length == 2`\n* `0 <= ai, bi < numCourses`\n* `ai != bi`\n* All the pairs `[ai, bi]` are unique.\n\n**Example 1:**\n**Input:** `numCourses = 2`, `prerequisites = [[1,0]]`\n\n**Expected Output:** `true`\n**Explanation:** There are a total of 2 courses to take. To take course 1 you should have finished course 0. So it is possible.\n\n**Example 2:**\n**Input:** `numCourses = 2`, `prerequisites = [[1,0],[0,1]]`\n\n**Expected Output:** `false`\n**Explanation:** There are a total of 2 courses to take. To take course 1 you should have finished course 0, and to take course 0 you should also have finished course 1. This is impossible.\n",
+    "starterCode": {
+      "javascript": "/**\n * @param {number} numCourses\n * @param {number[][]} prerequisites\n * @return {boolean}\n */\nfunction canFinish(numCourses, prerequisites) {\n  // Implement your solution here\n}"
+    },
+    "testCases": [
+      {
+        "input": "{\"numCourses\":2,\"prerequisites\":[[1,0]]}",
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "input": "{\"numCourses\":2,\"prerequisites\":[[1,0],[0,1]]}",
+        "expectedOutput": "false",
+        "isHidden": false
+      },
+      {
+        "input": "{\"numCourses\":3,\"prerequisites\":[[1,0],[2,1]]}",
+        "expectedOutput": "true",
+        "isHidden": true
+      },
+      {
+        "input": "{\"numCourses\":4,\"prerequisites\":[[1,0],[2,1],[3,2],[1,3]]}",
+        "expectedOutput": "false",
+        "isHidden": true
+      },
+      {
+        "input": "{\"numCourses\":5,\"prerequisites\":[[1,0],[2,0],[3,1],[3,2],[4,3]]}",
+        "expectedOutput": "true",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "This problem can be modeled as a graph problem. What do the courses and prerequisites represent in a graph?",
+      "If you can finish all courses, what property must the graph have regarding cycles?",
+      "Consider using either Depth-First Search (DFS) or Breadth-First Search (BFS) to detect cycles or perform a topological sort. For BFS, you'll need to track in-degrees."
+    ],
+    "source": "ai_generator",
+    "importedAt": "2026-09-13T16:35:35.972Z",
+    "status": "pending",
+    "approved": false
+  }
+]

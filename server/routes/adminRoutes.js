@@ -23,7 +23,7 @@ router.post('/challenges/score-all', ctrl.scoreAll);
 // AI review
 router.post('/challenges/generated/:slug/ai-review', ctrl.aiReview);
 
-// Import
+// Generate & Import
 router.post('/challenges/import', ctrl.importApproved);
 
 // Analytics

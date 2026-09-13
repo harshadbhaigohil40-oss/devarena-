@@ -1,0 +1,41 @@
+[
+  { "topicId": "nodejs-basics", "title": "Build a File Server with Node's http Module (no framework)", "difficulty": "Easy", "link": "https://nodejs.org/api/http.html" },
+  { "topicId": "nodejs-basics", "title": "Read and Parse a CSV File with fs and Streams", "difficulty": "Easy", "link": "https://nodejs.org/api/stream.html" },
+  { "topicId": "nodejs-basics", "title": "Build a Simple Event Emitter", "difficulty": "Easy", "link": "https://nodejs.org/api/events.html" },
+  { "topicId": "nodejs-basics", "title": "Implement a Basic CLI Tool with process.argv", "difficulty": "Easy", "link": "" },
+
+  { "topicId": "expressjs", "title": "Build a REST API for a Todo List (CRUD)", "difficulty": "Easy", "link": "https://expressjs.com/en/guide/routing.html" },
+  { "topicId": "expressjs", "title": "Write Custom Error-Handling Middleware", "difficulty": "Medium", "link": "https://expressjs.com/en/guide/error-handling.html" },
+  { "topicId": "expressjs", "title": "Add Request Validation Middleware (e.g. Zod/Joi)", "difficulty": "Medium", "link": "" },
+  { "topicId": "expressjs", "title": "Implement Rate Limiting Middleware", "difficulty": "Medium", "link": "" },
+  { "topicId": "expressjs", "title": "Add Pagination and Filtering to a List Endpoint", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "databases", "title": "Design a Normalized Schema for a Blog (Users, Posts, Comments)", "difficulty": "Medium", "link": "" },
+  { "topicId": "databases", "title": "Write Joins Across 3 Tables (SQL)", "difficulty": "Medium", "link": "" },
+  { "topicId": "databases", "title": "Add Indexes and Explain a Slow Query", "difficulty": "Medium", "link": "" },
+  { "topicId": "databases", "title": "Model a One-to-Many Relationship in MongoDB", "difficulty": "Medium", "link": "" },
+  { "topicId": "databases", "title": "Implement a Database Migration Script", "difficulty": "Medium", "link": "" },
+  { "topicId": "databases", "title": "Write a Transaction that Rolls Back on Failure", "difficulty": "Hard", "link": "" },
+
+  { "topicId": "authentication", "title": "Implement Password Hashing with bcrypt", "difficulty": "Easy", "link": "" },
+  { "topicId": "authentication", "title": "Build JWT-Based Login and Protected Routes", "difficulty": "Medium", "link": "https://jwt.io/introduction" },
+  { "topicId": "authentication", "title": "Implement Refresh Token Rotation", "difficulty": "Hard", "link": "" },
+  { "topicId": "authentication", "title": "Add OAuth Login (Google/GitHub)", "difficulty": "Medium", "link": "" },
+  { "topicId": "authentication", "title": "Implement Role-Based Access Control (RBAC)", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "scaling", "title": "Add Caching with Redis to a Hot Endpoint", "difficulty": "Medium", "link": "" },
+  { "topicId": "scaling", "title": "Horizontally Scale with a Load Balancer (concept + config)", "difficulty": "Medium", "link": "" },
+  { "topicId": "scaling", "title": "Implement a Job Queue with BullMQ/RabbitMQ", "difficulty": "Hard", "link": "" },
+  { "topicId": "scaling", "title": "Add Database Read Replicas and Route Read Traffic", "difficulty": "Hard", "link": "" },
+  { "topicId": "scaling", "title": "Profile and Fix a Memory Leak in a Node Service", "difficulty": "Hard", "link": "" },
+
+  { "topicId": "real-time", "title": "Build a Chat App with WebSockets", "difficulty": "Medium", "link": "" },
+  { "topicId": "real-time", "title": "Implement Server-Sent Events for Live Notifications", "difficulty": "Medium", "link": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events" },
+  { "topicId": "real-time", "title": "Build a Real-Time Collaborative Cursor (Socket.io)", "difficulty": "Hard", "link": "" },
+  { "topicId": "real-time", "title": "Implement Presence (online/offline) Tracking", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "backend-expert", "title": "Design and Implement an Idempotent Payment Endpoint", "difficulty": "Hard", "link": "" },
+  { "topicId": "backend-expert", "title": "Implement a Rate-Limited, Retry-Safe Webhook Receiver", "difficulty": "Hard", "link": "" },
+  { "topicId": "backend-expert", "title": "Build a Multi-Tenant API with Row-Level Isolation", "difficulty": "Hard", "link": "" },
+  { "topicId": "backend-expert", "title": "Add Distributed Tracing Across Two Microservices", "difficulty": "Hard", "link": "" }
+]

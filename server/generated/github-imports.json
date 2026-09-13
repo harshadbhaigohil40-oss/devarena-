@@ -1,0 +1,61 @@
+[
+  {
+    "title": "N Meetings in One Room",
+    "slug": "n-meetings-in-one-room",
+    "difficulty": "intermediate",
+    "category": "algorithms",
+    "tags": [
+      "Greedy",
+      "Sorting",
+      "Arrays",
+      "Interval Scheduling"
+    ],
+    "xpReward": 100,
+    "description": "You are given `N` meetings, each with a start time and an end time. Your task is to find the maximum number of meetings that can be scheduled in a single meeting room. A meeting can only be scheduled if its start time is strictly greater than the end time of the previously scheduled meeting.\n\n**Example:**\n`N = 6`\n`start[] = {1, 3, 0, 5, 8, 5}`\n`end[] = {2, 4, 6, 7, 9, 9}`\n\n**Output:** `4`\n\n**Explanation:**\nThe given meetings are: `(1,2), (3,4), (0,6), (5,7), (8,9), (5,9)`. To maximize the number of meetings, a greedy approach can be used.\n\nFirst, combine the start and end times into pairs and sort these meetings. A common and effective strategy for this problem is to sort primarily by their **end times**. If end times are the same, sorting by start time (or original index) can be used as a tie-breaker.\n\nAfter sorting by end time (and then start time for ties, as done in the provided solution's sorting logic):\n`meetings = [(1,2), (3,4), (0,6), (5,7), (5,9), (8,9)]`\n\nNow, iterate through the sorted meetings:\n1.  Select the first meeting `(1,2)`. The `last_scheduled_end_time` is `2`. Count = `1`.\n2.  Consider `(3,4)`. Its start time (`3`) is `>` `last_scheduled_end_time` (`2`). So, select `(3,4)`. Update `last_scheduled_end_time` to `4`. Count = `2`.\n3.  Consider `(0,6)`. Its start time (`0`) is not `>` `last_scheduled_end_time` (`4`). Skip.\n4.  Consider `(5,7)`. Its start time (`5`) is `>` `last_scheduled_end_time` (`4`). So, select `(5,7)`. Update `last_scheduled_end_time` to `7`. Count = `3`.\n5.  Consider `(5,9)`. Its start time (`5`) is not `>` `last_scheduled_end_time` (`7`). Skip.\n6.  Consider `(8,9)`. Its start time (`8`) is `>` `last_scheduled_end_time` (`7`). So, select `(8,9)`. Update `last_scheduled_end_time` to `9`. Count = `4`.\n\nTotal selected meetings: `4`. The scheduled meetings are `(1,2), (3,4), (5,7), (8,9)`.\n\nYour task is to implement this logic to return the maximum number of meetings.",
+    "starterCode": {
+      "python": "class Solution:\n    def maximumMeetings(self, n: int, start: list[int], end: list[int]) -> int:\n        # Your code here\n        pass"
+    },
+    "testCases": [
+      {
+        "input": "n = 6\nstart = [1, 3, 0, 5, 8, 5]\nend = [2, 4, 6, 7, 9, 9]",
+        "expectedOutput": "4",
+        "isHidden": false
+      },
+      {
+        "input": "n = 3\nstart = [1, 2, 3]\nend = [2, 3, 4]",
+        "expectedOutput": "3",
+        "isHidden": true
+      },
+      {
+        "input": "n = 4\nstart = [10, 12, 20, 30]\nend = [20, 25, 30, 40]",
+        "expectedOutput": "2",
+        "isHidden": true
+      },
+      {
+        "input": "n = 7\nstart = [1, 2, 3, 4, 5, 6, 7]\nend = [3, 4, 5, 6, 7, 8, 9]",
+        "expectedOutput": "3",
+        "isHidden": true
+      },
+      {
+        "input": "n = 1\nstart = [10]\nend = [20]",
+        "expectedOutput": "1",
+        "isHidden": true
+      },
+      {
+        "input": "n = 5\nstart = [7, 0, 1, 8, 8]\nend = [9, 10, 2, 9, 9]",
+        "expectedOutput": "2",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Consider a greedy approach. What characteristic of a meeting (start time or end time) would make it the 'best' to choose first or next to maximize subsequent choices?",
+      "Try sorting the meetings. What criteria for sorting would help you make optimal choices at each step? Hint: Focus on finishing meetings as early as possible.",
+      "After sorting meetings by their end times (and start times for ties), iterate through the sorted list. Select the first meeting. For subsequent meetings, only select one if its start time is strictly greater than the end time of the *last selected* meeting. Keep track of the end time of the last selected meeting."
+    ],
+    "source": "github",
+    "sourceUrl": "https://github.com/smv1999/CompetitiveProgrammingQuestionBank/blob/master/DSA%20450%20GFG/ActivitySelection.py",
+    "importedAt": "2026-09-13T16:26:50.020Z",
+    "status": "pending",
+    "approved": false
+  }
+]

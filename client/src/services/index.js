@@ -81,6 +81,7 @@ export const adminService = {
   approveGenerated: (slug, approved) => api.post(`/admin/challenges/generated/${slug}/approve`, { approved }),
   approveBulk: (slugs, approved) => api.post('/admin/challenges/generated/approve-bulk', { slugs, approved }),
   importApproved: () => api.post('/admin/challenges/import'),
+
   scoreChallenge: (slug) => api.post(`/admin/challenges/generated/${slug}/quality`),
   scoreAll: () => api.post('/admin/challenges/score-all'),
   aiReview: (slug) => api.post(`/admin/challenges/generated/${slug}/ai-review`),

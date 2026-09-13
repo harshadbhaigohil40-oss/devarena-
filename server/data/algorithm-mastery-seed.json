@@ -1,0 +1,43 @@
+[
+  { "topicId": "algorithm-basics", "title": "Big-O: Analyze Time Complexity of a Loop", "difficulty": "Easy", "link": "" },
+  { "topicId": "algorithm-basics", "title": "Fibonacci Number (Iterative)", "difficulty": "Easy", "link": "https://leetcode.com/problems/fibonacci-number/" },
+  { "topicId": "algorithm-basics", "title": "Reverse Integer", "difficulty": "Easy", "link": "https://leetcode.com/problems/reverse-integer/" },
+  { "topicId": "algorithm-basics", "title": "FizzBuzz", "difficulty": "Easy", "link": "https://leetcode.com/problems/fizz-buzz/" },
+
+  { "topicId": "searching", "title": "Binary Search", "difficulty": "Easy", "link": "https://leetcode.com/problems/binary-search/" },
+  { "topicId": "searching", "title": "Search in Rotated Sorted Array", "difficulty": "Medium", "link": "https://leetcode.com/problems/search-in-rotated-sorted-array/" },
+  { "topicId": "searching", "title": "Find First and Last Position of Element in Sorted Array", "difficulty": "Medium", "link": "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/" },
+  { "topicId": "searching", "title": "Search a 2D Matrix", "difficulty": "Medium", "link": "https://leetcode.com/problems/search-a-2d-matrix/" },
+  { "topicId": "searching", "title": "Median of Two Sorted Arrays", "difficulty": "Hard", "link": "https://leetcode.com/problems/median-of-two-sorted-arrays/" },
+
+  { "topicId": "sorting", "title": "Sort Colors (Dutch National Flag)", "difficulty": "Medium", "link": "https://leetcode.com/problems/sort-colors/" },
+  { "topicId": "sorting", "title": "Merge Intervals", "difficulty": "Medium", "link": "https://leetcode.com/problems/merge-intervals/" },
+  { "topicId": "sorting", "title": "Implement Merge Sort from Scratch", "difficulty": "Medium", "link": "" },
+  { "topicId": "sorting", "title": "Implement Quick Sort from Scratch", "difficulty": "Medium", "link": "" },
+  { "topicId": "sorting", "title": "Kth Largest Element in an Array", "difficulty": "Medium", "link": "https://leetcode.com/problems/kth-largest-element-in-an-array/" },
+  { "topicId": "sorting", "title": "Largest Number", "difficulty": "Medium", "link": "https://leetcode.com/problems/largest-number/" },
+
+  { "topicId": "recursion", "title": "Climbing Stairs", "difficulty": "Easy", "link": "https://leetcode.com/problems/climbing-stairs/" },
+  { "topicId": "recursion", "title": "Generate Parentheses", "difficulty": "Medium", "link": "https://leetcode.com/problems/generate-parentheses/" },
+  { "topicId": "recursion", "title": "Permutations", "difficulty": "Medium", "link": "https://leetcode.com/problems/permutations/" },
+  { "topicId": "recursion", "title": "Subsets", "difficulty": "Medium", "link": "https://leetcode.com/problems/subsets/" },
+  { "topicId": "recursion", "title": "N-Queens", "difficulty": "Hard", "link": "https://leetcode.com/problems/n-queens/" },
+
+  { "topicId": "dynamic-programming", "title": "House Robber", "difficulty": "Medium", "link": "https://leetcode.com/problems/house-robber/" },
+  { "topicId": "dynamic-programming", "title": "Coin Change", "difficulty": "Medium", "link": "https://leetcode.com/problems/coin-change/" },
+  { "topicId": "dynamic-programming", "title": "Longest Increasing Subsequence", "difficulty": "Medium", "link": "https://leetcode.com/problems/longest-increasing-subsequence/" },
+  { "topicId": "dynamic-programming", "title": "Longest Common Subsequence", "difficulty": "Medium", "link": "https://leetcode.com/problems/longest-common-subsequence/" },
+  { "topicId": "dynamic-programming", "title": "Word Break", "difficulty": "Medium", "link": "https://leetcode.com/problems/word-break/" },
+  { "topicId": "dynamic-programming", "title": "Edit Distance", "difficulty": "Hard", "link": "https://leetcode.com/problems/edit-distance/" },
+
+  { "topicId": "graph-algorithms", "title": "Number of Islands", "difficulty": "Medium", "link": "https://leetcode.com/problems/number-of-islands/" },
+  { "topicId": "graph-algorithms", "title": "Course Schedule (Topological Sort)", "difficulty": "Medium", "link": "https://leetcode.com/problems/course-schedule/" },
+  { "topicId": "graph-algorithms", "title": "Network Delay Time (Dijkstra)", "difficulty": "Medium", "link": "https://leetcode.com/problems/network-delay-time/" },
+  { "topicId": "graph-algorithms", "title": "Cheapest Flights Within K Stops (Bellman-Ford)", "difficulty": "Medium", "link": "https://leetcode.com/problems/cheapest-flights-within-k-stops/" },
+  { "topicId": "graph-algorithms", "title": "Minimum Spanning Tree (Kruskal's)", "difficulty": "Hard", "link": "" },
+
+  { "topicId": "algorithm-expert", "title": "Trapping Rain Water", "difficulty": "Hard", "link": "https://leetcode.com/problems/trapping-rain-water/" },
+  { "topicId": "algorithm-expert", "title": "Word Ladder", "difficulty": "Hard", "link": "https://leetcode.com/problems/word-ladder/" },
+  { "topicId": "algorithm-expert", "title": "Regular Expression Matching", "difficulty": "Hard", "link": "https://leetcode.com/problems/regular-expression-matching/" },
+  { "topicId": "algorithm-expert", "title": "Sliding Window Maximum", "difficulty": "Hard", "link": "https://leetcode.com/problems/sliding-window-maximum/" }
+]
