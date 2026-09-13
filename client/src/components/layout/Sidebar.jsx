@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -19,7 +20,19 @@ const recruiterLinks = [
 export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuth();
   const location = useLocation();
-  const hiddenPaths = ['/', '/login', '/register'];
+  const hiddenPaths = ['/', '/login', '/register', '/pricing'];
+
+  const [isDesktop, setIsDesktop] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth > 768 : true
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth > 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!user || hiddenPaths.includes(location.pathname)) return null;
 
@@ -27,24 +40,20 @@ export default function Sidebar({ isOpen, onClose }) {
 
   // Close sidebar on mobile when a link is clicked
   const handleLinkClick = () => {
-    // Only close if we're on a mobile viewport (sidebar is in overlay mode)
-    if (window.matchMedia('(max-width: 768px)').matches && onClose) {
+    if (!isDesktop && onClose) {
       onClose();
     }
   };
 
-  // On desktop (>768px), sidebar is always visible. On mobile, it's controlled by isOpen.
-  const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 769px)').matches;
-
   return (
     <motion.aside
-      initial={{ x: isDesktop ? 0 : -280 }}
-      animate={{ x: (isDesktop || isOpen) ? 0 : -280 }}
+      initial={{ x: isDesktop ? 0 : '-100%' }}
+      animate={{ x: (isDesktop || isOpen) ? 0 : '-100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       className="sidebar"
     >
-      <div style={{ padding: '0 1.5rem', marginBottom: '2rem' }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+      <div style={{ padding: '0 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link to="/" onClick={handleLinkClick} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
           <div style={{
             width: 36, height: 36, borderRadius: 8,
             background: 'var(--accent-gradient)', display: 'flex',
@@ -55,6 +64,16 @@ export default function Sidebar({ isOpen, onClose }) {
             DEV<span style={{ color: 'var(--accent-primary)' }}>ARENA</span>
           </span>
         </Link>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="mobile-only btn btn-icon"
+            aria-label="Close navigation menu"
+            style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       <div style={{ padding: '0 1rem', flex: 1 }}>

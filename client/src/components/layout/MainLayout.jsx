@@ -3,11 +3,28 @@ import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import { CommandPalette } from '@/components/search/CommandPalette';
 import FloatingChatbot from '@/components/ui/FloatingChatbot';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll when mobile menu is open to prevent background scrolling
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   return (
     <>
@@ -15,7 +32,7 @@ export default function MainLayout() {
       <CommandPalette />
       <div className="app-layout">
         <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-        <main className={`app-main ${['/', '/login', '/register'].includes(location.pathname) ? 'no-sidebar' : ''}`}>
+        <main className={`app-main ${['/', '/login', '/register', '/pricing'].includes(location.pathname) ? 'no-sidebar' : ''}`}>
           <Outlet />
         </main>
       </div>
@@ -25,6 +42,7 @@ export default function MainLayout() {
         <div 
           className="sidebar-backdrop"
           onClick={() => setIsMobileMenuOpen(false)}
+          aria-label="Close navigation overlay"
         />
       )}
 

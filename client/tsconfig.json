@@ -25,6 +25,7 @@
     "checkJs": false,
 
     /* Aliases */
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

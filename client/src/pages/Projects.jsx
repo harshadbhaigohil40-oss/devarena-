@@ -166,11 +166,11 @@ export default function Projects() {
                 <input className="input" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }} value={form.techStack} onChange={e => setForm({...form, techStack: e.target.value})} placeholder="React, Node.js, MongoDB, TailwindCSS" />
               </div>
               
-              <div className="flex gap-sm mt-sm">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn btn-primary" style={{ flex: 1, padding: '0.75rem', fontSize: '1rem' }}>
+              <div className="flex gap-sm mt-sm" style={{ flexWrap: 'wrap' }}>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn btn-primary" style={{ flex: '1 1 180px', padding: '0.75rem', fontSize: '1rem' }}>
                   {editingId ? 'Save Changes' : '🚀 Publish Project'}
                 </motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="button" onClick={handleCancel} className="btn" style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="button" onClick={handleCancel} className="btn" style={{ flex: '1 1 100px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}>
                   Cancel
                 </motion.button>
               </div>
@@ -260,7 +260,7 @@ export default function Projects() {
                       ))}
                     </div>
                     
-                    <div className="flex justify-between items-center pt-md" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="flex justify-between items-center pt-md" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap', gap: '0.5rem' }}>
                       <div className="flex items-center gap-md text-sm text-muted">
                         <span className="flex items-center gap-xs" title="Views"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> {p.views || 0}</span>
                         <motion.button 

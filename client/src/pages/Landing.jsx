@@ -57,14 +57,14 @@ export default function Landing() {
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }} className="landing-cta-group">
-            <Link to="/register" style={{ textDecoration: 'none' }}>
-              <div style={{ background: '#fff', color: '#000', padding: '1.1rem 2.5rem', borderRadius: '100px', fontWeight: 600, fontSize: '1.125rem', display: 'flex', alignItems: 'center', gap: '0.75rem', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', boxShadow: '0 8px 25px rgba(255,255,255,0.2)' }} onMouseOver={e => {e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(255,255,255,0.3)';}} onMouseOut={e => {e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(255,255,255,0.2)';}}>
+            <Link to="/register" style={{ textDecoration: 'none', width: 'auto' }}>
+              <div style={{ background: '#fff', color: '#000', padding: '1rem clamp(1.5rem, 4vw, 2.5rem)', borderRadius: '100px', fontWeight: 600, fontSize: 'clamp(1rem, 3vw, 1.125rem)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', boxShadow: '0 8px 25px rgba(255,255,255,0.2)', boxSizing: 'border-box' }} onMouseOver={e => {e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(255,255,255,0.3)';}} onMouseOut={e => {e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(255,255,255,0.2)';}}>
                 Start Coding Free
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               </div>
             </Link>
             <Link to="/login" style={{ textDecoration: 'none' }} className="desktop-only">
-              <div style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', padding: '1.1rem 2.5rem', borderRadius: '100px', fontWeight: 600, fontSize: '1.125rem', display: 'flex', alignItems: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', backdropFilter: 'blur(10px)' }} onMouseOver={e => {e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.borderColor = 'var(--border-secondary)';}} onMouseOut={e => {e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.borderColor = 'var(--border-primary)';}}>
+              <div style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', padding: '1rem clamp(1.5rem, 4vw, 2.5rem)', borderRadius: '100px', fontWeight: 600, fontSize: 'clamp(1rem, 3vw, 1.125rem)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer', backdropFilter: 'blur(10px)', boxSizing: 'border-box' }} onMouseOver={e => {e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.borderColor = 'var(--border-secondary)';}} onMouseOut={e => {e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.borderColor = 'var(--border-primary)';}}>
                 Sign In
               </div>
             </Link>
@@ -73,22 +73,22 @@ export default function Landing() {
       </section>
 
       {/* Social Proof */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '4rem 1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent)' }}>
+      <section style={{ position: 'relative', zIndex: 1, padding: 'clamp(2.5rem, 5vw, 4rem) 1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent)' }}>
         <p className="hero-tagline">Engineers from top companies train here</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(2rem, 5vw, 4rem)', flexWrap: 'wrap', opacity: 0.5, filter: 'grayscale(100%)', maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'clamp(1.5rem, 4vw, 4rem)', flexWrap: 'wrap', opacity: 0.5, filter: 'grayscale(100%)', maxWidth: '1000px', margin: '0 auto' }}>
           {['Google', 'Stripe', 'Vercel', 'Meta', 'Amazon', 'Netflix'].map(company => (
-            <span key={company} style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.5px' }}>{company}</span>
+            <span key={company} style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.5rem)', fontWeight: 800, letterSpacing: '-0.5px' }}>{company}</span>
           ))}
         </div>
       </section>
 
       {/* Features Showcase */}
-      <section className="landing-section" style={{ position: 'relative', zIndex: 1, padding: '8rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <motion.div {...fadeUp} style={{ textAlign: 'center', marginBottom: '5rem', maxWidth: '800px', margin: '0 auto 5rem' }}>
-          <h2 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
+      <section className="landing-section" style={{ position: 'relative', zIndex: 1, padding: 'clamp(4rem, 8vw, 8rem) 1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <motion.div {...fadeUp} style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem, 5vw, 5rem)', maxWidth: '800px', margin: '0 auto clamp(2.5rem, 5vw, 5rem)' }}>
+          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.15, marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
             A complete ecosystem for <br/><span style={{ color: 'var(--accent-primary)' }}>software excellence.</span>
           </h2>
-          <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>DevArena isn't just about algorithms. It's about building a verifiable portfolio of skills that engineering managers actually care about.</p>
+          <p style={{ fontSize: 'clamp(1rem, 2.5vw, 1.125rem)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>DevArena isn't just about algorithms. It's about building a verifiable portfolio of skills that engineering managers actually care about.</p>
         </motion.div>
 
         <div className="landing-features-grid">
@@ -100,7 +100,7 @@ export default function Landing() {
                 WebkitBackdropFilter: 'blur(16px)',
                 border: '1px solid var(--border-primary)', 
                 borderRadius: '24px', 
-                padding: '2.5rem',
+                padding: 'clamp(1.5rem, 4vw, 2.5rem)',
                 position: 'relative', 
                 overflow: 'hidden', 
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -125,7 +125,7 @@ export default function Landing() {
       </section>
 
       {/* Metrics Section */}
-      <section className="landing-section" style={{ position: 'relative', zIndex: 1, padding: '6rem 1.5rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-primary)', borderBottom: '1px solid var(--border-primary)' }}>
+      <section className="landing-section" style={{ position: 'relative', zIndex: 1, padding: 'clamp(3rem, 6vw, 6rem) 1.5rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-primary)', borderBottom: '1px solid var(--border-primary)' }}>
         <div className="landing-metrics-grid">
           {[
             { metric: '500k+', label: 'Lines of Code Evaluated' },
@@ -142,24 +142,24 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="landing-section-lg" style={{ position: 'relative', zIndex: 1, padding: '10rem 1.5rem', textAlign: 'center', overflow: 'hidden' }}>
+      <section className="landing-section-lg" style={{ position: 'relative', zIndex: 1, padding: 'clamp(4rem, 10vw, 10rem) 1.5rem', textAlign: 'center', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '100%', height: '500px', background: 'radial-gradient(ellipse at center, rgba(108,92,231,0.15) 0%, transparent 60%)', filter: 'blur(60px)', zIndex: -1, pointerEvents: 'none' }} />
         <motion.div {...fadeUp} style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '1.5rem', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>Ready to push to production?</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem', marginBottom: '2.5rem' }}>Join the elite network of developers transforming their careers.</p>
-          <Link to="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: '#fff', padding: '1.25rem 3rem', borderRadius: '100px', fontWeight: 600, fontSize: '1.125rem', textDecoration: 'none', transition: 'all 0.2s ease', boxShadow: '0 0 30px var(--accent-primary-glow)' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+          <h2 style={{ fontSize: 'clamp(2rem, 6vw, 4rem)', fontWeight: 800, lineHeight: 1.15, marginBottom: '1.5rem', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>Ready to push to production?</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(1rem, 2.5vw, 1.125rem)', marginBottom: '2.5rem' }}>Join the elite network of developers transforming their careers.</p>
+          <Link to="/register" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: '#fff', padding: '1rem clamp(1.75rem, 5vw, 3rem)', borderRadius: '100px', fontWeight: 600, fontSize: 'clamp(1rem, 3vw, 1.125rem)', textDecoration: 'none', transition: 'all 0.2s ease', boxShadow: '0 0 30px var(--accent-primary-glow)', maxWidth: '100%', boxSizing: 'border-box' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
             Get Started Now
           </Link>
         </motion.div>
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer" style={{ position: 'relative', zIndex: 1, padding: '3rem 1.5rem', borderTop: '1px solid var(--border-primary)' }}>
+      <footer className="landing-footer" style={{ position: 'relative', zIndex: 1, padding: '2.5rem 1.5rem', borderTop: '1px solid var(--border-primary)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ width: '24px', height: '24px', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', borderRadius: '6px', display: 'inline-block' }} />
           <span style={{ fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>DEVARENA</span>
         </div>
-        <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <div style={{ display: 'flex', gap: 'clamp(1rem, 3vw, 2rem)', flexWrap: 'wrap', justifyContent: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
           <span style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color='var(--text-primary)'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Changelog</span>
           <span style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color='var(--text-primary)'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Documentation</span>
           <span style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color='var(--text-primary)'} onMouseOut={e => e.currentTarget.style.color='var(--text-secondary)'}>Twitter</span>

@@ -44,7 +44,7 @@ export default function ChallengeCard({ challenge, index }) {
               </div>
             </div>
             
-            <h3 className="mb-sm challenge-card-title">
+            <h3 className="mb-sm challenge-card-title" style={{ wordBreak: 'break-word' }}>
               {challenge.title}
               {challenge.completed && <span className="ml-xs text-success" title="Completed">✓</span>}
             </h3>
@@ -65,7 +65,7 @@ export default function ChallengeCard({ challenge, index }) {
               )}
             </div>
             
-            <div className="mt-auto pt-md challenge-card-footer">
+            <div className="mt-auto pt-md challenge-card-footer" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
               <span className="flex items-center gap-xs">
                 <span className="opacity-50">👥</span> {challenge.attemptCount || 0} attempts
               </span>

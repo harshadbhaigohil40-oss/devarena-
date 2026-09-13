@@ -11,7 +11,7 @@ export default function ChatModal({ user, onClose }) {
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         onClick={(e) => e.stopPropagation()}
         className="card"
-        style={{ width: '100%', maxWidth: 500, height: 600, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}
+        style={{ width: '100%', maxWidth: 'min(500px, calc(100vw - 2rem))', height: 'min(600px, 90dvh)', maxHeight: '90dvh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}
       >
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)' }}>
           <div className="flex items-center gap-sm">

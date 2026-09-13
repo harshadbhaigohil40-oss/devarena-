@@ -44,7 +44,7 @@ export default function SettingsPage() {
       <div className="card mb-xl">
         <h3 className="mb-md">Theme Personalization</h3>
         <p className="text-muted mb-md text-sm">Choose the aesthetic that fits your workflow.</p>
-        <div className="grid grid-4" style={{ gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
           {availableThemes.map((t) => (
             <motion.div
               key={t.id}
@@ -93,7 +93,7 @@ export default function SettingsPage() {
           These actions are irreversible. Please proceed with caution.
         </p>
 
-        <div className="flex items-center justify-between settings-danger-actions" style={{ borderTop: '1px solid rgba(255,107,107,0.2)', paddingTop: '1rem' }}>
+        <div className="flex items-center justify-between settings-danger-actions" style={{ borderTop: '1px solid rgba(255,107,107,0.2)', paddingTop: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h4 style={{ fontSize: '1rem' }}>Delete Account</h4>
             <p className="text-xs text-muted">Permanently delete your account and all associated data.</p>
@@ -134,7 +134,7 @@ function DeleteAccountModal({ username, onClose }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000, padding: '1rem' }}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -144,10 +144,11 @@ function DeleteAccountModal({ username, onClose }) {
         style={{ 
           width: '100%', maxWidth: 450, 
           borderTop: '4px solid var(--color-danger)',
-          boxShadow: '0 10px 40px rgba(255, 107, 107, 0.2)'
+          boxShadow: '0 10px 40px rgba(255, 107, 107, 0.2)',
+          padding: 'clamp(1.25rem, 4vw, 2rem)'
         }}
       >
-        <h2 className="mb-sm">Are you absolutely sure?</h2>
+        <h2 className="mb-sm" style={{ fontSize: 'clamp(1.25rem, 4vw, 1.5rem)' }}>Are you absolutely sure?</h2>
         <p className="text-sm text-muted mb-md">
           This action cannot be undone. This will permanently delete the <strong>{username}</strong> account, 
           along with all your XP, badges, projects, and pipeline data.
@@ -167,15 +168,15 @@ function DeleteAccountModal({ username, onClose }) {
           />
         </div>
 
-        <div className="flex gap-sm justify-end">
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        <div className="flex gap-sm justify-end" style={{ flexWrap: 'wrap' }}>
+          <button className="btn btn-ghost" onClick={onClose} style={{ minHeight: 44 }}>Cancel</button>
           <motion.button 
             whileTap={isMatch ? { scale: 0.95 } : { x: [-5, 5, -5, 5, 0] }}
             transition={{ duration: 0.2 }}
-            className="btn btn-danger" 
+            className="btn btn-danger btn-wrap" 
             disabled={!isMatch}
             onClick={handleDelete}
-            style={{ opacity: isMatch ? 1 : 0.5, cursor: isMatch ? 'pointer' : 'not-allowed' }}
+            style={{ opacity: isMatch ? 1 : 0.5, cursor: isMatch ? 'pointer' : 'not-allowed', minHeight: 44 }}
           >
             I understand the consequences, delete this account
           </motion.button>

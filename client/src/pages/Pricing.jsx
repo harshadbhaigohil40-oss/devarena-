@@ -50,17 +50,17 @@ export default function Pricing() {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container" style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', padding: '4rem 2rem' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container" style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', padding: 'clamp(2rem, 5vw, 4rem) clamp(0.75rem, 3vw, 2rem)' }}>
       <div className="mb-xl">
-        <h1 style={{ fontSize: '3rem', marginBottom: '1rem', background: 'var(--level-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: '1rem', background: 'var(--level-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Simple, transparent pricing
         </h1>
-        <p className="text-muted" style={{ fontSize: '1.2rem', maxWidth: 600, margin: '0 auto' }}>
+        <p className="text-muted" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', maxWidth: 600, margin: '0 auto' }}>
           Whether you're just starting out or hiring a full engineering team, we have a plan for you.
         </p>
       </div>
 
-      <div className="pricing-grid" style={{ marginTop: '3rem' }}>
+      <div className="pricing-grid" style={{ marginTop: '2.5rem' }}>
         {plans.map((plan, idx) => (
           <motion.div 
             key={plan.name}
@@ -70,7 +70,7 @@ export default function Pricing() {
             className={`card ${plan.popular ? 'pricing-card-popular' : ''}`}
             style={{ 
               position: 'relative',
-              padding: '2.5rem 2rem', 
+              padding: 'clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 3vw, 2rem)', 
               display: 'flex', 
               flexDirection: 'column',
               border: plan.popular ? '2px solid var(--accent-primary)' : '1px solid var(--border-primary)',
@@ -79,20 +79,20 @@ export default function Pricing() {
             }}
           >
             {plan.popular && (
-              <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-primary)', color: 'white', padding: '0.2rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '1px' }}>
+              <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-primary)', color: 'white', padding: '0.2rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '1px', whiteSpace: 'nowrap' }}>
                 MOST POPULAR
               </div>
             )}
             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{plan.name}</h3>
             <p className="text-muted text-sm mb-lg" style={{ minHeight: '40px' }}>{plan.description}</p>
             <div className="mb-lg">
-              <span style={{ fontSize: '3rem', fontWeight: 800 }}>{plan.price}</span>
+              <span style={{ fontSize: 'clamp(2.25rem, 5vw, 3rem)', fontWeight: 800 }}>{plan.price}</span>
               <span className="text-muted"> / {plan.period}</span>
             </div>
             
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', textAlign: 'left', flex: 1 }}>
               {plan.features.map((feat, i) => (
-                <li key={i} style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                <li key={i} style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', fontSize: '0.9375rem' }}>
                   <span style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>✓</span>
                   <span className="text-muted">{feat}</span>
                 </li>
@@ -101,7 +101,7 @@ export default function Pricing() {
 
             <button 
               className={`btn ${plan.popular ? 'btn-primary' : 'btn-ghost'}`} 
-              style={{ width: '100%', padding: '1rem', fontSize: '1rem', border: plan.popular ? 'none' : '1px solid var(--border-primary)' }}
+              style={{ width: '100%', padding: '0.875rem', fontSize: '1rem', border: plan.popular ? 'none' : '1px solid var(--border-primary)' }}
             >
               {plan.buttonText}
             </button>

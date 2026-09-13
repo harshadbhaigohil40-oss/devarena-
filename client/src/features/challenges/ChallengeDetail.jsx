@@ -112,30 +112,31 @@ export default function ChallengeDetail() {
 
       {/* ── Header ── */}
       <div className="flex justify-between items-center mb-lg" style={{ flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div className="flex items-center gap-sm mb-sm">
+        <div style={{ maxWidth: '100%' }}>
+          <div className="flex items-center gap-sm mb-sm" style={{ flexWrap: 'wrap' }}>
             <span style={{ textTransform: 'capitalize', background: `${diffColor}18`, border: `1px solid ${diffColor}40`, color: diffColor, padding: '0.2rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
               {challenge.difficulty}
             </span>
             <span className="badge badge-primary" style={{ textTransform: 'capitalize' }}>{challenge.category}</span>
             <span style={{ color: 'var(--xp-gold)', fontWeight: 700, fontSize: '0.875rem' }}>⚡ {challenge.xpReward} XP</span>
           </div>
-          <h1 style={{ fontSize: '1.75rem', margin: 0 }}>{challenge.title}</h1>
+          <h1 style={{ fontSize: 'clamp(1.35rem, 4vw, 1.75rem)', margin: 0, wordBreak: 'break-word' }}>{challenge.title}</h1>
         </div>
 
         {/* Language Selector */}
-        <div className="flex gap-sm">
+        <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
           {['javascript', 'python'].map(lang => (
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
               style={{
-                padding: '0.5rem 1.25rem', borderRadius: '100px', fontWeight: 600, cursor: 'pointer',
+                padding: '0.45rem 1rem', borderRadius: '100px', fontWeight: 600, cursor: 'pointer',
                 border: language === lang ? `1px solid ${diffColor}80` : '1px solid rgba(255,255,255,0.1)',
                 background: language === lang ? `${diffColor}18` : 'var(--bg-secondary)',
                 color: language === lang ? diffColor : 'var(--text-secondary)',
                 transition: 'all 0.2s',
-                fontSize: '0.85rem'
+                fontSize: '0.85rem',
+                minHeight: '40px'
               }}
             >
               {LANG_ICONS[lang]} {LANG_LABELS[lang]}
@@ -350,7 +351,7 @@ export default function ChallengeDetail() {
           </div>
 
           {/* Info Bar */}
-          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.78rem', color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
             <span>▶ Run = visible tests only</span>
             <span>•</span>
             <span>🚀 Submit = all tests + save score</span>

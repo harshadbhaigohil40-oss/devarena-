@@ -43,7 +43,7 @@ export default function Login() {
   };
 
   return (
-    <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100dvh - var(--navbar-height))', padding: 'clamp(1rem, 3vw, 2rem)' }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card card-glass" style={{ width: '100%', maxWidth: 400 }}>
         <h2 className="mb-md text-center text-gradient">Welcome Back</h2>
         <form onSubmit={handleSubmit} className="flex-col gap-md">
@@ -66,7 +66,7 @@ export default function Login() {
           <span style={{ borderBottom: '1px solid var(--border)', flexGrow: 1 }}></span>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', maxWidth: '100%', overflow: 'hidden' }}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => {

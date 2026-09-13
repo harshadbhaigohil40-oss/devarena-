@@ -347,39 +347,43 @@ export default function AdminChallenges() {
                     }}
                   >
                     {/* Header Row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', cursor: 'pointer' }}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', cursor: 'pointer', flexWrap: 'wrap' }}
                       onClick={() => setExpandedSlug(expandedSlug === c.slug ? null : c.slug)}>
-                      <input type="checkbox" checked={selected.has(c.slug)} onChange={() => toggleSelect(c.slug)} onClick={e => e.stopPropagation()}
-                        style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#6c5ce7' }} />
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.approved ? '#00b894' : '#e17055', flexShrink: 0 }} />
-                      
-                      <span style={{ fontWeight: 700, flex: 1, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                        {c.title}
-                        {highlight && <span style={{ marginLeft: '0.5rem', color: '#d63031', fontSize: '0.75rem', fontWeight: 600 }}>⚠️ Low Quality</span>}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 220px', minWidth: 0 }}>
+                        <input type="checkbox" checked={selected.has(c.slug)} onChange={() => toggleSelect(c.slug)} onClick={e => e.stopPropagation()}
+                          style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#6c5ce7', flexShrink: 0 }} />
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.approved ? '#00b894' : '#e17055', flexShrink: 0 }} />
+                        
+                        <span style={{ fontWeight: 700, flex: 1, color: 'var(--text-primary)', fontSize: '0.9rem', wordBreak: 'break-word' }}>
+                          {c.title}
+                          {highlight && <span style={{ marginLeft: '0.5rem', color: '#d63031', fontSize: '0.75rem', fontWeight: 600 }}>⚠️ Low Quality</span>}
+                        </span>
+                      </div>
 
-                      {/* Quality Score Badge */}
-                      <span style={{ 
-                        fontSize: '0.75rem', 
-                        padding: '0.2rem 0.5rem', 
-                        borderRadius: 6, 
-                        background: bs.bg, 
-                        color: bs.text, 
-                        fontWeight: 700,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem'
-                      }}>
-                        {bs.icon} {c.qualityScore || 0}/100
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
+                        {/* Quality Score Badge */}
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          padding: '0.2rem 0.5rem', 
+                          borderRadius: 6, 
+                          background: bs.bg, 
+                          color: bs.text, 
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}>
+                          {bs.icon} {c.qualityScore || 0}/100
+                        </span>
 
-                      <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: 6, background: `${DIFF_COLORS[c.difficulty]}20`, color: DIFF_COLORS[c.difficulty], fontWeight: 700 }}>
-                        {c.difficulty}
-                      </span>
-                      <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: 6, background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                        {c._sourceFile?.replace('.json', '') || c.category}
-                      </span>
-                      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', transition: 'transform 0.2s', transform: expandedSlug === c.slug ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
+                        <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: 6, background: `${DIFF_COLORS[c.difficulty]}20`, color: DIFF_COLORS[c.difficulty], fontWeight: 700 }}>
+                          {c.difficulty}
+                        </span>
+                        <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: 6, background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          {c._sourceFile?.replace('.json', '') || c.category}
+                        </span>
+                        <span style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', transition: 'transform 0.2s', transform: expandedSlug === c.slug ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
+                      </div>
                     </div>
 
                     {/* Detail panel */}
@@ -439,7 +443,7 @@ export default function AdminChallenges() {
                           </div>
 
                           {/* Detail Footer Actions */}
-                          <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid var(--border-primary)', display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.1)', alignItems: 'center' }}>
+                          <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid var(--border-primary)', display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.1)', alignItems: 'center', flexWrap: 'wrap' }}>
                             <button onClick={() => approveMut.mutate({ slug: c.slug, approved: !c.approved })}
                               style={btnStyle(c.approved ? '#e17055' : '#00b894')}>
                               {c.approved ? '❌ Reject / Unapprove' : '✅ Approve Challenge'}
@@ -466,11 +470,11 @@ export default function AdminChallenges() {
       <AnimatePresence>
         {editing && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(0.75rem, 3vw, 2rem)' }}
             onClick={() => setEditing(null)}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}
               onClick={e => e.stopPropagation()}
-              style={{ ...cardStyle, width: '100%', maxWidth: 700, maxHeight: '80vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+              style={{ ...cardStyle, width: '100%', maxWidth: 700, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
               <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>✏️ Edit Challenge</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Title</label>
@@ -496,7 +500,7 @@ export default function AdminChallenges() {
                 <textarea value={editing.hints?.join('\n')} onChange={e => setEditing({ ...editing, hints: e.target.value.split('\n').filter(Boolean) })} rows={3}
                   style={{ ...inputStyle, resize: 'vertical' }} />
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                 <button onClick={() => setEditing(null)} style={btnStyle('var(--bg-tertiary)', 'var(--text-primary)')}>Cancel</button>
                 <button onClick={() => { const { _sourceFile, ...data } = editing; editMut.mutate({ slug: editing.slug, data }); }}
                   disabled={editMut.isLoading} style={btnStyle('linear-gradient(135deg, #6c5ce7, #a29bfe)')}>
@@ -512,20 +516,20 @@ export default function AdminChallenges() {
       <AnimatePresence>
         {aiReviewData && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(0.75rem, 3vw, 2rem)' }}
             onClick={() => setAiReviewData(null)}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}
               onClick={e => e.stopPropagation()}
               style={{ ...cardStyle, width: '100%', maxWidth: 850, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <h3 style={{ margin: 0 }}>🤖 AI Quality Review: {aiReviewData.slug}</h3>
                 <span style={{ fontSize: '1.1rem', fontWeight: 800, color: aiReviewData.overallScore >= 75 ? '#00b894' : '#e17055' }}>
                   AI Score: {aiReviewData.overallScore} / 100 ({aiReviewData.verdict})
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 {/* Issues Panel */}
                 <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 8 }}>
                   <h4 style={{ color: '#d63031', marginTop: 0, marginBottom: '0.5rem' }}>⚠️ Detected Issues</h4>
@@ -555,7 +559,7 @@ export default function AdminChallenges() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 <div>
                   <h4 style={{ marginBottom: '0.5rem' }}>⚡ Improved JavaScript Starter</h4>
                   <pre style={{ fontSize: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 8, overflow: 'auto', maxHeight: 150, color: '#a29bfe', margin: 0 }}>
@@ -576,7 +580,7 @@ export default function AdminChallenges() {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid var(--border-primary)', paddingTop: '1.25rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid var(--border-primary)', paddingTop: '1.25rem', flexWrap: 'wrap' }}>
                 <button onClick={() => setAiReviewData(null)} style={btnStyle('var(--bg-tertiary)', 'var(--text-primary)')}>Discard AI Suggestions</button>
                 <button onClick={() => {
                   editMut.mutate({

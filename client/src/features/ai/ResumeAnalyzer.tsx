@@ -75,7 +75,7 @@ export function ResumeAnalyzer() {
             style={{
               border: `2px dashed ${isDragging ? 'var(--accent-primary)' : 'var(--border-primary)'}`,
               borderRadius: '12px',
-              padding: '3rem',
+              padding: 'clamp(1.5rem, 5vw, 3rem) clamp(1rem, 3vw, 2rem)',
               textAlign: 'center',
               cursor: 'pointer',
               background: isDragging ? 'var(--bg-hover)' : 'var(--bg-secondary)',

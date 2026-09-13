@@ -90,7 +90,7 @@ export function CommandPalette() {
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                width: '100%',
+                width: 'min(600px, calc(100vw - 2rem))',
                 maxWidth: '600px',
                 background: 'var(--bg-secondary)',
                 borderRadius: '12px',
@@ -112,7 +112,7 @@ export function CommandPalette() {
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
-                    fontSize: '1.2rem',
+                    fontSize: 'clamp(0.95rem, 3.5vw, 1.2rem)',
                     color: 'var(--text-primary)',
                   }}
                 />

@@ -38,23 +38,23 @@ export default function Leaderboard() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
       
       {/* Header Section */}
-      <header style={{ textAlign: 'center', marginBottom: '3rem', paddingTop: '1rem' }}>
-        <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem', color: '#fff' }}>
+      <header style={{ textAlign: 'center', marginBottom: '2.5rem', paddingTop: '1rem' }}>
+        <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem', color: '#fff' }}>
           Global Leaderboard
         </motion.h1>
-        <motion.p initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} style={{ fontSize: '1.125rem', color: 'var(--text-secondary)' }}>
+        <motion.p initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.125rem)', color: 'var(--text-secondary)' }}>
           The top performing architects of the DevArena ecosystem.
         </motion.p>
       </header>
 
       {/* Filters and Options */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '100px', padding: '0.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '100px', padding: '0.25rem', overflowX: 'auto', maxWidth: '100%' }}>
           {['all', 'weekly', 'monthly'].map(p => (
             <button key={p} 
               className={`tab ${period === p ? 'active' : ''}`} 
               onClick={() => setPeriod(p)} 
-              style={{ textTransform: 'capitalize', margin: 0, padding: '0.5rem 1.5rem', borderRadius: '100px', background: period === p ? 'rgba(255,255,255,0.1)' : 'transparent', color: period === p ? '#fff' : 'var(--text-secondary)', border: 'none', fontWeight: 600, transition: 'all 0.2s' }}>
+              style={{ textTransform: 'capitalize', margin: 0, padding: '0.5rem 1.25rem', borderRadius: '100px', background: period === p ? 'rgba(255,255,255,0.1)' : 'transparent', color: period === p ? '#fff' : 'var(--text-secondary)', border: 'none', fontWeight: 600, transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
               {p === 'all' ? 'All Time' : p}
             </button>
           ))}
@@ -62,7 +62,7 @@ export default function Leaderboard() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', height: '300px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', height: '300px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ width: 200, height: i === 2 ? 250 : 200, borderRadius: 16 }} />)}
         </div>
       ) : entries.length === 0 ? (
@@ -98,9 +98,9 @@ export default function Leaderboard() {
 
               {/* Rank 1: Gold */}
               {top3[0] && (
-                <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: -30, opacity: 1 }} transition={{ delay: 0.1 }}
+                <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
                   className="leaderboard-podium-card leaderboard-podium-gold"
-                  style={{ transform: 'translateY(-30px)', zIndex: 10 }}
+                  style={{ zIndex: 10 }}
                   onClick={() => navigate(`/profile/${top3[0].userId}`)}
                 >
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
@@ -153,7 +153,7 @@ export default function Leaderboard() {
             <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} 
               style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', overflow: 'hidden' }}>
               <div className="leaderboard-table-container">
-                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '480px' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
                       <th style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</th>

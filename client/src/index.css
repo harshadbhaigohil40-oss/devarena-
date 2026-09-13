@@ -858,7 +858,15 @@ select.input {
   margin-bottom: var(--space-sm);
 }
 
-/* --- Responsive --- */
+/* --- Responsive Utilities --- */
+.mobile-only {
+  display: none !important;
+}
+
+.desktop-only {
+  display: inherit !important;
+}
+
 @media (max-width: 768px) {
   .page-header { margin-bottom: var(--space-lg); }
   
@@ -877,10 +885,6 @@ select.input {
   .stat-card .stat-value {
     font-size: 1.5rem;
   }
-}
-
-.mobile-only {
-  display: none !important;
 }
 
 
@@ -1443,6 +1447,7 @@ select.input {
 .leaderboard-podium-gold {
   width: min(280px, 100%);
   order: 2;
+  transform: translateY(-20px);
 }
 
 .leaderboard-podium-silver {
@@ -1460,11 +1465,14 @@ select.input {
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
   }
 
   .leaderboard-podium-gold {
     order: 1;
     width: min(280px, 90%);
+    transform: translateY(0);
   }
 
   .leaderboard-podium-silver {
@@ -1616,212 +1624,90 @@ select.input {
   }
 }
 
-/* Leaderboard podium */
-.leaderboard-podium {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 1.5rem;
-  margin-bottom: 4rem;
-  margin-top: 3rem;
-  flex-wrap: wrap;
+/* --- Responsive Helpers & Overflow Protection --- */
+.w-full {
+  width: 100% !important;
 }
 
-.leaderboard-podium-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
+.max-w-full {
+  max-width: 100% !important;
 }
 
-.leaderboard-podium-gold {
-  width: min(280px, 100%);
-  order: 2;
-}
-
-.leaderboard-podium-silver {
-  width: min(260px, 100%);
-  order: 1;
-}
-
-.leaderboard-podium-bronze {
-  width: min(260px, 100%);
-  order: 3;
-}
-
-@media (max-width: 768px) {
-  .leaderboard-podium {
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .leaderboard-podium-gold {
-    order: 1;
-    width: min(280px, 90%);
-  }
-
-  .leaderboard-podium-silver {
-    order: 2;
-    width: min(260px, 85%);
-  }
-
-  .leaderboard-podium-bronze {
-    order: 3;
-    width: min(260px, 85%);
-  }
-}
-
-/* Leaderboard table */
-.leaderboard-table-container {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-@media (max-width: 768px) {
-  .leaderboard-table-container th,
-  .leaderboard-table-container td {
-    padding: 0.75rem 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .leaderboard-table-container th,
-  .leaderboard-table-container td {
-    padding: 0.6rem 0.5rem;
-    font-size: 0.8rem;
-  }
-}
-
-/* Landing page feature grid */
-.landing-features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-  gap: 2rem;
-}
-
-/* Landing page metrics grid */
-.landing-metrics-grid {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: clamp(1.5rem, 3vw, 3rem);
+.btn-wrap {
+  white-space: normal !important;
+  word-break: break-word;
   text-align: center;
 }
 
-/* Landing page hero CTA buttons */
-.landing-cta-group {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  justify-content: center;
+img, svg, video, canvas, audio, iframe, embed, object {
+  max-width: 100%;
 }
 
-@media (max-width: 480px) {
-  .landing-cta-group {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .landing-cta-group a {
-    width: 100%;
-  }
-
-  .landing-cta-group a > div {
-    justify-content: center;
-  }
-}
-
-/* Landing footer */
-.landing-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-@media (max-width: 480px) {
-  .landing-footer {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-/* Challenges header responsive */
-@media (max-width: 768px) {
-  .challenges-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .challenges-header-title {
-    font-size: clamp(1.75rem, 5vw, 2.5rem);
-  }
-}
-
-/* Table scroll container utility */
-.table-scroll-container {
-  width: 100%;
+pre, code {
+  max-width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  word-break: break-word;
 }
 
-/* Settings danger zone responsive */
-@media (max-width: 480px) {
-  .settings-danger-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .settings-danger-actions .btn {
-    width: 100%;
-  }
-}
-
-/* Landing section spacing responsive */
+/* Base font scaling and touch friendliness */
 @media (max-width: 768px) {
-  .landing-section {
-    padding-top: 4rem;
-    padding-bottom: 4rem;
+  .btn {
+    min-height: 44px;
+    touch-action: manipulation;
   }
 
-  .landing-section-lg {
-    padding-top: 5rem;
-    padding-bottom: 5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .landing-section {
-    padding-top: 3rem;
-    padding-bottom: 3rem;
+  .input {
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+    min-height: 44px;
   }
 
-  .landing-section-lg {
-    padding-top: 3rem;
-    padding-bottom: 3rem;
+  .tabs {
+    gap: 0.25rem;
   }
 }
 
-/* Pagination responsive */
-@media (max-width: 480px) {
-  .pagination-container {
-    gap: 0.5rem;
-    padding: 1rem;
-    flex-wrap: wrap;
+/* Extra small screens: 320px - 360px */
+@media (max-width: 360px) {
+  .page-container {
+    padding: 0.75rem 0.5rem !important;
   }
 
-  .pagination-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+  .card {
+    padding: 1rem 0.75rem !important;
+    border-radius: var(--radius-md);
+  }
+
+  .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .stat-card {
+    padding: 0.875rem 0.625rem !important;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* --- Tablet Sidebar Width --- */
+@media (max-width: 1024px) and (min-width: 769px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+}
+
+/* --- Ultra-Narrow (<=360px) Navbar Adjustments --- */
+@media (max-width: 360px) {
+  .navbar {
+    padding: 0 0.5rem;
+  }
+  .navbar-actions {
+    gap: 0.25rem;
+  }
+  .navbar-logo-text {
+    font-size: 0.95rem !important;
   }
 }
 
@@ -1829,15 +1715,15 @@ select.input {
 .hero-section {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
+  min-height: calc(100vh - var(--navbar-height));
   display: flex;
   align-items: center;
-  padding-top: calc(var(--navbar-height) + 4rem);
+  padding: 3rem 0;
 }
 @media (max-width: 768px) {
   .hero-section {
-    padding-top: calc(var(--navbar-height) + 2rem);
-    min-height: calc(100vh - var(--navbar-height));
+    padding: 1.5rem 0 2.5rem 0;
+    min-height: auto;
   }
 }
 

@@ -37,11 +37,11 @@ export function ActivityHeatmap({ stats }: { stats?: any }) {
             startDate={subDays(today, 150)}
             endDate={today}
             values={data}
-            classForValue={(value) => {
+            classForValue={(value: any) => {
               if (!value || value.count === 0) return 'color-empty';
               return `color-scale-${value.count}`;
             }}
-            tooltipDataAttrs={(value) => {
+            tooltipDataAttrs={(value: any) => {
               if (!value || !value.date) return null;
               return { 'data-tooltip': `${value.date.toISOString().slice(0, 10)}: ${value.count} contributions` };
             }}

@@ -109,9 +109,9 @@ export default function RecruiterDashboard() {
         {candidates.map((candidate, i) => (
           <motion.div key={candidate._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card card-glass">
             <div className="flex items-center gap-md mb-sm">
-              <div className="level-badge" style={{ width: 48, height: 48, fontSize: '1.2rem' }}>{candidate.level}</div>
-              <div>
-                <h4 className="font-bold">{candidate.username}</h4>
+              <div className="level-badge" style={{ width: 48, height: 48, fontSize: '1.2rem', flexShrink: 0 }}>{candidate.level}</div>
+              <div style={{ minWidth: 0 }}>
+                <h4 className="font-bold" style={{ wordBreak: 'break-word' }}>{candidate.username}</h4>
                 <p className="text-sm text-muted">{candidate.location || 'Location not specified'}</p>
               </div>
             </div>
@@ -123,7 +123,7 @@ export default function RecruiterDashboard() {
                 <span key={idx} className="badge badge-info">{skill.name}</span>
               ))}
             </div>
-            <div className="flex justify-between items-center border-t border-primary pt-sm mt-sm">
+            <div className="flex justify-between items-center border-t border-primary pt-sm mt-sm" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
               <span className="text-xs font-bold text-gradient">{formatNumber(candidate.xp)} XP</span>
               <a href={`/profile/${candidate._id}`} className="btn btn-sm btn-ghost">View Profile</a>
             </div>

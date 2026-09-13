@@ -13,18 +13,18 @@ export default function AIAdvisor() {
         <p className="text-muted">Powered by Google Gemini — Accelerate your career growth</p>
       </div>
 
-      <div className="flex gap-sm mb-lg" style={{ borderBottom: '1px solid var(--border-primary)', paddingBottom: '1rem' }}>
+      <div className="flex gap-sm mb-lg" style={{ borderBottom: '1px solid var(--border-primary)', paddingBottom: '1rem', flexWrap: 'wrap' }}>
         <button 
-          className={`btn ${activeTab === 'career' ? 'btn-primary' : 'btn-ghost'}`}
+          className={`btn btn-wrap ${activeTab === 'career' ? 'btn-primary' : 'btn-ghost'}`}
           onClick={() => setActiveTab('career')}
-          style={{ flex: 1 }}
+          style={{ flex: '1 1 200px', minHeight: 44 }}
         >
           Career Roadmap Generator
         </button>
         <button 
-          className={`btn ${activeTab === 'resume' ? 'btn-primary' : 'btn-ghost'}`}
+          className={`btn btn-wrap ${activeTab === 'resume' ? 'btn-primary' : 'btn-ghost'}`}
           onClick={() => setActiveTab('resume')}
-          style={{ flex: 1 }}
+          style={{ flex: '1 1 200px', minHeight: 44 }}
         >
           ATS Resume Analyzer
         </button>

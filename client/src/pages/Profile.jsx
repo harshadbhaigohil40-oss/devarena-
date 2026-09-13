@@ -41,13 +41,13 @@ export default function Profile() {
           <div style={{
             width: 80, height: 80, borderRadius: '50%', background: 'var(--level-gradient)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '2rem', fontWeight: 800, color: 'white',
+            fontSize: '2rem', fontWeight: 800, color: 'white', flexShrink: 0,
           }}>
             {profile.username?.charAt(0).toUpperCase()}
           </div>
-          <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>{profile.username}</h1>
-            <p className="text-muted">{profile.bio || 'No bio yet'}</p>
+          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+            <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.75rem)', marginBottom: '0.25rem', wordBreak: 'break-word' }}>{profile.username}</h1>
+            <p className="text-muted" style={{ wordBreak: 'break-word' }}>{profile.bio || 'No bio yet'}</p>
             <div className="flex items-center gap-md mt-sm" style={{ flexWrap: 'wrap' }}>
               {profile.location && <span className="text-sm text-muted">📍 {profile.location}</span>}
               {profile.githubUrl && <a href={profile.githubUrl} target="_blank" rel="noreferrer" className="text-sm">🔗 GitHub</a>}

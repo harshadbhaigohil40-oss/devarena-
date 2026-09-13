@@ -22,15 +22,15 @@ const quickActions = [
 
 // ─── Static style objects extracted to prevent new object references per render ──
 
-const headerStyle = { marginBottom: '2.5rem', position: 'relative' };
-const h1Style = { fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-0.5px' };
+const headerStyle = { marginBottom: '2rem', position: 'relative' };
+const h1Style = { fontSize: 'clamp(1.5rem, 4.5vw, 2.5rem)', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-0.5px' };
 const usernameGradientStyle = {
   background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   filter: 'drop-shadow(0 0 15px rgba(108,92,231,0.4))',
 };
-const subtitleStyle = { fontSize: '1.1rem' };
+const subtitleStyle = { fontSize: 'clamp(0.95rem, 2.5vw, 1.1rem)' };
 const xpCardStyle = {
   marginBottom: '2rem',
   background: 'linear-gradient(135deg, rgba(108,92,231,0.15) 0%, rgba(0,206,201,0.05) 100%)',
@@ -40,8 +40,8 @@ const xpCardStyle = {
   overflow: 'hidden',
 };
 const glowStyle = { position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'var(--accent-primary)', filter: 'blur(100px)', opacity: 0.2, zIndex: 0 };
-const levelBadgeStyle = { width: 80, height: 80, fontSize: '2.5rem', boxShadow: '0 0 30px rgba(108,92,231,0.4), inset 0 0 15px rgba(255,255,255,0.3)' };
-const streakContainerStyle = { background: 'rgba(0,0,0,0.2)', padding: '1rem 1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' };
+const levelBadgeStyle = { width: 'clamp(56px, 12vw, 80px)', height: 'clamp(56px, 12vw, 80px)', fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', boxShadow: '0 0 30px rgba(108,92,231,0.4), inset 0 0 15px rgba(255,255,255,0.3)', flexShrink: 0 };
+const streakContainerStyle = { background: 'rgba(0,0,0,0.2)', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' };
 const xpBarContainerStyle = { height: 16, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' };
 const xpBarFillStyle = { background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 0 15px var(--accent-primary), inset 0 0 10px rgba(255,255,255,0.5)' };
 const statCardStyle = { position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' };
