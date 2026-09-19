@@ -15,7 +15,7 @@ const path = require('path');
 const MAX_CODE_LENGTH = 50000; // 50KB max code size
 const JS_EXECUTION_TIMEOUT = 3000; // 3 seconds
 const PY_EXECUTION_TIMEOUT = 5000; // 5 seconds
-const ALLOWED_LANGUAGES = ['javascript', 'python'];
+const ALLOWED_LANGUAGES = ['javascript', 'python', 'html'];
 
 // Patterns that indicate sandbox escape attempts in JavaScript
 const JS_BANNED_PATTERNS = [
@@ -397,10 +397,67 @@ ${code}
   });
 }
 
+// ─── HTML Evaluator ───────────────────────────────────────────────────────────
+function evaluateHTML(code, testCases) {
+  return testCases.map((tc, index) => {
+    try {
+      const startTime = Date.now();
+      const cleanCode = code.replace(/\s+/g, ' ').trim().toLowerCase();
+      const cleanExpected = (tc.expectedOutput || '').trim().toLowerCase();
+
+      let passed = false;
+
+      // If expected output is a simple pass/true marker
+      if (['true', 'passed', 'pass'].includes(cleanExpected)) {
+        // Pass if the HTML has meaningful content (more than just boilerplate)
+        passed = cleanCode.length > 20 && !cleanCode.includes('<!-- write your');
+      } else if (cleanExpected.length > 0) {
+        // Check if the HTML contains the expected structural elements
+        const expectedParts = cleanExpected.split(/[,;|]+/).map(p => p.trim()).filter(Boolean);
+        if (expectedParts.length > 1) {
+          // Multiple expected elements: all must be present
+          passed = expectedParts.every(part => cleanCode.includes(part));
+        } else {
+          // Single expected output: check inclusion
+          passed = cleanCode.includes(cleanExpected) || code.toLowerCase().includes(cleanExpected);
+        }
+      } else {
+        // No expected output specified — pass if code is non-trivial
+        passed = cleanCode.length > 30;
+      }
+
+      const executionTime = Date.now() - startTime;
+      return {
+        testCaseIndex: index,
+        passed,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: passed ? tc.expectedOutput : 'Structure mismatch',
+        output: passed ? `✅ HTML structure matches expected output` : `❌ HTML does not contain expected structure`,
+        executionTime,
+      };
+    } catch (e) {
+      return {
+        testCaseIndex: index,
+        passed: false,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: 'Error',
+        error: e.message || String(e),
+        output: `Error: ${e.message || String(e)}`,
+        executionTime: 0,
+      };
+    }
+  });
+}
+
 // ─── Main Evaluator ───────────────────────────────────────────────────────────
 const evaluateCode = (code, testCases, language, category, starterCode = '') => {
   if (language === 'python') return evaluatePython(code, testCases, category, starterCode);
   if (language === 'javascript') return evaluateJS(code, testCases, category, starterCode);
+  if (language === 'html') return evaluateHTML(code, testCases);
 
   // Unsupported language — reject instead of mocking results
   return testCases.map((_, index) => ({

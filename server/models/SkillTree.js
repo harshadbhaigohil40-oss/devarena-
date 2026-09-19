@@ -18,6 +18,7 @@ const skillTreeSchema = new mongoose.Schema({
     },
     connections: [String],
     tier: { type: Number, default: 1 },
+    topics: [String],
   }],
 }, {
   timestamps: true,

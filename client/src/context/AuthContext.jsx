@@ -14,21 +14,21 @@ export function AuthProvider({ children }) {
       return null;
     }
   });
-  const [loading, setLoading] = useState(() => {
-    // Only show initial loader if token exists but user profile is not yet restored
-    return !!localStorage.getItem('devarena_token') && !localStorage.getItem('devarena_user');
-  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Artificial delay so the beautiful loader animation plays
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2800));
+
     const storedToken = localStorage.getItem('devarena_token');
     if (!storedToken) {
-      setLoading(false);
+      minLoadTime.then(() => setLoading(false));
       return;
     }
 
     // Verify or refresh the current user session once on app mount
-    authService.getMe()
-      .then((res) => {
+    Promise.all([authService.getMe(), minLoadTime])
+      .then(([res]) => {
         const userData = res.data?.data?.user;
         if (userData) {
           setUser(userData);

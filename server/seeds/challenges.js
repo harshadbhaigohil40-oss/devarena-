@@ -1,3 +1,7 @@
+const frontendQuestions = require('../data/frontendQuestions');
+const backendQuestions = require('../data/backendQuestions');
+const systemDesignQuestions = require('../data/systemDesignQuestions');
+
 const challenges = [
   // ═══════════════════ ALGORITHM MASTERY ═══════════════════
   // Tier 1 — Basics
@@ -373,162 +377,15 @@ const challenges = [
     testCases:[{input:'2, [["put",1,1],["put",2,2],["get",1],["put",3,3],["get",2]]',expectedOutput:'[1,-1]',isHidden:false}],
     hints:['Use a Map for O(1) access + track insertion order']},
 
-  // ═══════════════════ FRONTEND ENGINEERING ═══════════════════
-  // Tier 1
-  { title:'Reverse String',slug:'reverse-string',difficulty:'beginner',category:'frontend',tags:['html-css-layouts','strings'],xpReward:50,
-    description:'## Reverse String\n\nReverse an array of characters.\n\n### Example\n`["h","e","l","l","o"]` → `["o","l","l","e","h"]`',
-    starterCode:{javascript:'function reverseString(s) {\n  // Your code here\n}',python:'def reverse_string(s):\n    # Your code here\n    pass'},
-    testCases:[{input:'["h","e","l","l","o"]',expectedOutput:'["o","l","l","e","h"]',isHidden:false},{input:'["H","a","n"]',expectedOutput:'["n","a","H"]',isHidden:false}],
-    hints:['Two pointers swap']},
+  // ═══════════════════ FRONTEND ENGINEERING (205 Questions) ═══════════════════
+  ...frontendQuestions,
 
-  { title:'Palindrome Check',slug:'palindrome-check',difficulty:'beginner',category:'frontend',tags:['js-dom-manipulation','strings'],xpReward:50,
-    description:'## Palindrome Check\n\nReturn `true` if the string reads the same backward.\n\n### Example\n`"racecar"` → `true`',
-    starterCode:{javascript:'function isPalindrome(s) {\n  // Your code here\n}',python:'def is_palindrome(s):\n    # Your code here\n    pass'},
-    testCases:[{input:'"racecar"',expectedOutput:'true',isHidden:false},{input:'"hello"',expectedOutput:'false',isHidden:false}],
-    hints:['Compare string with its reverse']},
+  // ═══════════════════ BACKEND ENGINEERING (100 Questions) ═══════════════════
+  ...backendQuestions,
 
-  // Tier 2
-  { title:'Debounce Function',slug:'debounce-function',difficulty:'intermediate',category:'frontend',tags:['hooks','closures'],xpReward:100,
-    description:'## Debounce\n\nReturn the delay value passed in (simplified debounce concept).\n\n### Example\n`300` → `300`',
-    starterCode:{javascript:'function debounce(delay) {\n  // Your code here\n}',python:'def debounce(delay):\n    # Your code here\n    pass'},
-    testCases:[{input:'300',expectedOutput:'300',isHidden:false},{input:'500',expectedOutput:'500',isHidden:false}],
-    hints:['Return the delay']},
+  // ═══════════════════ SYSTEM DESIGN (245 Questions) ═══════════════════
+  ...systemDesignQuestions,
 
-  // Tier 3
-  { title:'Flatten Nested Array',slug:'flatten-nested-array',difficulty:'advanced',category:'frontend',tags:['state-management','recursion'],xpReward:200,
-    description:'## Flatten Array\n\nFlatten a nested array to given depth.\n\n### Example\n`[1,[2,[3,[4]]]], 2` → `[1,2,3,[4]]`',
-    starterCode:{javascript:'function flattenArray(arr, depth) {\n  // Your code here\n}',python:'def flatten_array(arr, depth):\n    # Your code here\n    pass'},
-    testCases:[{input:'[1,[2,[3,[4]]]], 1',expectedOutput:'[1,2,[3,[4]]]',isHidden:false},{input:'[1,[2,[3,[4]]]], 2',expectedOutput:'[1,2,3,[4]]',isHidden:false}],
-    hints:['Recursive flatten with depth counter']},
-
-  // Tier 4
-  { title:'Deep Clone Object',slug:'deep-clone-object',difficulty:'advanced',category:'frontend',tags:['performance','web-apis'],xpReward:200,
-    description:'## Deep Clone\n\nCreate a deep clone of a nested object.\n\n### Example\n`{"a":1,"b":{"c":2}}` → `{"a":1,"b":{"c":2}}`',
-    starterCode:{javascript:'function deepClone(obj) {\n  // Your code here\n}',python:'def deep_clone(obj):\n    # Your code here\n    pass'},
-    testCases:[{input:'{"a":1,"b":{"c":2}}',expectedOutput:'{"a":1,"b":{"c":2}}',isHidden:false}],
-    hints:['Recursively copy nested objects']},
-
-  // Tier 5
-  { title:'Event Emitter',slug:'event-emitter',difficulty:'expert',category:'frontend',tags:['system-ui','design-patterns'],xpReward:300,
-    description:'## Event Emitter\n\nReturn the number of listeners registered for the given event count.\n\n### Example\n`3` → `3`',
-    starterCode:{javascript:'function eventEmitterCount(n) {\n  return n;\n}',python:'def event_emitter_count(n):\n    return n'},
-    testCases:[{input:'3',expectedOutput:'3',isHidden:false},{input:'0',expectedOutput:'0',isHidden:false}],
-    hints:['Track listeners in a map']},
-
-  // ═══════════════════ BACKEND ENGINEERING ═══════════════════
-  // Tier 1
-  { title:'HTTP Status Codes',slug:'http-status-codes',difficulty:'beginner',category:'backend',tags:['crud-apis','http'],xpReward:50,
-    description:'## HTTP Status\n\nReturn the HTTP status code for "Not Found".\n\n### Example\n`"Not Found"` → `404`',
-    starterCode:{javascript:'function getStatusCode(status) {\n  // Your code here\n}',python:'def get_status_code(status):\n    # Your code here\n    pass'},
-    testCases:[{input:'"Not Found"',expectedOutput:'404',isHidden:false},{input:'"OK"',expectedOutput:'200',isHidden:false},{input:'"Internal Server Error"',expectedOutput:'500',isHidden:true}],
-    hints:['Use a lookup map']},
-
-  { title:'Parse Query String',slug:'parse-query-string',difficulty:'beginner',category:'backend',tags:['middleware-logic','parsing'],xpReward:50,
-    description:'## Parse Query String\n\nParse `"a=1&b=2"` into `{"a":"1","b":"2"}`.\n\n### Example\n`"a=1&b=2"` → `{"a":"1","b":"2"}`',
-    starterCode:{javascript:'function parseQuery(qs) {\n  // Your code here\n}',python:'def parse_query(qs):\n    # Your code here\n    pass'},
-    testCases:[{input:'"a=1&b=2"',expectedOutput:'{"a":"1","b":"2"}',isHidden:false},{input:'"x=hello"',expectedOutput:'{"x":"hello"}',isHidden:false}],
-    hints:['Split by & then by =']},
-
-  // Tier 2
-  { title:'JWT Payload Decode',slug:'jwt-payload-decode',difficulty:'intermediate',category:'backend',tags:['authentication-basics','jwt'],xpReward:100,
-    description:'## JWT Parts\n\nReturn the number of parts in a JWT token string.\n\n### Example\n`"header.payload.signature"` → `3`',
-    starterCode:{javascript:'function jwtParts(token) {\n  // Your code here\n}',python:'def jwt_parts(token):\n    # Your code here\n    pass'},
-    testCases:[{input:'"header.payload.signature"',expectedOutput:'3',isHidden:false},{input:'"a.b.c"',expectedOutput:'3',isHidden:false}],
-    hints:['Split by dot']},
-
-  // Tier 3
-  { title:'Rate Limiter',slug:'rate-limiter',difficulty:'advanced',category:'backend',tags:['caching','rate-limiting'],xpReward:200,
-    description:'## Rate Limiter\n\nGiven max requests and current count, return `true` if request is allowed.\n\n### Example\n`5, 3` → `true`',
-    starterCode:{javascript:'function isAllowed(max, current) {\n  // Your code here\n}',python:'def is_allowed(max_req, current):\n    # Your code here\n    pass'},
-    testCases:[{input:'5, 3',expectedOutput:'true',isHidden:false},{input:'5, 5',expectedOutput:'false',isHidden:false},{input:'10, 0',expectedOutput:'true',isHidden:true}],
-    hints:['Compare current < max']},
-
-  // Tier 4
-  { title:'Consistent Hash',slug:'consistent-hash',difficulty:'expert',category:'backend',tags:['load-balancing','microservices'],xpReward:300,
-    description:'## Consistent Hashing\n\nGiven servers array and a key number, return which server handles it (modular hash).\n\n### Example\n`["A","B","C"], 7` → `"B"`',
-    starterCode:{javascript:'function consistentHash(servers, key) {\n  // Your code here\n}',python:'def consistent_hash(servers, key):\n    # Your code here\n    pass'},
-    testCases:[{input:'["A","B","C"], 7',expectedOutput:'"B"',isHidden:false},{input:'["X","Y"], 4',expectedOutput:'"X"',isHidden:false}],
-    hints:['key % servers.length']},
-
-  // ═══════════════════ SYSTEM DESIGN ═══════════════════
-  // Tier 1 — Fundamentals
-  { title:'URL Shortener Simulator',slug:'url-shortener-simulator',difficulty:'beginner',category:'system-design',tags:['url-shortener','encoding'],xpReward:50,
-    description:'## URL Shortener Simulator\n\nImplement an `encode(longUrl)` function that returns a shortened string, and a `decode(shortUrl)` function that retrieves the original. (For simplicity, just use a map!).\n\n### Example\n`"https://devarena.com"` → `"1"` → `"https://devarena.com"`',
-    starterCode:{javascript:'const map = {};\nlet id = 1;\nfunction encode(longUrl) {\n  // return short string\n}\nfunction decode(shortUrl) {\n  // return original\n}',python:'map = {}\nid_count = 1\ndef encode(longUrl):\n    pass\ndef decode(shortUrl):\n    pass'},
-    testCases:[{input:'"https://devarena.com"',expectedOutput:'"https://devarena.com"',isHidden:false}],
-    hints:['Use an auto-incrementing ID and a hash map']},
-
-  { title:'Round Robin LB',slug:'round-robin-lb',difficulty:'beginner',category:'system-design',tags:['url-shortener','load-balancing'],xpReward:50,
-    description:'## Round Robin\n\nGiven servers and request number n, return which server handles it.\n\n### Example\n`["A","B","C"], 4` → `"B"`',
-    starterCode:{javascript:'function roundRobin(servers, n) {\n  // Your code here\n}',python:'def round_robin(servers, n):\n    # Your code here\n    pass'},
-    testCases:[{input:'["A","B","C"], 0',expectedOutput:'"A"',isHidden:false},{input:'["A","B","C"], 4',expectedOutput:'"B"',isHidden:false}],
-    hints:['n % servers.length']},
-
-  { title:'Base62 Encode',slug:'base62-encode',difficulty:'beginner',category:'system-design',tags:['url-shortener','encoding'],xpReward:50,
-    description:'## Base62 Encode\n\nReturn the length of base62 encoding needed for a number.\n\n### Example\n`100` → `2`',
-    starterCode:{javascript:'function base62Length(num) {\n  // Your code here\n}',python:'def base62_length(num):\n    # Your code here\n    pass'},
-    testCases:[{input:'0',expectedOutput:'1',isHidden:false},{input:'100',expectedOutput:'2',isHidden:false},{input:'62',expectedOutput:'2',isHidden:true}],
-    hints:['Divide by 62 repeatedly']},
-
-  // Tier 2 — Storage Systems
-  { title:'Cache Hit Rate',slug:'cache-hit-rate',difficulty:'intermediate',category:'system-design',tags:['chat-system','caching'],xpReward:100,
-    description:'## Cache Hit Rate\n\nGiven hits and total requests, return hit rate as percentage (integer).\n\n### Example\n`75, 100` → `75`',
-    starterCode:{javascript:'function cacheHitRate(hits, total) {\n  // Your code here\n}',python:'def cache_hit_rate(hits, total):\n    # Your code here\n    pass'},
-    testCases:[{input:'75, 100',expectedOutput:'75',isHidden:false},{input:'0, 50',expectedOutput:'0',isHidden:false},{input:'33, 100',expectedOutput:'33',isHidden:true}],
-    hints:['Math.floor(hits/total * 100)']},
-
-  { title:'Distributed Cache TTL',slug:'distributed-cache-ttl',difficulty:'intermediate',category:'system-design',tags:['distributed-cache','caching'],xpReward:100,
-    description:'## Cache TTL Eviction\n\nGiven a list of cache entries `[key, timestamp, ttl]` and a current time `T`, return a list of keys that are still valid (timestamp + ttl >= T).\n\n### Example\n`[["A", 10, 5], ["B", 12, 10]], 16` → `["B"]`',
-    starterCode:{javascript:'function validCacheKeys(entries, T) {\n  // Your code here\n}',python:'def validCacheKeys(entries, T):\n    # Your code here\n    pass'},
-    testCases:[{input:'[["A", 10, 5], ["B", 12, 10]], 16',expectedOutput:'["B"]',isHidden:false}],
-    hints:['Filter entries where timestamp + ttl >= T']},
-
-  // Tier 2 — Compute
-  { title:'Token Bucket Rate Limiter',slug:'token-bucket-rate-limiter',difficulty:'intermediate',category:'system-design',tags:['chat-system','notification-system'],xpReward:100,
-    description:'## Token Bucket Simulator\n\nGiven a `capacity` of tokens, a `refillRate` per second, and a list of request timestamps `[1, 1, 1, 2, 2, 3]`, return `true` if all requests pass, or `false` if any gets dropped.\n\n### Example\n`3, 1, [1, 1, 1, 1]` → `false`',
-    starterCode:{javascript:'function simulateRateLimiter(capacity, refillRate, requests) {\n  // Your code here\n}',python:'def simulateRateLimiter(capacity, refillRate, requests):\n    # Your code here\n    pass'},
-    testCases:[{input:'3, 1, [1, 1, 1, 1]',expectedOutput:'false',isHidden:false}],
-    hints:['Track current tokens and refill based on time difference']},
-
-  // Tier 3 — Distributed Systems
-  { title:'Partition Data',slug:'partition-data',difficulty:'advanced',category:'system-design',tags:['news-feed','distributed'],xpReward:200,
-    description:'## Data Partitioning\n\nGiven total items and partition count, return items per partition.\n\n### Example\n`100, 3` → `[34,33,33]`',
-    starterCode:{javascript:'function partition(total, parts) {\n  // Your code here\n}',python:'def partition(total, parts):\n    # Your code here\n    pass'},
-    testCases:[{input:'100, 3',expectedOutput:'[34,33,33]',isHidden:false},{input:'10, 2',expectedOutput:'[5,5]',isHidden:false}],
-    hints:['Distribute remainder across first partitions']},
-
-  { title:'Merge News Feeds',slug:'merge-news-feeds',difficulty:'advanced',category:'system-design',tags:['news-feed','distributed'],xpReward:200,
-    description:'## Merge Distributed Feeds\n\nGiven a list of arrays representing sorted feed posts (by timestamp) from different users, merge them into a single sorted feed (similar to Merge K Sorted Lists).\n\n### Example\n`[[10, 8, 5], [9, 7], [6, 2]]` → `[10, 9, 8, 7, 6, 5, 2]`',
-    starterCode:{javascript:'function mergeFeeds(feeds) {\n  // Your code here\n}',python:'def mergeFeeds(feeds):\n    # Your code here\n    pass'},
-    testCases:[{input:'[[10, 8, 5], [9, 7], [6, 2]]',expectedOutput:'[10, 9, 8, 7, 6, 5, 2]',isHidden:false}],
-    hints:['Use a heap or iterative merge']},
-
-  // Tier 4 — Cloud Architecture
-  { title:'CDN Edge Routing',slug:'cdn-edge-routing',difficulty:'advanced',category:'system-design',tags:['cdn-system'],xpReward:200,
-    description:'## CDN Edge Routing\n\nGiven a user location `[ux, uy]` and a list of CDN nodes `[[nx, ny]]`, return the index of the closest CDN node using Euclidean distance.\n\n### Example\n`[0, 0], [[3, 4], [1, 1], [5, 5]]` → `1`',
-    starterCode:{javascript:'function findClosestCDN(user, nodes) {\n  // Your code here\n}',python:'def findClosestCDN(user, nodes):\n    # Your code here\n    pass'},
-    testCases:[{input:'[0, 0], [[3, 4], [1, 1], [5, 5]]',expectedOutput:'1',isHidden:false}],
-    hints:['Calculate (nx-ux)^2 + (ny-uy)^2 for each node']},
-
-  // Tier 4 — Interview Prep
-  { title:'Sharding Key',slug:'sharding-key',difficulty:'advanced',category:'system-design',tags:['instagram','sharding'],xpReward:200,
-    description:'## Shard Selection\n\nGiven a user ID and shard count, return which shard the user belongs to.\n\n### Example\n`12345, 8` → `1`',
-    starterCode:{javascript:'function getShard(userId, shardCount) {\n  // Your code here\n}',python:'def get_shard(user_id, shard_count):\n    # Your code here\n    pass'},
-    testCases:[{input:'12345, 8',expectedOutput:'1',isHidden:false},{input:'100, 10',expectedOutput:'0',isHidden:false}],
-    hints:['userId % shardCount']},
-
-  // Tier 5 — Architect
-  { title:'Bloom Filter Size',slug:'bloom-filter-size',difficulty:'expert',category:'system-design',tags:['search-engine','probabilistic'],xpReward:300,
-    description:'## Bloom Filter\n\nGiven n items and false positive rate p (as percentage integer), return optimal bit array size m = ceil(n * 10).\n\n### Example\n`1000, 1` → `10000`',
-    starterCode:{javascript:'function bloomFilterSize(n, p) {\n  // Your code here\n}',python:'def bloom_filter_size(n, p):\n    # Your code here\n    pass'},
-    testCases:[{input:'1000, 1',expectedOutput:'10000',isHidden:false},{input:'500, 5',expectedOutput:'5000',isHidden:false}],
-    hints:['m = ceil(n * 10)']},
-
-  { title:'Autocomplete Trie',slug:'autocomplete-trie',difficulty:'expert',category:'system-design',tags:['search-engine'],xpReward:300,
-    description:'## Typeahead Search\n\nGiven a list of search queries and a prefix, return all queries that start with that prefix (simulating a search engine autocomplete).\n\n### Example\n`["system design", "systemctl", "sysadmin", "software"], "sys"` → `["system design", "systemctl", "sysadmin"]`',
-    starterCode:{javascript:'function autocomplete(queries, prefix) {\n  // Your code here\n}',python:'def autocomplete(queries, prefix):\n    # Your code here\n    pass'},
-    testCases:[{input:'["system design", "systemctl", "sysadmin", "software"], "sys"',expectedOutput:'["system design", "systemctl", "sysadmin"]',isHidden:false}],
-    hints:['Filter the array or build a prefix tree']},
 
   // ═══════════════════ CROSS-CATEGORY BONUS ═══════════════════
   { title:'Best Time to Buy Stock',slug:'best-time-to-buy-stock',difficulty:'intermediate',category:'algorithms',tags:['arrays','dynamic-programming'],xpReward:100,

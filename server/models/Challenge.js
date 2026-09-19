@@ -8,11 +8,19 @@ const challengeSchema = new mongoose.Schema({
   category: { type: String, required: true, index: true },
   tags: [String],
 
+  id: { type: String },
+  tier: { type: Number },
+  section: { type: String },
+  topic: { type: String },
+  pattern: { type: String },
+  originalDifficulty: { type: String },
+
   xpReward: { type: Number, required: true },
 
   starterCode: {
     javascript: { type: String, default: '' },
     python: { type: String, default: '' },
+    html: { type: String, default: '' },
   },
   testCases: [{
     input: String,

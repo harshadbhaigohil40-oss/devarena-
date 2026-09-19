@@ -45,8 +45,8 @@ export default function PageLoader() {
         flexDirection: 'column',
         alignItems: 'center', 
         justifyContent: 'center', 
-        height: '100vh', 
-        width: '100vw',
+        height: '100dvh', 
+        width: '100%',
         background: '#050508',
         position: 'fixed',
         top: 0,
@@ -79,8 +79,8 @@ export default function PageLoader() {
         transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
         style={{
           position: 'absolute',
-          width: '500px',
-          height: '500px',
+          width: 'clamp(300px, 60vw, 500px)',
+          height: 'clamp(300px, 60vw, 500px)',
           background: 'radial-gradient(circle, #8a2be2 0%, transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
@@ -99,8 +99,8 @@ export default function PageLoader() {
         transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 1 }}
         style={{
           position: 'absolute',
-          width: '400px',
-          height: '400px',
+          width: 'clamp(250px, 50vw, 400px)',
+          height: 'clamp(250px, 50vw, 400px)',
           background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
@@ -219,7 +219,7 @@ export default function PageLoader() {
           style={{ marginTop: '2.5rem', textAlign: 'center' }}
         >
           <div style={{
-            fontSize: '1.5rem',
+            fontSize: 'clamp(1.25rem, 5vw, 1.5rem)',
             fontWeight: 800,
             letterSpacing: '-0.03em',
             color: '#fff',
@@ -229,7 +229,7 @@ export default function PageLoader() {
             Dev<span style={{ color: '#8a2be2' }}>Arena</span>
           </div>
           <div style={{
-            fontSize: '0.7rem',
+            fontSize: 'clamp(0.6rem, 2.5vw, 0.7rem)',
             color: 'rgba(255,255,255,0.35)',
             letterSpacing: '0.35em',
             textTransform: 'uppercase',
@@ -244,7 +244,7 @@ export default function PageLoader() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          style={{ marginTop: '2.5rem', width: '280px' }}
+          style={{ marginTop: '2.5rem', width: 'clamp(250px, 80vw, 280px)' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <motion.span
@@ -252,7 +252,7 @@ export default function PageLoader() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 0.5, y: 0 }}
               style={{
-                fontSize: '0.7rem',
+                fontSize: 'clamp(0.6rem, 2.5vw, 0.7rem)',
                 color: 'rgba(255,255,255,0.5)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
@@ -262,7 +262,7 @@ export default function PageLoader() {
               {statusText}
             </motion.span>
             <span style={{
-              fontSize: '0.7rem',
+              fontSize: 'clamp(0.6rem, 2.5vw, 0.7rem)',
               color: 'rgba(138, 43, 226, 0.8)',
               fontWeight: 700,
               fontFamily: "'JetBrains Mono', monospace",

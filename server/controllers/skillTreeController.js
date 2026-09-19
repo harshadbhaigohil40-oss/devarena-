@@ -1,4 +1,5 @@
 const SkillTree = require('../models/SkillTree');
+const Challenge = require('../models/Challenge');
 const Submission = require('../models/Submission');
 const { success, error } = require('../utils/responseHelper');
 
@@ -36,7 +37,10 @@ exports.listSkillTrees = async (req, res, next) => {
 
 exports.getSkillTree = async (req, res, next) => {
   try {
-    const tree = await SkillTree.findById(req.params.id);
+    const tree = await SkillTree.findById(req.params.id).populate({
+      path: 'nodes.challengeIds',
+      select: '_id id title slug difficulty originalDifficulty xpReward pattern topic section tier tags',
+    });
     if (!tree) return error(res, 'Skill tree not found.', 404);
 
     // Get user's completed challenges if logged in
@@ -51,13 +55,22 @@ exports.getSkillTree = async (req, res, next) => {
 
     // Add progress to each node
     const nodesWithProgress = tree.nodes.map(node => {
-      const completedInNode = node.challengeIds.filter(id =>
-        completedChallenges.has(id.toString())
-      ).length;
-      const totalInNode = node.challengeIds.length;
+      const rawChallenges = node.challengeIds || [];
+      const challengeList = rawChallenges.map(ch => {
+        const chObj = ch && ch.toObject ? ch.toObject() : (ch || {});
+        return {
+          ...chObj,
+          completed: completedChallenges.has((chObj._id || '').toString()),
+        };
+      });
 
+      const completedInNode = challengeList.filter(c => c.completed).length;
+      const totalInNode = challengeList.length;
+
+      const nodeObj = node.toObject();
       return {
-        ...node.toObject(),
+        ...nodeObj,
+        challenges: challengeList,
         progress: totalInNode > 0 ? Math.round((completedInNode / totalInNode) * 100) : 0,
         completed: completedInNode,
         total: totalInNode,

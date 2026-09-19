@@ -1,0 +1,187 @@
+[
+  {
+    "title": "Contextual Config Optimizer",
+    "slug": "contextual-config-optimizer",
+    "difficulty": "advanced",
+    "category": "frontend",
+    "tags": [
+      "state-management",
+      "performance"
+    ],
+    "xpReward": 200,
+    "description": "## Contextual Config Optimizer\n\nSimulate a simplified Context API-like state management for application configuration with render optimization. Given an initial configuration, a series of updates, and a list of components subscribed to specific configuration paths, determine how many times each subscribed component would 're-render' due to its observed config paths changing. Assume components are optimized (e.g., using `React.memo`) and only re-render if the specific configuration values they observe (via deep equality for objects/arrays) actually change. Initial component renders are not tracked, only subsequent updates.\n\n### Example\n`optimizeConfigUpdates(initialConfig, updates, subscribedComponents)`\n\n`initialConfig = {\"theme\": {\"primary\": \"blue\", \"font\": {\"size\": 16}}, \"user\": {\"name\": \"Alice\"}}`\n`updates = [{\"path\": \"theme.primary\", \"value\": \"red\"}, {\"path\": \"user.name\", \"value\": \"Bob\"}]`\n`subscribedComponents = {\"Header\": [\"theme.primary\"], \"Profile\": [\"user.name\", \"theme.font\"], \"Settings\": [\"theme\"]}`\n\nOutput: `{\"Header\": 1, \"Profile\": 1, \"Settings\": 1}`",
+    "starterCode": {
+      "javascript": "function optimizeConfigUpdates(initialConfig, updates, subscribedComponents) {\n  const getByPath = (obj, path) => {\n    return path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined) ? acc[part] : undefined, obj);\n  };\n\n  const deepEqual = (a, b) => {\n    if (a === b) return true;\n    if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;\n\n    const keysA = Object.keys(a);\n    const keysB = Object.keys(b);\n\n    if (keysA.length !== keysB.length) return false;\n\n    for (const key of keysA) {\n      if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {\n        return false;\n      }\n    }\n    return true;\n  };\n\n  let currentConfig = JSON.parse(JSON.stringify(initialConfig));\n  const renderCounts = Object.fromEntries(Object.keys(subscribedComponents).map(name => [name, 0]));\n\n  for (const update of updates) {\n    const prevConfig = JSON.parse(JSON.stringify(currentConfig));\n    \n    const pathParts = update.path.split('.');\n    let target = currentConfig;\n    for (let i = 0; i < pathParts.length - 1; i++) {\n      if (!target[pathParts[i]] || typeof target[pathParts[i]] !== 'object') {\n        target[pathParts[i]] = {};\n      }\n      target = target[pathParts[i]];\n    }\n    target[pathParts[pathParts.length - 1]] = update.value;\n\n    for (const componentName in subscribedComponents) {\n      const pathsToObserve = subscribedComponents[componentName];\n      let shouldRender = false;\n      for (const path of pathsToObserve) {\n        const prevValue = getByPath(prevConfig, path);\n        const currentValue = getByPath(currentConfig, path);\n        if (!deepEqual(prevValue, currentValue)) {\n          shouldRender = true;\n          break;\n        }\n      }\n      if (shouldRender) {\n        renderCounts[componentName]++;\n      }\n    }\n  }\n\n  return renderCounts;\n}",
+      "python": "import json\n\ndef get_by_path(obj, path):\n    parts = path.split('.')\n    for part in parts:\n        if isinstance(obj, dict) and part in obj:\n            obj = obj[part]\n        else:\n            return None\n    return obj\n\ndef deep_equal(a, b):\n    if a == b: \n        return True\n    if not isinstance(a, dict) or not isinstance(b, dict) or a is None or b is None:\n        return False\n\n    if len(a) != len(b):\n        return False\n\n    for key in a:\n        if key not in b or not deep_equal(a[key], b[key]):\n            return False\n    return True\n\ndef optimizeConfigUpdates(initial_config, updates, subscribed_components):\n    current_config = json.loads(json.dumps(initial_config))\n    render_counts = {name: 0 for name in subscribed_components}\n\n    for update in updates:\n        prev_config = json.loads(json.dumps(current_config))\n        \n        path_parts = update['path'].split('.')\n        target = current_config\n        for i in range(len(path_parts) - 1):\n            if path_parts[i] not in target or not isinstance(target[path_parts[i]], dict):\n                target[path_parts[i]] = {}\n            target = target[path_parts[i]]\n        target[path_parts[-1]] = update['value']\n\n        for component_name, paths_to_observe in subscribed_components.items():\n            should_render = False\n            for path in paths_to_observe:\n                prev_value = get_by_path(prev_config, path)\n                current_value = get_by_path(current_config, path)\n                if not deep_equal(prev_value, current_value):\n                    should_render = True\n                    break\n            if should_render:\n                render_counts[component_name] += 1\n\n    return render_counts"
+    },
+    "testCases": [
+      {
+        "input": "{\"initialConfig\": {\"theme\": {\"primary\": \"blue\", \"font\": {\"size\": 16}}, \"user\": {\"name\": \"Alice\"}}, \"updates\": [{\"path\": \"theme.primary\", \"value\": \"red\"}, {\"path\": \"user.name\", \"value\": \"Bob\"}], \"subscribedComponents\": {\"Header\": [\"theme.primary\"], \"Profile\": [\"user.name\", \"theme.font\"], \"Settings\": [\"theme\"]}}",
+        "expectedOutput": "{\"Header\": 1, \"Profile\": 1, \"Settings\": 1}",
+        "isHidden": false
+      },
+      {
+        "input": "{\"initialConfig\": {\"data\": {\"list\": [1,2,3], \"item\": {\"id\":10}}}, \"updates\": [{\"path\": \"data.list\", \"value\": [1,2,3,4]}, {\"path\": \"data.item.id\", \"value\": 11}], \"subscribedComponents\": {\"ListDisplay\": [\"data.list\"], \"ItemDetail\": [\"data.item.id\"], \"Parent\": [\"data\"], \"Unrelated\": [\"other.path\"]}}",
+        "expectedOutput": "{\"ListDisplay\": 1, \"ItemDetail\": 1, \"Parent\": 1, \"Unrelated\": 0}",
+        "isHidden": true
+      },
+      {
+        "input": "{\"initialConfig\": {\"a\": 1, \"b\": {\"c\": 2}}, \"updates\": [{\"path\": \"a\", \"value\": 1}, {\"path\": \"b.c\", \"value\": 2}], \"subscribedComponents\": {\"CompA\": [\"a\"], \"CompB\": [\"b.c\"]}}",
+        "expectedOutput": "{\"CompA\": 0, \"CompB\": 0}",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "You'll need a helper function to deeply compare two objects/arrays to determine if a change truly occurred for a subscribed path.",
+      "Consider how to correctly apply updates to a nested object structure, ensuring you don't mutate previous states for comparison."
+    ]
+  },
+  {
+    "title": "Optimized Redux Cart Selectors",
+    "slug": "optimized-redux-cart-selectors",
+    "difficulty": "advanced",
+    "category": "frontend",
+    "tags": [
+      "state-management",
+      "performance"
+    ],
+    "xpReward": 200,
+    "description": "## Optimized Redux Cart Selectors\n\nSimulate the state management and selector optimization typical in a Redux application for a shopping cart. Given an initial cart state and a sequence of actions, process these actions to derive the final state. Additionally, track how many times specific 'memoized' selectors (like `getTotalPrice` and `getItemCount`) would recompute. A memoized selector should only recompute if the specific parts of the state it depends on (its 'input selectors') change shallowly after an action. Otherwise, it should return the previously computed value without re-running its calculation.\n\n### Example\n`calculateOptimizedCartState(initialState, actions)`\n\n`initialState = {\"items\": [{\"id\": \"1\", \"name\": \"Apple\", \"price\": 1.0, \"quantity\": 2}], \"discounts\": []}`\n`actions = [`\n  `{\"type\": \"ADD_ITEM\", \"payload\": {\"id\": \"2\", \"name\": \"Banana\", \"price\": 0.5, \"quantity\": 1}},`\n  `{\"type\": \"APPLY_DISCOUNT\", \"payload\": {\"code\": \"SAVE10\", \"amount\": 0.1}}`\n`]`\n\nOutput:\n`{\n  \"finalState\": {\n    \"items\": [\n      {\"id\": \"1\", \"name\": \"Apple\", \"price\": 1.0, \"quantity\": 2},\n      {\"id\": \"2\", \"name\": \"Banana\", \"price\": 0.5, \"quantity\": 1}\n    ],\n    \"discounts\": [\n      {\"code\": \"SAVE10\", \"amount\": 0.1}\n    ]\n  },\n  \"selectorRecomputations\": {\n    \"getTotalPrice\": 2, \n    \"getItemCount\": 1\n  }\n}`\n\n(Initial computation of selectors is not counted, only re-computations due to state changes. For `getTotalPrice`, it depends on `items` and `discounts`. For `getItemCount`, it depends only on `items`.)",
+    "starterCode": {
+      "javascript": "function calculateOptimizedCartState(initialState, actions) {\n  let currentState = JSON.parse(JSON.stringify(initialState));\n  let totalPriceRecomputations = 0;\n  let itemCountRecomputations = 0;\n\n  let memoizedTotalPrice = null;\n  let memoizedItemCount = null;\n\n  const calculateTotalPrice = (items, discounts) => {\n    let total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);\n    for (const discount of discounts) {\n      total -= total * discount.amount;\n    }\n    return total;\n  };\n\n  const calculateItemCount = (items) => {\n    return items.reduce((sum, item) => sum + item.quantity, 0);\n  };\n\n  memoizedTotalPrice = calculateTotalPrice(currentState.items, currentState.discounts);\n  memoizedItemCount = calculateItemCount(currentState.items);\n\n  for (const action of actions) {\n    const previousItems = currentState.items;\n    const previousDiscounts = currentState.discounts;\n\n    if (action.type === 'ADD_ITEM') {\n      const existingItemIndex = currentState.items.findIndex(item => item.id === action.payload.id);\n      if (existingItemIndex !== -1) {\n        currentState.items = currentState.items.map((item, index) => \n          index === existingItemIndex ? { ...item, quantity: item.quantity + action.payload.quantity } : item\n        );\n      } else {\n        currentState.items = [...currentState.items, action.payload];\n      }\n    } else if (action.type === 'REMOVE_ITEM') {\n      currentState.items = currentState.items.filter(item => item.id !== action.payload.id);\n    } else if (action.type === 'UPDATE_QUANTITY') {\n      currentState.items = currentState.items.map(item => \n        item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item\n      );\n    } else if (action.type === 'APPLY_DISCOUNT') {\n      currentState.discounts = [...currentState.discounts, action.payload];\n    }\n\n    const itemsChanged = previousItems !== currentState.items;\n    const discountsChanged = previousDiscounts !== currentState.discounts;\n\n    if (itemsChanged || discountsChanged) {\n      if (itemsChanged || discountsChanged) {\n        memoizedTotalPrice = calculateTotalPrice(currentState.items, currentState.discounts);\n        totalPriceRecomputations++;\n      }\n      if (itemsChanged) {\n        memoizedItemCount = calculateItemCount(currentState.items);\n        itemCountRecomputations++;\n      }\n    }\n  }\n\n  return {\n    finalState: currentState,\n    selectorRecomputations: {\n      getTotalPrice: totalPriceRecomputations,\n      getItemCount: itemCountRecomputations,\n    },\n  };\n}",
+      "python": "import json\n\ndef calculateOptimizedCartState(initial_state, actions):\n    current_state = json.loads(json.dumps(initial_state))\n    total_price_recomputations = 0\n    item_count_recomputations = 0\n\n    memoized_total_price = None\n    memoized_item_count = None\n\n    def calculate_total_price(items, discounts):\n        total = sum(item['price'] * item['quantity'] for item in items)\n        for discount in discounts:\n            total -= total * discount['amount']\n        return total\n\n    def calculate_item_count(items):\n        return sum(item['quantity'] for item in items)\n\n    memoized_total_price = calculate_total_price(current_state['items'], current_state['discounts'])\n    memoized_item_count = calculate_item_count(current_state['items'])\n\n    for action in actions:\n        previous_items_ref = current_state['items']\n        previous_discounts_ref = current_state['discounts']\n\n        if action['type'] == 'ADD_ITEM':\n            existing_item_index = -1\n            for i, item in enumerate(current_state['items']):\n                if item['id'] == action['payload']['id']:\n                    existing_item_index = i\n                    break\n            \n            if existing_item_index != -1:\n                new_items = list(current_state['items'])\n                new_items[existing_item_index] = {**new_items[existing_item_index], 'quantity': new_items[existing_item_index]['quantity'] + action['payload']['quantity']}\n                current_state['items'] = new_items\n            else:\n                current_state['items'] = current_state['items'] + [action['payload']]\n        elif action['type'] == 'REMOVE_ITEM':\n            current_state['items'] = [item for item in current_state['items'] if item['id'] != action['payload']['id']]\n        elif action['type'] == 'UPDATE_QUANTITY':\n            current_state['items'] = [\n                {**item, 'quantity': action['payload']['quantity']} if item['id'] == action['payload']['id'] else item\n                for item in current_state['items']\n            ]\n        elif action['type'] == 'APPLY_DISCOUNT':\n            current_state['discounts'] = current_state['discounts'] + [action['payload']]\n\n        items_changed = previous_items_ref is not current_state['items']\n        discounts_changed = previous_discounts_ref is not current_state['discounts']\n\n        if items_changed or discounts_changed:\n            if items_changed or discounts_changed:\n                memoized_total_price = calculate_total_price(current_state['items'], current_state['discounts'])\n                total_price_recomputations += 1\n            if items_changed:\n                memoized_item_count = calculate_item_count(current_state['items'])\n                item_count_recomputations += 1\n\n    return {\n        'finalState': current_state,\n        'selectorRecomputations': {\n            'getTotalPrice': total_price_recomputations,\n            'getItemCount': item_count_recomputations,\n        },\n    }"
+    },
+    "testCases": [
+      {
+        "input": "{\"initialState\": {\"items\": [{\"id\": \"1\", \"name\": \"Apple\", \"price\": 1.0, \"quantity\": 2}], \"discounts\": []}, \"actions\": [{\"type\": \"ADD_ITEM\", \"payload\": {\"id\": \"2\", \"name\": \"Banana\", \"price\": 0.5, \"quantity\": 1}}, {\"type\": \"APPLY_DISCOUNT\", \"payload\": {\"code\": \"SAVE10\", \"amount\": 0.1}}]}",
+        "expectedOutput": "{\"finalState\": {\"items\": [{\"id\": \"1\", \"name\": \"Apple\", \"price\": 1.0, \"quantity\": 2}, {\"id\": \"2\", \"name\": \"Banana\", \"price\": 0.5, \"quantity\": 1}], \"discounts\": [{\"code\": \"SAVE10\", \"amount\": 0.1}]}, \"selectorRecomputations\": {\"getTotalPrice\": 2, \"getItemCount\": 1}}",
+        "isHidden": false
+      },
+      {
+        "input": "{\"initialState\": {\"items\": [{\"id\": \"A\", \"name\": \"Item A\", \"price\": 10.0, \"quantity\": 1}], \"discounts\": [{\"code\": \"FIRST\", \"amount\": 0.05}]}, \"actions\": [{\"type\": \"UPDATE_QUANTITY\", \"payload\": {\"id\": \"A\", \"quantity\": 3}}, {\"type\": \"REMOVE_ITEM\", \"payload\": {\"id\": \"A\"}}, {\"type\": \"ADD_ITEM\", \"payload\": {\"id\": \"B\", \"name\": \"Item B\", \"price\": 5.0, \"quantity\": 5}}]}",
+        "expectedOutput": "{\"finalState\": {\"items\": [{\"id\": \"B\", \"name\": \"Item B\", \"price\": 5.0, \"quantity\": 5}], \"discounts\": [{\"code\": \"FIRST\", \"amount\": 0.05}]}, \"selectorRecomputations\": {\"getTotalPrice\": 3, \"getItemCount\": 3}}",
+        "isHidden": true
+      },
+      {
+        "input": "{\"initialState\": {\"items\": [{\"id\": \"X\", \"name\": \"X Item\", \"price\": 20.0, \"quantity\": 1}], \"discounts\": []}, \"actions\": [{\"type\": \"UNKNOWN_ACTION\", \"payload\": {}}]}",
+        "expectedOutput": "{\"finalState\": {\"items\": [{\"id\": \"X\", \"name\": \"X Item\", \"price\": 20.0, \"quantity\": 1}], \"discounts\": []}, \"selectorRecomputations\": {\"getTotalPrice\": 0, \"getItemCount\": 0}}",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Ensure your reducer logic for the cart items and discounts correctly produces a new state object/array reference when changes occur (immutability).",
+      "For a memoized selector to recompute, at least one of its input dependencies must have changed *identity* (shallow comparison)."
+    ]
+  },
+  {
+    "title": "Debounced Input Resolver",
+    "slug": "debounced-input-resolver",
+    "difficulty": "advanced",
+    "category": "frontend",
+    "tags": [
+      "state-management",
+      "performance"
+    ],
+    "xpReward": 200,
+    "description": "## Debounced Input Resolver\n\nSimulate the core logic of a `useDebounce` or `useDebouncedCallback` hook, commonly used for optimizing search inputs. Given a chronological sequence of user inputs (each with a value and a timestamp) and a `debounceDelay`, determine which input values would actually 'trigger' as a stable search query. An input `I` triggers if no subsequent input `J` arrives within `debounceDelay` milliseconds after `I.timestamp`. If multiple inputs arrive within `debounceDelay` of each other, only the *latest* one in that rapid sequence should eventually trigger, but its `triggeredAt` time will be `latestInput.timestamp + debounceDelay`.\n\n### Example\n`simulateDebouncedSearch(inputSequence, debounceDelay)`\n\n`inputSequence = [`\n  `{\"value\": \"a\", \"timestamp\": 100},`\n  `{\"value\": \"ab\", \"timestamp\": 150},`\n  `{\"value\": \"abc\", \"timestamp\": 280},`\n  `{\"value\": \"abcd\", \"timestamp\": 400},`\n  `{\"value\": \"abcde\", \"timestamp\": 1000}`\n`]`\n`debounceDelay = 100`\n\nOutput: \n`[`\n  `{\"query\": \"abcd\", \"triggeredAt\": 500},`\n  `{\"query\": \"abcde\", \"triggeredAt\": 1100}`\n`]`",
+    "starterCode": {
+      "javascript": "function simulateDebouncedSearch(inputSequence, debounceDelay) {\n  if (inputSequence.length === 0) return [];\n\n  const triggeredQueries = [];\n  let lastStableInput = null;\n\n  for (const input of inputSequence) {\n    if (lastStableInput === null) {\n      lastStableInput = input;\n    } else {\n      if (input.timestamp < lastStableInput.timestamp + debounceDelay) {\n        lastStableInput = input;\n      } else {\n        triggeredQueries.push({\n          query: lastStableInput.value,\n          triggeredAt: lastStableInput.timestamp + debounceDelay,\n        });\n        lastStableInput = input;\n      }\n    }\n  }\n\n  if (lastStableInput !== null) {\n    triggeredQueries.push({\n      query: lastStableInput.value,\n      triggeredAt: lastStableInput.timestamp + debounceDelay,\n    });\n  }\n\n  return triggeredQueries.sort((a, b) => a.triggeredAt - b.triggeredAt);\n}",
+      "python": "def simulateDebouncedSearch(input_sequence, debounce_delay):\n    if not input_sequence: \n        return []\n\n    triggered_queries = []\n    last_stable_input = None\n\n    for input_item in input_sequence:\n        if last_stable_input is None:\n            last_stable_input = input_item\n        else:\n            if input_item['timestamp'] < last_stable_input['timestamp'] + debounce_delay:\n                last_stable_input = input_item\n            else:\n                triggered_queries.append({\n                    'query': last_stable_input['value'],\n                    'triggeredAt': last_stable_input['timestamp'] + debounce_delay,\n                })\n                last_stable_input = input_item\n    \n    if last_stable_input is not None:\n        triggered_queries.append({\n            'query': last_stable_input['value'],\n            'triggeredAt': last_stable_input['timestamp'] + debounce_delay,\n        })\n\n    return sorted(triggered_queries, key=lambda x: x['triggeredAt'])"
+    },
+    "testCases": [
+      {
+        "input": "{\"inputSequence\": [{\"value\": \"a\", \"timestamp\": 100}, {\"value\": \"ab\", \"timestamp\": 150}, {\"value\": \"abc\", \"timestamp\": 280}, {\"value\": \"abcd\", \"timestamp\": 400}, {\"value\": \"abcde\", \"timestamp\": 1000}], \"debounceDelay\": 100}",
+        "expectedOutput": "[{\"query\": \"abcd\", \"triggeredAt\": 500}, {\"query\": \"abcde\", \"triggeredAt\": 1100}]",
+        "isHidden": false
+      },
+      {
+        "input": "{\"inputSequence\": [{\"value\": \"apple\", \"timestamp\": 1000}, {\"value\": \"banana\", \"timestamp\": 1050}, {\"value\": \"cherry\", \"timestamp\": 1200}], \"debounceDelay\": 200}",
+        "expectedOutput": "[{\"query\": \"cherry\", \"triggeredAt\": 1400}]",
+        "isHidden": true
+      },
+      {
+        "input": "{\"inputSequence\": [{\"value\": \"foo\", \"timestamp\": 100}, {\"value\": \"bar\", \"timestamp\": 400}, {\"value\": \"baz\", \"timestamp\": 800}], \"debounceDelay\": 100}",
+        "expectedOutput": "[{\"query\": \"foo\", \"triggeredAt\": 200}, {\"query\": \"bar\", \"triggeredAt\": 500}, {\"query\": \"baz\", \"triggeredAt\": 900}]",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "Iterate through the `inputSequence` and keep track of the most recent input that is currently 'pending' to be debounced. When a new input arrives, decide if it cancels the previous pending one or if the previous one should now trigger.",
+      "The `triggeredAt` timestamp for a debounced input will be its own `timestamp + debounceDelay`."
+    ]
+  },
+  {
+    "title": "Error Boundary Tracer",
+    "slug": "error-boundary-tracer",
+    "difficulty": "advanced",
+    "category": "frontend",
+    "tags": [
+      "state-management",
+      "performance"
+    ],
+    "xpReward": 200,
+    "description": "## Error Boundary Tracer\n\nSimulate the error propagation mechanism in a React component tree, specifically how Error Boundaries catch errors. Given a hierarchical component tree structure and the name of a component where an error originates, determine the name of the nearest ancestor Error Boundary that catches the error. If no ancestor Error Boundary is found, the error is considered uncaught. An Error Boundary component cannot catch errors thrown by itself.\n\n### Example\n`resolveErrorPropagation(componentTree, errorOrigin)`\n\n`componentTree = {\"name\": \"App\", \"hasErrorBoundary\": true, \"children\": [{\"name\": \"Dashboard\", \"children\": [{\"name\": \"WidgetA\", \"hasErrorBoundary\": false}, {\"name\": \"WidgetB\", \"hasErrorBoundary\": true, \"children\": [{\"name\": \"DeepComponent\", \"hasErrorBoundary\": false}]}]}]}`\n`errorOrigin = \"DeepComponent\"`\n\nOutput: `\"Error caught by WidgetB\"`",
+    "starterCode": {
+      "javascript": "function resolveErrorPropagation(componentTree, errorOrigin) {\n  let pathFromRoot = [];\n\n  function findPath(node, targetName, currentPath) {\n    if (!node) return null;\n    currentPath.push(node);\n    if (node.name === targetName) {\n      return currentPath.slice();\n    }\n    if (node.children) {\n      for (const child of node.children) {\n        const result = findPath(child, targetName, currentPath);\n        if (result) return result;\n      }\n    }\n    currentPath.pop();\n    return null;\n  }\n\n  pathFromRoot = findPath(componentTree, errorOrigin, []);\n\n  if (!pathFromRoot) {\n    return \"Error origin not found\";\n  }\n\n  for (let i = pathFromRoot.length - 1; i >= 0; i--) {\n    const component = pathFromRoot[i];\n    if (component.name === errorOrigin) continue;\n    if (component.hasErrorBoundary) {\n      return `Error caught by ${component.name}`;\n    }\n  }\n\n  return \"Uncaught Error\";\n}",
+      "python": "def resolveErrorPropagation(component_tree, error_origin):\n    path_from_root = []\n\n    def find_path(node, target_name, current_path):\n        if not node: \n            return None\n        current_path.append(node)\n        if node['name'] == target_name:\n            return list(current_path)\n        \n        if 'children' in node and node['children']:\n            for child in node['children']:\n                result = find_path(child, target_name, current_path)\n                if result: \n                    return result\n        current_path.pop()\n        return None\n\n    path_from_root = find_path(component_tree, error_origin, [])\n\n    if not path_from_root:\n        return \"Error origin not found\"\n\n    for i in range(len(path_from_root) - 1, -1, -1):\n        component = path_from_root[i]\n        if component['name'] == error_origin:\n            continue\n        if component.get('hasErrorBoundary', False):\n            return f\"Error caught by {component['name']}\"\n\n    return \"Uncaught Error\""
+    },
+    "testCases": [
+      {
+        "input": "{\"componentTree\": {\"name\": \"App\", \"hasErrorBoundary\": true, \"children\": [{\"name\": \"Dashboard\", \"children\": [{\"name\": \"WidgetA\", \"hasErrorBoundary\": false}, {\"name\": \"WidgetB\", \"hasErrorBoundary\": true, \"children\": [{\"name\": \"DeepComponent\", \"hasErrorBoundary\": false}]}]}]}, \"errorOrigin\": \"DeepComponent\"}",
+        "expectedOutput": "\"Error caught by WidgetB\"",
+        "isHidden": false
+      },
+      {
+        "input": "{\"componentTree\": {\"name\": \"App\", \"hasErrorBoundary\": true, \"children\": [{\"name\": \"Main\", \"hasErrorBoundary\": false, \"children\": [{\"name\": \"Sidebar\", \"hasErrorBoundary\": false}, {\"name\": \"Content\", \"children\": [{\"name\": \"Trouble\", \"hasErrorBoundary\": false}]}]}]}, \"errorOrigin\": \"Trouble\"}",
+        "expectedOutput": "\"Error caught by App\"",
+        "isHidden": true
+      },
+      {
+        "input": "{\"componentTree\": {\"name\": \"Root\", \"hasErrorBoundary\": false, \"children\": [{\"name\": \"Parent\", \"hasErrorBoundary\": false, \"children\": [{\"name\": \"Child\", \"hasErrorBoundary\": false}]}]}, \"errorOrigin\": \"Child\"}",
+        "expectedOutput": "\"Uncaught Error\"",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "First, find the path from the root component down to the `errorOrigin` component.",
+      "Then, traverse this path upwards, starting from the *parent* of the `errorOrigin` component, to find the first ancestor with `hasErrorBoundary: true`."
+    ]
+  },
+  {
+    "title": "Dynamic Module Resolver",
+    "slug": "dynamic-module-resolver",
+    "difficulty": "advanced",
+    "category": "frontend",
+    "tags": [
+      "state-management",
+      "performance"
+    ],
+    "xpReward": 200,
+    "description": "## Dynamic Module Resolver\n\nSimulate a simplified dynamic module loading system that respects dependencies and potential loading failures, akin to React's lazy loading or code splitting. Given a set of modules with their dependencies, an entry point module, and a list of modules that are guaranteed to load successfully, determine the ordered sequence of successfully loaded module contents. Modules should only load if all their direct and transitive dependencies can also load. If the entry point module itself or any of its critical (transitive) dependencies cannot be loaded (i.e., not in `successfulModules`), the entire loading process fails.\n\nThe output order should reflect a valid dependency resolution, where all dependencies of a module appear before the module itself.\n\n### Example\n`simulateModuleLoading(modules, entryModule, successfulModules)`\n\n`modules = {`\n  `\"App\": {\"dependencies\": [\"Header\", \"Footer\"], \"content\": \"App Content\"},`\n  `\"Header\": {\"dependencies\": [\"Nav\"], \"content\": \"Header Content\"},`\n  `\"Footer\": {\"dependencies\": [], \"content\": \"Footer Content\"},`\n  `\"Nav\": {\"dependencies\": [\"Auth\"], \"content\": \"Nav Content\"},`\n  `\"Auth\": {\"dependencies\": [], \"content\": \"Auth Content\"}`\n`}`\n`entryModule = \"App\"`\n`successfulModules = [\"App\", \"Header\", \"Footer\", \"Nav\", \"Auth\"]`\n\nOutput: `[\"Auth Content\", \"Nav Content\", \"Header Content\", \"Footer Content\", \"App Content\"]`",
+    "starterCode": {
+      "javascript": "function simulateModuleLoading(modules, entryModule, successfulModules) {\n  const successfullyLoaded = new Set(successfulModules);\n  const loadedOrder = [];\n  const visited = new Set();\n  const loadingStack = new Set(); \n\n  function dfsLoad(moduleName) {\n    if (loadingStack.has(moduleName)) {\n      return false; \n    }\n    if (visited.has(moduleName)) {\n      return true;\n    }\n\n    if (!successfullyLoaded.has(moduleName)) {\n      return false;\n    }\n\n    loadingStack.add(moduleName);\n\n    const module = modules[moduleName];\n    if (module && module.dependencies) {\n      for (const dep of module.dependencies) {\n        if (!dfsLoad(dep)) {\n          loadingStack.delete(moduleName);\n          return false;\n        }\n      }\n    }\n    \n    loadingStack.delete(moduleName);\n    visited.add(moduleName);\n    loadedOrder.push(module.content);\n    return true;\n  }\n\n  if (!dfsLoad(entryModule)) {\n    visited.clear(); \n    loadingStack.clear();\n    \n    function findFailingModule(moduleName) {\n        if (loadingStack.has(moduleName)) return moduleName;\n        if (!successfullyLoaded.has(moduleName)) return moduleName;\n        if (visited.has(moduleName)) return null;\n\n        loadingStack.add(moduleName);\n        const module = modules[moduleName];\n        if (module && module.dependencies) {\n            for (const dep of module.dependencies) {\n                const failedDep = findFailingModule(dep);\n                if (failedDep) {\n                    loadingStack.delete(moduleName);\n                    return failedDep;\n                }\n            }\n        }\n        loadingStack.delete(moduleName);\n        visited.add(moduleName);\n        return null;\n    }\n    \n    const failingModule = findFailingModule(entryModule);\n    if(failingModule) {\n        return `Failed to load: ${failingModule}`;\n    } else {\n        return `Failed to load a dependency for ${entryModule}`;\n    }\n  }\n\n  return loadedOrder;\n}",
+      "python": "def simulateModuleLoading(modules, entry_module, successful_modules):\n    successfully_loaded = set(successful_modules)\n    loaded_order = []\n    visited = set()\n    loading_stack = set() \n\n    def dfs_load(module_name):\n        if module_name in loading_stack:\n            return False\n        if module_name in visited:\n            return True\n\n        if module_name not in successfully_loaded:\n            return False\n\n        loading_stack.add(module_name)\n\n        module = modules.get(module_name)\n        if module and 'dependencies' in module:\n            for dep in module['dependencies']:\n                if not dfs_load(dep):\n                    loading_stack.remove(module_name)\n                    return False\n        \n        loading_stack.remove(module_name)\n        visited.add(module_name)\n        loaded_order.append(module['content'])\n        return True\n\n    if not dfs_load(entry_module):\n        visited.clear()\n        loading_stack.clear()\n\n        def find_failing_module(module_name_inner):\n            if module_name_inner in loading_stack: return module_name_inner\n            if module_name_inner not in successfully_loaded: return module_name_inner\n            if module_name_inner in visited: return None\n\n            loading_stack.add(module_name_inner)\n            module_inner = modules.get(module_name_inner)\n            if module_inner and 'dependencies' in module_inner:\n                for dep_inner in module_inner['dependencies']:\n                    failed_dep = find_failing_module(dep_inner)\n                    if failed_dep:\n                        loading_stack.remove(module_name_inner)\n                        return failed_dep\n            loading_stack.remove(module_name_inner)\n            visited.add(module_name_inner)\n            return None\n\n        failing_module = find_failing_module(entry_module)\n        if failing_module:\n            return f\"Failed to load: {failing_module}\"\n        else:\n            return f\"Failed to load a dependency for {entry_module}\"\n\n    return loaded_order"
+    },
+    "testCases": [
+      {
+        "input": "{\"modules\": {\"App\": {\"dependencies\": [\"Header\", \"Footer\"], \"content\": \"App Content\"}, \"Header\": {\"dependencies\": [\"Nav\"], \"content\": \"Header Content\"}, \"Footer\": {\"dependencies\": [], \"content\": \"Footer Content\"}, \"Nav\": {\"dependencies\": [\"Auth\"], \"content\": \"Nav Content\"}, \"Auth\": {\"dependencies\": [], \"content\": \"Auth Content\"}}, \"entryModule\": \"App\", \"successfulModules\": [\"App\", \"Header\", \"Footer\", \"Nav\", \"Auth\"]}",
+        "expectedOutput": "[\"Auth Content\", \"Nav Content\", \"Header Content\", \"Footer Content\", \"App Content\"]",
+        "isHidden": false
+      },
+      {
+        "input": "{\"modules\": {\"App\": {\"dependencies\": [\"Header\"], \"content\": \"App\"}, \"Header\": {\"dependencies\": [\"Nav\"], \"content\": \"Header\"}, \"Nav\": {\"dependencies\": [], \"content\": \"Nav\"}, \"Broken\": {\"dependencies\": [], \"content\": \"Broken\"}}, \"entryModule\": \"App\", \"successfulModules\": [\"App\", \"Header\", \"Broken\"]}",
+        "expectedOutput": "\"Failed to load: Nav\"",
+        "isHidden": true
+      },
+      {
+        "input": "{\"modules\": {\"A\": {\"dependencies\": [\"B\"], \"content\": \"Content A\"}, \"B\": {\"dependencies\": [\"C\"], \"content\": \"Content B\"}, \"C\": {\"dependencies\": [], \"content\": \"Content C\"}}, \"entryModule\": \"A\", \"successfulModules\": [\"A\", \"B\", \"C\"]}",
+        "expectedOutput": "[\"Content C\", \"Content B\", \"Content A\"]",
+        "isHidden": true
+      }
+    ],
+    "hints": [
+      "This problem can be solved using a Depth-First Search (DFS) approach. Maintain a `visited` set to track modules that have been successfully loaded and processed.",
+      "During the DFS, if a module is not in the `successfulModules` list, or if any of its dependencies fail to load, the entire loading path for that module fails. Build the `loadedOrder` array as you 'finish' processing a module (after all its dependencies are added)."
+    ]
+  }
+]
