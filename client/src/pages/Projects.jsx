@@ -10,6 +10,7 @@ export default function Projects() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', liveUrl: '', repoUrl: '', techStack: '' });
 
   useEffect(() => {
@@ -18,6 +19,8 @@ export default function Projects() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const data = { ...form, techStack: typeof form.techStack === 'string' ? form.techStack.split(',').map(s => s.trim()).filter(Boolean) : form.techStack };
       
@@ -36,6 +39,8 @@ export default function Projects() {
       setForm({ title: '', description: '', liveUrl: '', repoUrl: '', techStack: '' });
     } catch (err) {
       toast.error(err.response?.data?.error || `Failed to ${editingId ? 'update' : 'launch'} project`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -147,36 +152,51 @@ export default function Projects() {
               </h3>
               
               <div className="input-group">
-                <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Project Title</label>
-                <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', padding: '0.75rem' }} value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="E.g., Devarena AI Integration" required />
+                <label htmlFor="project-title" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Project Title</label>
+                <input id="project-title" name="title" className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', padding: '0.75rem' }} value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="E.g., Devarena AI Integration" required disabled={isSubmitting} />
               </div>
               
               <div className="input-group">
-                <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Description</label>
-                <textarea className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', padding: '0.75rem', minHeight: '100px' }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What does this project do?" required />
+                <label htmlFor="project-description" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Description</label>
+                <textarea id="project-description" name="description" className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', padding: '0.75rem', minHeight: '100px' }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What does this project do?" required disabled={isSubmitting} />
               </div>
               
               <div className="grid grid-2" style={{ gap: '1.5rem' }}>
                 <div className="input-group">
-                  <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Live URL <span className="text-muted">(Optional)</span></label>
-                  <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.liveUrl} onChange={e => setForm({...form, liveUrl: e.target.value})} placeholder="https://myapp.com" />
+                  <label htmlFor="project-live-url" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Live URL <span className="text-muted">(Optional)</span></label>
+                  <input id="project-live-url" name="liveUrl" className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.liveUrl} onChange={e => setForm({...form, liveUrl: e.target.value})} placeholder="https://myapp.com" disabled={isSubmitting} />
                 </div>
                 <div className="input-group">
-                  <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Repository URL <span className="text-muted">(Optional)</span></label>
-                  <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.repoUrl} onChange={e => setForm({...form, repoUrl: e.target.value})} placeholder="https://github.com/username/repo" />
+                  <label htmlFor="project-repo-url" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Repository URL <span className="text-muted">(Optional)</span></label>
+                  <input id="project-repo-url" name="repoUrl" className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.repoUrl} onChange={e => setForm({...form, repoUrl: e.target.value})} placeholder="https://github.com/username/repo" disabled={isSubmitting} />
                 </div>
               </div>
               
               <div className="input-group">
-                <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Tech Stack (comma-separated)</label>
-                <input className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.techStack} onChange={e => setForm({...form, techStack: e.target.value})} placeholder="React, Node.js, MongoDB, TailwindCSS" />
+                <label htmlFor="project-tech-stack" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Tech Stack (comma-separated)</label>
+                <input id="project-tech-stack" name="techStack" className="input" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)' }} value={form.techStack} onChange={e => setForm({...form, techStack: e.target.value})} placeholder="React, Node.js, MongoDB, TailwindCSS" disabled={isSubmitting} />
               </div>
               
               <div className="flex gap-sm mt-sm" style={{ flexWrap: 'wrap' }}>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn btn-primary" style={{ flex: '1 1 180px', padding: '0.75rem', fontSize: '1rem' }}>
-                  {editingId ? 'Save Changes' : '🚀 Publish Project'}
+                <motion.button 
+                  whileHover={{ scale: isSubmitting ? 1 : 1.02 }} 
+                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }} 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="btn btn-primary" 
+                  style={{ flex: '1 1 180px', padding: '0.75rem', fontSize: '1rem', opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                >
+                  {isSubmitting ? 'Saving...' : editingId ? 'Save Changes' : '🚀 Publish Project'}
                 </motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="button" onClick={handleCancel} className="btn btn-secondary" style={{ flex: '1 1 100px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)' }}>
+                <motion.button 
+                  whileHover={{ scale: 1.02 }} 
+                  whileTap={{ scale: 0.98 }} 
+                  type="button" 
+                  onClick={handleCancel} 
+                  disabled={isSubmitting}
+                  className="btn btn-secondary" 
+                  style={{ flex: '1 1 100px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)' }}
+                >
                   Cancel
                 </motion.button>
               </div>

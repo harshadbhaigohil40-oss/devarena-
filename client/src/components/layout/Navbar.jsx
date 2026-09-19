@@ -200,10 +200,14 @@ export default function Navbar({ onMenuClick }) {
           
           {/* Theme Toggle Button */}
           <button 
+            type="button"
             onClick={toggleTheme} 
             className="btn btn-icon navbar-theme-btn" 
             aria-label="Toggle theme"
             title="Toggle theme"
+            aria-pressed={theme === 'light'}
+            data-theme={theme}
+            data-testid="theme-toggle"
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>

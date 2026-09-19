@@ -4,7 +4,7 @@
    ============================================ */
 
 /* --- CSS Custom Properties --- */
-:root, [data-theme='dark'] {
+:root, [data-theme='dark'], .dark {
   /* Backgrounds */
   --bg-primary: #0f0f1a;
   --bg-primary-rgb: 15, 15, 26;
@@ -100,7 +100,7 @@
   --max-width: 1440px;
 }
 
-[data-theme='light'] {
+[data-theme='light'], .light {
   /* Backgrounds */
   --bg-primary: #f8f9fa;
   --bg-primary-rgb: 248, 249, 250;

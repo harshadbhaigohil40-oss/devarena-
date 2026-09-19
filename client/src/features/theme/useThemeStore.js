@@ -10,26 +10,41 @@ const getInitialTheme = () => {
   return 'dark'; // Default to dark if no preference
 };
 
+const applyThemeDOM = (theme) => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    document.documentElement.style.colorScheme = theme;
+    if (document.body) {
+      document.body.setAttribute('data-theme', theme);
+      document.body.classList.remove('light', 'dark');
+      document.body.classList.add(theme);
+    }
+  }
+};
+
 const initialTheme = getInitialTheme();
 if (typeof document !== 'undefined') {
-  document.documentElement.setAttribute('data-theme', initialTheme);
+  applyThemeDOM(initialTheme);
+  if (!document.body) {
+    document.addEventListener('DOMContentLoaded', () => {
+      applyThemeDOM(initialTheme);
+    });
+  }
 }
 
 export const useThemeStore = create((set) => ({
   theme: initialTheme,
   setTheme: (newTheme) => {
     localStorage.setItem('theme', newTheme);
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', newTheme);
-    }
+    applyThemeDOM(newTheme);
     set({ theme: newTheme });
   },
   toggleTheme: () => set((state) => {
     const newTheme = state.theme === 'dark' ? 'light' : 'dark';
     localStorage.setItem('theme', newTheme);
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', newTheme);
-    }
+    applyThemeDOM(newTheme);
     return { theme: newTheme };
   })
 }));
