@@ -83,13 +83,8 @@ export default function ChallengeDetail() {
     }
   });
 
-  // Detect if this is a frontend HTML question that should show the HTML language tab
-  const isFrontendHtmlQuestion = challenge?.category === 'frontend' && (
-    Boolean(challenge?.starterCode?.html) ||
-    challenge?.tags?.includes('fe-html') ||
-    challenge?.section === 'HTML & CSS' ||
-    challenge?.tags?.some(t => ['html', 'document-structure', 'semantic-html', 'forms'].includes(t))
-  );
+  // Detect if this is a frontend question that should show the HTML language tab
+  const isFrontendHtmlQuestion = challenge?.category === 'frontend';
 
   const availableLanguages = isFrontendHtmlQuestion
     ? ['javascript', 'python', 'html']
@@ -457,7 +452,7 @@ export default function ChallengeDetail() {
             ))}
           </div>
 
-          <div style={{ padding: '1.25rem', maxHeight: '70vh', overflowY: 'auto' }}>
+          <div style={{ padding: '1.25rem', maxHeight: '70dvh', overflowY: 'auto' }}>
             <AnimatePresence mode="wait">
               {activeTab === 'description' ? (
                 <motion.div key="desc" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
@@ -532,14 +527,16 @@ export default function ChallengeDetail() {
                     borderRadius: 'var(--radius-md)',
                     overflow: 'hidden',
                     border: '1px solid var(--border-primary)',
-                    minHeight: '340px',
+                    minHeight: 'clamp(280px, 50dvh, 400px)',
+                    display: 'flex',
+                    flexDirection: 'column',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
                   }}>
                     <iframe
                       title="HTML Preview Sandbox"
                       srcDoc={activeCode}
-                      sandbox="allow-scripts"
-                      style={{ width: '100%', height: '380px', border: 'none', background: '#ffffff', display: 'block' }}
+                      sandbox="allow-scripts allow-same-origin"
+                      style={{ width: '100%', flex: 1, minHeight: '380px', border: 'none', background: '#ffffff', display: 'block' }}
                     />
                   </div>
                   <div className="mobile-only" style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>
@@ -637,6 +634,32 @@ export default function ChallengeDetail() {
                           )}
                         </div>
                       ))}
+
+                      {/* Visual Output for HTML Challenges */}
+                      {language === 'html' && activeCode && (
+                        <div style={{ marginTop: '1.5rem' }}>
+                          <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '1.2rem' }}>👁️</span> Rendered Output
+                          </h4>
+                          <div style={{
+                            background: '#ffffff',
+                            borderRadius: 'var(--radius-md)',
+                            overflow: 'hidden',
+                            border: '1px solid var(--border-primary)',
+                            minHeight: '300px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
+                          }}>
+                            <iframe
+                              title="HTML Result Render"
+                              srcDoc={activeCode}
+                              sandbox="allow-scripts allow-same-origin"
+                              style={{ width: '100%', flex: 1, minHeight: '300px', border: 'none', background: '#ffffff', display: 'block' }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       {/* Quick Jump back to Editor on Mobile */}
                       <div className="mobile-only" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>

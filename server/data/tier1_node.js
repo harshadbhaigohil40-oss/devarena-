@@ -4,29 +4,6 @@
 
 module.exports = [
   {
-    id: "nodejs-001",
-    tier: 1,
-    section: "Node.js Basics",
-    topic: "Node.js Fundamentals",
-    title: "Hello Node.js",
-    difficulty: "Easy",
-    pattern: "Node.js Fundamentals",
-    description: "Write a Node.js program that prints \"Hello, World!\" to the console and returns the greeting string.",
-    slug: "hello-nodejs",
-    category: "backend",
-    tags: ["be-node", "nodejs-basics", "Node.js Fundamentals"],
-    xpReward: 50,
-    starterCode: {
-      javascript: `function helloNode() {\n  console.log("Hello, World!");\n  return "Hello, World!";\n}`,
-      python: `def hello_node():\n    print("Hello, World!")\n    return "Hello, World!"`
-    },
-    testCases: [
-      { input: `""`, expectedOutput: `"Hello, World!"`, isHidden: false },
-      { input: `"test"`, expectedOutput: `"Hello, World!"`, isHidden: true }
-    ],
-    hints: ["Use console.log to output and return the string 'Hello, World!'."]
-  },
-  {
     id: "nodejs-002",
     tier: 1,
     section: "Node.js Basics",
@@ -95,30 +72,6 @@ module.exports = [
       { input: `"data.json", "{}"`, expectedOutput: `{"filename":"data.json","bytesWritten":2,"status":"ok"}`, isHidden: true }
     ],
     hints: ["fs.writeFile asynchronously writes data to a file, replacing it if it already exists."]
-  },
-  {
-    id: "nodejs-005",
-    tier: 1,
-    section: "Node.js Basics",
-    topic: "File System",
-    title: "Count Words in a File",
-    difficulty: "Easy",
-    pattern: "File Processing",
-    description: "Read a text string and return the total number of words separated by whitespace (spaces, tabs, newlines).",
-    slug: "count-words-in-a-file",
-    category: "backend",
-    tags: ["be-node", "nodejs-basics", "File System", "File Processing"],
-    xpReward: 50,
-    starterCode: {
-      javascript: `function countWords(text) {\n  // Your code here\n  const words = text.trim().split(/\\s+/).filter(Boolean);\n  return words.length;\n}`,
-      python: `def count_words(text):\n    # Your code here\n    words = [w for w in text.strip().split() if w]\n    return len(words)`
-    },
-    testCases: [
-      { input: `"The quick brown fox"`, expectedOutput: `4`, isHidden: false },
-      { input: `"Hello \\n world\\t!"`, expectedOutput: `3`, isHidden: false },
-      { input: `""`, expectedOutput: `0`, isHidden: true }
-    ],
-    hints: ["Split the string on whitespace regex /\\s+/ and filter out empty strings."]
   },
   {
     id: "nodejs-006",

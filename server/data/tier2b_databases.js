@@ -4,28 +4,6 @@
 
 module.exports = [
   {
-    id: "db-001",
-    tier: 2,
-    section: "Databases",
-    topic: "SQL",
-    title: "Create a Users Table",
-    difficulty: "Easy",
-    pattern: "CREATE TABLE",
-    description: "Return a standard SQL CREATE TABLE query string for users with columns: id, name, email, and created_at.",
-    slug: "create-a-users-table",
-    category: "backend",
-    tags: ["be-db", "databases", "SQL", "CREATE TABLE"],
-    xpReward: 50,
-    starterCode: {
-      javascript: `function createUsersTableQuery() {\n  return "CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);";\n}`,
-      python: `def create_users_table_query():\n    return "CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"`
-    },
-    testCases: [
-      { input: `""`, expectedOutput: `"CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"`, isHidden: false }
-    ],
-    hints: ["SERIAL PRIMARY KEY auto-increments in PostgreSQL."]
-  },
-  {
     id: "db-002",
     tier: 2,
     section: "Databases",

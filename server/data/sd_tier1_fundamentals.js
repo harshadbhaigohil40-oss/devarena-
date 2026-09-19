@@ -756,51 +756,6 @@ Calculate bandwidth savings percentage when switching from JSON payload size to 
     hints: ["Calculate (jsonBytes - protobufBytes) / jsonBytes * 100 and round to integer."]
   },
   {
-    id: "sd-tier1-019",
-    tier: 1,
-    section: "Fundamentals",
-    topic: "HTTP Basics",
-    title: "HTTP Basics",
-    slug: "http-basics",
-    difficulty: "Easy",
-    pattern: "Distributed Systems Fundamentals",
-    category: "system-design",
-    tags: ["sd-basics", "system-design", "http", "Distributed Systems Fundamentals"],
-    xpReward: 50,
-    description: `Explore HTTP fundamentals across HTTP/1.1, HTTP/2, and HTTP/3 (QUIC). Understand connection lifecycles, keep-alive headers, pipelining, head-of-line blocking, and TLS handshakes.
-
-### Learning Objectives
-- Trace the lifecycle of an HTTP request from DNS lookup and TCP 3-way handshake to TLS exchange
-- Understand HTTP/1.1 persistent connections and head-of-line blocking issues
-- Learn HTTP/2 binary framing, streams, multiplexing, and server push
-- Explore HTTP/3 over QUIC running over UDP to eliminate transport head-of-line blocking
-- Leverage caching headers: Cache-Control, ETag, and If-None-Match for network reduction
-
-### Practical Challenge
-Determine if a response is cacheable based on Cache-Control header value ("no-store", "private", "public, max-age=3600").`,
-    starterCode: {
-      javascript: `function isResponseCacheable(cacheControlHeader) {
-  if (!cacheControlHeader) return false;
-  const val = cacheControlHeader.toLowerCase();
-  if (val.includes("no-store") || val.includes("no-cache")) return false;
-  return val.includes("max-age") || val.includes("public");
-}`,
-      python: `def is_response_cacheable(cache_control_header):
-    if not cache_control_header:
-        return False
-    val = cache_control_header.lower()
-    if "no-store" in val or "no-cache" in val:
-        return False
-    return "max-age" in val or "public" in val`
-    },
-    testCases: [
-      { input: `"public, max-age=3600"`, expectedOutput: `true`, isHidden: false },
-      { input: `"no-store, private"`, expectedOutput: `false`, isHidden: false },
-      { input: `""`, expectedOutput: `false`, isHidden: true }
-    ],
-    hints: ["Check if header contains max-age or public, and does not contain no-store or no-cache."]
-  },
-  {
     id: "sd-tier1-020",
     tier: 1,
     section: "Fundamentals",
