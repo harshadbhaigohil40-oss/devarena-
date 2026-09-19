@@ -13,6 +13,7 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const success = await register(formData.username, formData.email, formData.password, formData.role);
@@ -29,6 +30,8 @@ export default function Register() {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const success = await loginWithGoogle(credentialResponse.credential);
       if (success) {
@@ -38,6 +41,8 @@ export default function Register() {
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Google authentication failed.';
       toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

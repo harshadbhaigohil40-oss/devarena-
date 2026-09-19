@@ -9,20 +9,20 @@ import toast from 'react-hot-toast';
 import ChatMarkdown from '@/components/ui/ChatMarkdown';
 import Editor from '@monaco-editor/react';
 
-const LANG_LABELS = { javascript: 'JavaScript', python: 'Python' };
-const LANG_ICONS  = { javascript: '🟨', python: '🐍' };
+const LANG_LABELS = { javascript: 'JavaScript', python: 'Python', html: 'HTML' };
+const LANG_ICONS  = { javascript: '🟨', python: '🐍', html: '🌐' };
 
 export default function ChallengeDetail() {
   const { slug } = useParams();
   const { user } = useAuth();
   const { theme } = useThemeStore();
   const [language, setLanguage]       = useState('javascript');
-  const [userCode, setUserCode]       = useState({ javascript: '', python: '' });
+  const [userCode, setUserCode]       = useState({ javascript: '', python: '', html: '' });
   const [result, setResult]           = useState(null);
   const [running, setRunning]         = useState(false);
   const [submitting, setSubmitting]   = useState(false);
-  const [activeTab, setActiveTab]     = useState('description'); // 'description' | 'results'
-  const [mobileView, setMobileView]   = useState('problem'); // 'problem' | 'editor' | 'results'
+  const [activeTab, setActiveTab]     = useState('description'); // 'description' | 'preview' | 'results'
+  const [mobileView, setMobileView]   = useState('problem'); // 'problem' | 'editor' | 'preview' | 'results'
 
   // Monaco Editor Resizing & Customization States
   const editorRef = useRef(null);
@@ -83,15 +83,35 @@ export default function ChallengeDetail() {
     }
   });
 
+  // Detect if this is a frontend HTML question that should show the HTML language tab
+  const isFrontendHtmlQuestion = challenge?.category === 'frontend' && (
+    Boolean(challenge?.starterCode?.html) ||
+    challenge?.tags?.includes('fe-html') ||
+    challenge?.section === 'HTML & CSS' ||
+    challenge?.tags?.some(t => ['html', 'document-structure', 'semantic-html', 'forms'].includes(t))
+  );
+
+  const availableLanguages = isFrontendHtmlQuestion
+    ? ['javascript', 'python', 'html']
+    : ['javascript', 'python'];
+
   useEffect(() => {
     if (challenge?.starterCode) {
+      const defaultHtml = challenge.starterCode.html || (isFrontendHtmlQuestion ? `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>${challenge.title || 'Page'}</title>\n</head>\n<body>\n  <!-- Write your HTML structure here -->\n\n</body>\n</html>\n` : '');
       setUserCode({
         javascript: challenge.starterCode.javascript || '// Write your solution here\n',
         python: challenge.starterCode.python || '# Write your solution here\n',
+        html: defaultHtml,
       });
       setResult(null);
     }
-  }, [challenge]);
+  }, [challenge, isFrontendHtmlQuestion]);
+
+  useEffect(() => {
+    if (language === 'html' && !isFrontendHtmlQuestion) {
+      setLanguage('javascript');
+    }
+  }, [isFrontendHtmlQuestion, language]);
 
   // Handle Fullscreen Escape key listener
   useEffect(() => {
@@ -231,7 +251,9 @@ export default function ChallengeDetail() {
     setUserCode(prev => ({ ...prev, [language]: value || '' }));
 
   const handleReset = () => {
-    setUserCode(prev => ({ ...prev, [language]: challenge?.starterCode?.[language] || '' }));
+    const defaultHtml = challenge?.starterCode?.html || (isFrontendHtmlQuestion ? `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>${challenge?.title || 'Page'}</title>\n</head>\n<body>\n  <!-- Write your HTML structure here -->\n\n</body>\n</html>\n` : '');
+    const defaultCode = challenge?.starterCode?.[language] || (language === 'html' ? defaultHtml : '');
+    setUserCode(prev => ({ ...prev, [language]: defaultCode }));
     setResult(null);
   };
 
@@ -239,6 +261,8 @@ export default function ChallengeDetail() {
     setMobileView(view);
     if (view === 'problem') {
       setActiveTab('description');
+    } else if (view === 'preview') {
+      setActiveTab('preview');
     } else if (view === 'results') {
       setActiveTab('results');
     } else if (view === 'editor') {
@@ -347,7 +371,7 @@ export default function ChallengeDetail() {
 
         {/* Language Selector */}
         <div className="flex gap-sm challenge-lang-selector">
-          {['javascript', 'python'].map(lang => (
+          {availableLanguages.map(lang => (
             <button
               key={lang}
               onClick={() => {
@@ -385,6 +409,14 @@ export default function ChallengeDetail() {
         >
           💻 Code
         </button>
+        {language === 'html' && (
+          <button
+            onClick={() => handleMobileTabSwitch('preview')}
+            className={`challenge-mobile-nav-btn ${mobileView === 'preview' ? 'active' : ''}`}
+          >
+            👁️ Preview
+          </button>
+        )}
         <button
           onClick={() => handleMobileTabSwitch('results')}
           className={`challenge-mobile-nav-btn ${mobileView === 'results' ? 'active' : ''}`}
@@ -411,6 +443,7 @@ export default function ChallengeDetail() {
           <div className="flex desktop-only" style={{ borderBottom: '1px solid var(--border-primary)' }}>
             {[
               { id: 'description', label: '📋 Problem' },
+              ...(language === 'html' ? [{ id: 'preview', label: '👁️ Live Preview' }] : []),
               { id: 'results',     label: result ? (result.allPassed ? '✅ Results' : '❌ Results') : '📊 Results' },
             ].map(tab => (
               <button
@@ -471,6 +504,45 @@ export default function ChallengeDetail() {
 
                   {/* Quick Jump back to Editor on Mobile */}
                   <div className="mobile-only" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>
+                    <button
+                      onClick={() => handleMobileTabSwitch('editor')}
+                      className="btn btn-secondary"
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minHeight: 44, fontWeight: 700 }}
+                    >
+                      💻 Back to Code Editor
+                    </button>
+                  </div>
+                </motion.div>
+              ) : activeTab === 'preview' ? (
+                <motion.div key="preview" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>🌐</span>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Live HTML Preview</h4>
+                        <span className="text-muted text-sm">Real-time rendered DOM output</span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', borderRadius: '4px', border: '1px solid rgba(99, 102, 241, 0.2)', fontWeight: 600 }}>
+                      Interactive Sandbox
+                    </span>
+                  </div>
+                  <div style={{
+                    background: '#ffffff',
+                    borderRadius: 'var(--radius-md)',
+                    overflow: 'hidden',
+                    border: '1px solid var(--border-primary)',
+                    minHeight: '340px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
+                  }}>
+                    <iframe
+                      title="HTML Preview Sandbox"
+                      srcDoc={activeCode}
+                      sandbox="allow-scripts"
+                      style={{ width: '100%', height: '380px', border: 'none', background: '#ffffff', display: 'block' }}
+                    />
+                  </div>
+                  <div className="mobile-only" style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>
                     <button
                       onClick={() => handleMobileTabSwitch('editor')}
                       className="btn btn-secondary"

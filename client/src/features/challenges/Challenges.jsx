@@ -6,7 +6,7 @@ import { challengeService } from '../../services';
 import toast from 'react-hot-toast';
 import ChallengeCard from './components/ChallengeCard';
 
-// Custom hook for debouncing search input
+// Custom hook for debouncing search input with instant update capability
 function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -15,7 +15,7 @@ function useDebounce(value, delay) {
     }, delay);
     return () => clearTimeout(handler);
   }, [value, delay]);
-  return debouncedValue;
+  return [debouncedValue, setDebouncedValue];
 }
 
 export default function Challenges() {
@@ -26,25 +26,32 @@ export default function Challenges() {
 
   const [filter, setFilter] = useState(initialFilter);
   const [searchInput, setSearchInput] = useState(initialSearch);
-  const debouncedSearch = useDebounce(searchInput, 500); // 500ms debounce
+  const [debouncedSearch, setDebouncedSearch] = useDebounce(searchInput, 300); // 300ms responsive debounce
   const [page, setPage] = useState(1);
 
-  // Update URL params when filter or debounced search changes
+  // Update URL params only when filter, search, or node genuinely changes
   useEffect(() => {
-    const params = {};
-    if (filter !== 'all') params.difficulty = filter;
-    if (debouncedSearch) params.search = debouncedSearch;
-    if (nodeId) params.node = nodeId;
-    setSearchParams(params, { replace: true });
-    setPage(1);
-  }, [filter, debouncedSearch, nodeId, setSearchParams]);
+    const currentDifficulty = searchParams.get('difficulty') || 'all';
+    const currentSearch = searchParams.get('search') || '';
+    const currentNode = searchParams.get('node') || '';
+
+    if (filter !== currentDifficulty || debouncedSearch !== currentSearch || (nodeId || '') !== currentNode) {
+      const params = {};
+      if (filter !== 'all') params.difficulty = filter;
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (nodeId) params.node = nodeId;
+      setSearchParams(params, { replace: true });
+      setPage(1);
+    }
+  }, [filter, debouncedSearch, nodeId, searchParams, setSearchParams]);
 
   const { data: result = { challenges: [], total: 0 }, isLoading: loading } = useQuery({
-    queryKey: ['challenges', filter, debouncedSearch, page],
+    queryKey: ['challenges', filter, debouncedSearch, page, nodeId],
     queryFn: async () => {
       const params = { page, limit: 18 };
       if (filter !== 'all') params.difficulty = filter;
       if (debouncedSearch) params.search = debouncedSearch;
+      if (nodeId) params.node = nodeId;
       
       const res = await challengeService.list(params);
       const responseData = res.data;
@@ -109,11 +116,25 @@ export default function Challenges() {
           className="search-input" 
           value={searchInput} 
           onChange={e => setSearchInput(e.target.value)} 
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              setDebouncedSearch(searchInput);
+            }
+          }}
           placeholder="Search challenges by name, topic, or pattern..." 
         />
         <span className="search-icon">🔍</span>
         {searchInput && (
-          <button onClick={() => setSearchInput('')} className="search-clear-btn">✕</button>
+          <button 
+            onClick={() => {
+              setSearchInput('');
+              setDebouncedSearch('');
+            }} 
+            className="search-clear-btn"
+          >
+            ✕
+          </button>
         )}
       </div>
 
@@ -123,6 +144,24 @@ export default function Challenges() {
           <span>Showing results for</span>
           <span className="search-active-term" style={{ wordBreak: 'break-all' }}>"{debouncedSearch}"</span>
           <span className="text-tertiary">({result.total} found)</span>
+        </div>
+      )}
+
+      {/* Active node indicator */}
+      {nodeId && (
+        <div className="search-active-indicator" style={{ flexWrap: 'wrap', gap: '0.35rem', marginTop: debouncedSearch ? '0.25rem' : '0' }}>
+          <span>Filtered by node:</span>
+          <span className="search-active-term" style={{ textTransform: 'capitalize' }}>{nodeId}</span>
+          <button 
+            onClick={() => {
+              const newParams = new URLSearchParams(searchParams);
+              newParams.delete('node');
+              setSearchParams(newParams);
+            }} 
+            style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', marginLeft: '0.5rem', fontWeight: 600, fontSize: '0.85rem' }}
+          >
+            Clear filter ✕
+          </button>
         </div>
       )}
 

@@ -13,7 +13,15 @@ export function SocketProvider({ children }) {
   useEffect(() => {
     if (!user) return;
 
-    const newSocket = io(import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://devarena-ymqe.onrender.com'), {
+    const getSocketUrl = () => {
+      const envUrl = import.meta.env.VITE_API_BASE_URL;
+      if (envUrl) {
+        return envUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+      }
+      return import.meta.env.DEV ? 'http://localhost:5000' : 'https://devarena-ymqe.onrender.com';
+    };
+
+    const newSocket = io(getSocketUrl(), {
       transports: ['websocket', 'polling'],
     });
 

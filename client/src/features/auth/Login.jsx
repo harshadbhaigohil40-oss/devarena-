@@ -14,6 +14,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const success = await login(email, password);
@@ -30,6 +31,8 @@ export default function Login() {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const success = await loginWithGoogle(credentialResponse.credential);
       if (success) {
@@ -39,6 +42,8 @@ export default function Login() {
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Google authentication failed.';
       toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +48,11 @@ export default function SkillTrees() {
     return 1;
   });
   const [activeNodeModal, setActiveNodeModal] = useState(null);
+  const [expandedNodes, setExpandedNodes] = useState({});
+
+  const toggleExpandNode = (nodeId) => {
+    setExpandedNodes(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
+  };
 
   const { data: trees = [], isLoading: loadingTrees } = useQuery({
     queryKey: ['skillTrees'],
@@ -80,7 +85,17 @@ export default function SkillTrees() {
 
   const handleZoomIn = () => setZoom(z => Math.min(1.5, Math.round((z + 0.15) * 100) / 100));
   const handleZoomOut = () => setZoom(z => Math.max(0.5, Math.round((z - 0.15) * 100) / 100));
-  const handleResetZoom = () => setZoom(typeof window !== 'undefined' && window.innerWidth < 768 ? 0.75 : 1);
+  const handleResetZoom = () => setZoom(typeof window !== 'undefined' && window.innerWidth < 768 ? 0.7 : 1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        setZoom(z => (z > 0.85 ? 0.7 : z));
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (loading) return <div className="page-container"><div className="skeleton" style={{ height: 400, borderRadius: 'var(--radius-lg)' }} /></div>;
 
@@ -241,16 +256,8 @@ export default function SkillTrees() {
                       style={{ 
                         filter: isLight ? 'drop-shadow(0 4px 12px rgba(99, 102, 241, 0.2))' : `drop-shadow(0 0 10px ${selected.color}80)`,
                         background: isLight ? '#FFFFFF' : 'rgba(255,255,255,0.06)',
-                        width: '76px',
-                        height: '76px',
-                        borderRadius: '20px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
                         border: isLight ? '1px solid rgba(99, 102, 241, 0.25)' : `1px solid ${selected.color}40`,
                         boxShadow: isLight ? '0 4px 14px rgba(99, 102, 241, 0.15), 0 1px 3px rgba(0,0,0,0.05)' : 'none',
-                        fontSize: '3.2rem',
-                        flexShrink: 0
                       }}
                     >
                       {selected.icon}
@@ -359,6 +366,142 @@ export default function SkillTrees() {
                                         {node.xpRequired ? `${node.xpRequired} XP` : '0 XP (Free)'}
                                       </span>
                                     </div>
+
+                                    {/* Topics Covered */}
+                                    {node.topics && node.topics.length > 0 && (
+                                      <div style={{ marginTop: '0.75rem', paddingTop: '0.6rem', borderTop: isLight ? '1px solid #F1F5F9' : '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: isLight ? '#64748B' : 'var(--text-tertiary)', marginBottom: '0.35rem' }}>
+                                          Topics Covered ({node.topics.length})
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                                          {node.topics.map((t, idx) => (
+                                            <span
+                                              key={idx}
+                                              style={{
+                                                fontSize: '0.68rem',
+                                                padding: '0.15rem 0.4rem',
+                                                borderRadius: '5px',
+                                                background: isLight ? '#F1F5F9' : 'rgba(255,255,255,0.05)',
+                                                color: isLight ? '#334155' : 'var(--text-secondary)',
+                                                border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.06)',
+                                                lineHeight: 1.3
+                                              }}
+                                            >
+                                              {t}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Questions Accordion */}
+                                    {node.challenges && node.challenges.length > 0 && (
+                                      <div style={{ marginTop: '0.65rem' }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleExpandNode(node.nodeId)}
+                                          style={{
+                                            width: '100%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '0.4rem 0.6rem',
+                                            borderRadius: '6px',
+                                            background: isLight ? '#F8FAFC' : 'rgba(255,255,255,0.03)',
+                                            border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.06)',
+                                            color: isLight ? '#334155' : 'var(--text-secondary)',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            marginBottom: '0.4rem'
+                                          }}
+                                        >
+                                          <span>📝 Questions ({node.challenges.length})</span>
+                                          <span style={{ fontSize: '0.7rem' }}>{expandedNodes[node.nodeId] ? '▲ Hide' : '▼ View'}</span>
+                                        </button>
+
+                                        <AnimatePresence>
+                                          {expandedNodes[node.nodeId] && (
+                                            <motion.div
+                                              initial={{ opacity: 0, height: 0 }}
+                                              animate={{ opacity: 1, height: 'auto' }}
+                                              exit={{ opacity: 0, height: 0 }}
+                                              style={{ overflow: 'hidden', marginBottom: '0.6rem' }}
+                                            >
+                                              <div className="skill-tree-question-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '0.2rem', WebkitOverflowScrolling: 'touch' }}>
+                                                {node.challenges.map((ch, chIdx) => (
+                                                  <div
+                                                    key={ch._id || ch.slug || chIdx}
+                                                    onClick={() => {
+                                                      if (isUnlocked) {
+                                                        navigate(`/challenges/${ch.slug}`);
+                                                      } else {
+                                                        toast.error(`Node locked! Need ${node.xpRequired} XP to unlock.`);
+                                                      }
+                                                    }}
+                                                    style={{
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      justifyContent: 'space-between',
+                                                      gap: '0.4rem',
+                                                      padding: '0.5rem 0.65rem',
+                                                      minHeight: '42px',
+                                                      borderRadius: '6px',
+                                                      background: isLight ? '#FFFFFF' : 'rgba(255,255,255,0.02)',
+                                                      border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.05)',
+                                                      cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                                                      transition: 'all 0.15s ease',
+                                                      WebkitTapHighlightColor: 'transparent',
+                                                    }}
+                                                    title={ch.pattern ? `${ch.title} (${ch.pattern})` : ch.title}
+                                                  >
+                                                    <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                      <span style={{ fontSize: '0.75rem', color: ch.completed ? '#10B981' : (isLight ? '#94A3B8' : 'var(--text-tertiary)'), flexShrink: 0 }}>
+                                                        {ch.completed ? '✓' : `#${ch.id || chIdx + 1}`}
+                                                      </span>
+                                                      <div style={{ minWidth: 0 }}>
+                                                        <div style={{ fontSize: '0.78rem', fontWeight: 600, color: isLight ? '#0F172A' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                          {ch.title}
+                                                        </div>
+                                                        {ch.pattern && (
+                                                          <div style={{ fontSize: '0.66rem', color: isLight ? '#64748B' : 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                            {ch.pattern}
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+                                                      <span style={{
+                                                        fontSize: '0.62rem',
+                                                        padding: '0.1rem 0.35rem',
+                                                        borderRadius: '4px',
+                                                        fontWeight: 700,
+                                                        background: (ch.originalDifficulty === 'Easy' || ch.difficulty === 'beginner')
+                                                          ? 'rgba(16,185,129,0.12)'
+                                                          : (ch.originalDifficulty === 'Hard' || ch.difficulty === 'advanced')
+                                                          ? 'rgba(239,68,68,0.12)'
+                                                          : 'rgba(245,158,11,0.12)',
+                                                        color: (ch.originalDifficulty === 'Easy' || ch.difficulty === 'beginner')
+                                                          ? '#10B981'
+                                                          : (ch.originalDifficulty === 'Hard' || ch.difficulty === 'advanced')
+                                                          ? '#EF4444'
+                                                          : '#F59E0B',
+                                                      }}>
+                                                        {ch.originalDifficulty || ch.difficulty}
+                                                      </span>
+                                                      <span style={{ fontSize: '0.72rem', color: isUnlocked ? nodeTierColor : 'inherit' }}>
+                                                        {isUnlocked ? '▶' : '🔒'}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+                                      </div>
+                                    )}
                                   </div>
 
                                   <button
@@ -417,7 +560,7 @@ export default function SkillTrees() {
                           position: 'absolute', 
                           top: 0, 
                           left: 0,
-                          transformOrigin: '250px 250px'
+                          transformOrigin: 'center center'
                         }}
                       >
                       
@@ -480,11 +623,7 @@ export default function SkillTrees() {
                                 zIndex: hoveredNode === node.nodeId ? 50 : 10
                               }}
                               onClick={() => {
-                                if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                                  setActiveNodeModal(node);
-                                } else {
-                                  handleEnterNode(node);
-                                }
+                                setActiveNodeModal(node);
                               }}
                             >
                               
@@ -670,25 +809,30 @@ export default function SkillTrees() {
               <button 
                 onClick={() => setActiveNodeModal(null)}
                 style={{ 
-                  position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', 
-                  color: isLight ? '#64748B' : 'var(--text-tertiary)', 
-                  fontSize: '1.25rem', cursor: 'pointer', lineHeight: 1 
+                  position: 'absolute', top: '0.75rem', right: '0.75rem',
+                  width: '34px', height: '34px', borderRadius: '50%',
+                  background: isLight ? '#F1F5F9' : 'rgba(255,255,255,0.08)',
+                  border: isLight ? '1px solid #CBD5E1' : '1px solid rgba(255,255,255,0.1)',
+                  color: isLight ? '#475569' : 'var(--text-secondary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1rem', cursor: 'pointer', lineHeight: 1, zIndex: 10,
+                  WebkitTapHighlightColor: 'transparent'
                 }}
                 aria-label="Close details"
               >
                 ✕
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', paddingRight: '2.5rem' }}>
+                <span style={{ fontSize: 'clamp(1.6rem, 4vw, 2rem)' }}>
                   {activeNodeModal.progress === 100 ? '✨' : activeNodeModal.unlocked ? '🔥' : '🔒'}
                 </span>
                 <div style={{ minWidth: 0 }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: isLight ? '#0F172A' : 'var(--text-primary)', margin: 0, wordBreak: 'break-word' }}>
+                  <h3 style={{ fontSize: 'clamp(1.05rem, 3.5vw, 1.25rem)', fontWeight: 800, color: isLight ? '#0F172A' : 'var(--text-primary)', margin: 0, wordBreak: 'break-word', lineHeight: 1.25 }}>
                     {activeNodeModal.title}
                   </h3>
                   <span style={{ 
-                    fontSize: '0.75rem', 
+                    fontSize: '0.72rem', 
                     color: getTierColor(activeNodeModal.tier, isLight, selected?.color), 
                     fontWeight: 700, 
                     textTransform: 'uppercase' 
@@ -698,7 +842,7 @@ export default function SkillTrees() {
                 </div>
               </div>
 
-              <p style={{ fontSize: '0.9rem', color: isLight ? '#475569' : 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              <p style={{ fontSize: '0.875rem', color: isLight ? '#475569' : 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
                 {activeNodeModal.description || 'Master this node to unlock advanced abilities and earn XP.'}
               </p>
 
@@ -724,6 +868,112 @@ export default function SkillTrees() {
                 </div>
               </div>
 
+              {/* Topics Covered */}
+              {activeNodeModal.topics && activeNodeModal.topics.length > 0 && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: isLight ? '#64748B' : 'var(--text-tertiary)', marginBottom: '0.45rem' }}>
+                    Topics Covered ({activeNodeModal.topics.length})
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                    {activeNodeModal.topics.map((t, idx) => (
+                      <span key={idx} style={{
+                        fontSize: '0.72rem',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '6px',
+                        background: isLight ? '#F1F5F9' : 'rgba(255,255,255,0.06)',
+                        color: isLight ? '#334155' : 'var(--text-secondary)',
+                        border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.08)',
+                        lineHeight: 1.35,
+                        wordBreak: 'break-word'
+                      }}>
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Questions List */}
+              {activeNodeModal.challenges && activeNodeModal.challenges.length > 0 && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: isLight ? '#64748B' : 'var(--text-tertiary)', marginBottom: '0.5rem' }}>
+                    <span>Challenges ({activeNodeModal.challenges.length})</span>
+                    <span style={{ fontSize: '0.7rem', color: isLight ? '#64748B' : 'var(--text-tertiary)', textTransform: 'none', fontWeight: 500 }}>
+                      Tap to open in compiler
+                    </span>
+                  </div>
+                  <div className="skill-tree-question-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: 'clamp(170px, 30vh, 250px)', overflowY: 'auto', paddingRight: '0.2rem', WebkitOverflowScrolling: 'touch' }}>
+                    {activeNodeModal.challenges.map((ch, idx) => (
+                      <div
+                        key={ch._id || ch.slug || idx}
+                        onClick={() => {
+                          if (activeNodeModal.unlocked) {
+                            setActiveNodeModal(null);
+                            navigate(`/challenges/${ch.slug}`);
+                          } else {
+                            toast.error(`Node locked! Need ${activeNodeModal.xpRequired} XP to unlock.`);
+                          }
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '0.5rem',
+                          padding: '0.55rem 0.7rem',
+                          minHeight: '44px',
+                          borderRadius: '8px',
+                          background: isLight ? '#F8FAFC' : 'rgba(255,255,255,0.03)',
+                          border: isLight ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.06)',
+                          cursor: activeNodeModal.unlocked ? 'pointer' : 'not-allowed',
+                          transition: 'all 0.15s ease',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
+                      >
+                        <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.8rem', color: ch.completed ? '#10B981' : (isLight ? '#94A3B8' : 'var(--text-tertiary)'), flexShrink: 0 }}>
+                            {ch.completed ? '✓' : `#${ch.id || idx + 1}`}
+                          </span>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: isLight ? '#0F172A' : 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {ch.title}
+                            </div>
+                            {ch.pattern && (
+                              <div style={{ fontSize: '0.68rem', color: isLight ? '#64748B' : 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {ch.pattern}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+                          <span style={{
+                            fontSize: '0.65rem',
+                            padding: '0.12rem 0.4rem',
+                            borderRadius: '4px',
+                            fontWeight: 700,
+                            background: (ch.originalDifficulty === 'Easy' || ch.difficulty === 'beginner')
+                              ? 'rgba(16,185,129,0.12)'
+                              : (ch.originalDifficulty === 'Hard' || ch.difficulty === 'advanced')
+                              ? 'rgba(239,68,68,0.12)'
+                              : 'rgba(245,158,11,0.12)',
+                            color: (ch.originalDifficulty === 'Easy' || ch.difficulty === 'beginner')
+                              ? '#10B981'
+                              : (ch.originalDifficulty === 'Hard' || ch.difficulty === 'advanced')
+                              ? '#EF4444'
+                              : '#F59E0B',
+                          }}>
+                            {ch.originalDifficulty || ch.difficulty}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: activeNodeModal.unlocked ? getTierColor(activeNodeModal.tier, isLight, selected?.color) : 'inherit' }}>
+                            {activeNodeModal.unlocked ? '▶' : '🔒'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -735,7 +985,7 @@ export default function SkillTrees() {
                 className="btn btn-primary"
                 style={{
                   width: '100%',
-                  minHeight: '44px',
+                  minHeight: '46px',
                   justifyContent: 'center',
                   background: activeNodeModal.unlocked 
                     ? (activeNodeModal.progress === 100 ? '#10B981' : getTierColor(activeNodeModal.tier, isLight, selected?.color)) 
@@ -745,7 +995,8 @@ export default function SkillTrees() {
                   opacity: activeNodeModal.unlocked ? 1 : 0.8,
                   cursor: activeNodeModal.unlocked ? 'pointer' : 'not-allowed',
                   fontWeight: 700,
-                  boxShadow: activeNodeModal.unlocked ? '0 4px 14px rgba(99, 102, 241, 0.25)' : 'none'
+                  boxShadow: activeNodeModal.unlocked ? '0 4px 14px rgba(99, 102, 241, 0.25)' : 'none',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
               >
                 {activeNodeModal.unlocked ? 'Enter Arena ▶' : `🔒 Locked (${activeNodeModal.xpRequired} XP required)`}
