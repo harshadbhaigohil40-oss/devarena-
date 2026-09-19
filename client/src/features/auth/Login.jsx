@@ -53,14 +53,40 @@ export default function Login() {
         <h2 className="mb-md text-center text-gradient">Welcome Back</h2>
         <form onSubmit={handleSubmit} className="flex-col gap-md">
           <div className="input-group">
-            <label>Email Address</label>
-            <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <label htmlFor="login-email">Email Address</label>
+            <input 
+              id="login-email"
+              name="email"
+              type="email" 
+              className="input" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              autoComplete="email"
+              required 
+              disabled={isSubmitting}
+            />
           </div>
           <div className="input-group">
-            <label>Password</label>
-            <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <label htmlFor="login-password">Password</label>
+            <input 
+              id="login-password"
+              name="password"
+              type="password" 
+              className="input" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              autoComplete="current-password"
+              required 
+              disabled={isSubmitting}
+            />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={isSubmitting}>
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            style={{ width: '100%', marginTop: '1rem' }} 
+            disabled={isSubmitting}
+            data-testid="login-submit-btn"
+          >
             {isSubmitting ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>

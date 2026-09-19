@@ -52,25 +52,70 @@ export default function Register() {
         <h2 className="mb-md text-center text-gradient">Create Account</h2>
         <form onSubmit={handleSubmit} className="flex-col gap-md">
           <div className="input-group">
-            <label>Username</label>
-            <input type="text" className="input" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} required minLength={3} />
+            <label htmlFor="register-username">Username</label>
+            <input 
+              id="register-username"
+              name="username"
+              type="text" 
+              className="input" 
+              value={formData.username} 
+              onChange={(e) => setFormData({...formData, username: e.target.value})} 
+              autoComplete="username"
+              required 
+              minLength={3} 
+              disabled={isSubmitting}
+            />
           </div>
           <div className="input-group">
-            <label>Email Address</label>
-            <input type="email" className="input" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} required />
+            <label htmlFor="register-email">Email Address</label>
+            <input 
+              id="register-email"
+              name="email"
+              type="email" 
+              className="input" 
+              value={formData.email} 
+              onChange={(e) => setFormData({...formData, email: e.target.value})} 
+              autoComplete="email"
+              required 
+              disabled={isSubmitting}
+            />
           </div>
           <div className="input-group">
-            <label>Password</label>
-            <input type="password" className="input" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} required minLength={6} />
+            <label htmlFor="register-password">Password</label>
+            <input 
+              id="register-password"
+              name="password"
+              type="password" 
+              className="input" 
+              value={formData.password} 
+              onChange={(e) => setFormData({...formData, password: e.target.value})} 
+              autoComplete="new-password"
+              required 
+              minLength={6} 
+              disabled={isSubmitting}
+            />
           </div>
           <div className="input-group">
-            <label>I am a...</label>
-            <select className="input" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
+            <label htmlFor="register-role">I am a...</label>
+            <select 
+              id="register-role"
+              name="role"
+              className="input" 
+              value={formData.role} 
+              onChange={(e) => setFormData({...formData, role: e.target.value})}
+              disabled={isSubmitting}
+            >
               <option value="developer">Developer</option>
               <option value="recruiter">Recruiter</option>
             </select>
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={isSubmitting}>
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            style={{ width: '100%', marginTop: '1rem' }} 
+            disabled={isSubmitting}
+            data-testid="register-submit-btn"
+          >
             {isSubmitting ? 'Creating...' : 'Register'}
           </button>
         </form>
