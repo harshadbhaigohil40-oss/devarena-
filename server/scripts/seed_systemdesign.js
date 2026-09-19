@@ -18,26 +18,31 @@ function generateSlug(title) {
 }
 
 async function generateChallengeData(model, question) {
-  const prompt = `You are an expert System Design instructor creating high-quality interview challenges for DevArena.
+  const prompt = `You are a Senior FAANG Engineer and expert System Design instructor creating high-quality, practical, LeetCode-style coding challenges for DevArena.
 I have a problem title: "${question.title}" (Topic: ${question.topicId}, Difficulty: ${question.difficulty}).
-Generate a JSON object matching this schema EXACTLY for this problem:
+
+CRITICAL INSTRUCTIONS:
+1. The challenge MUST be a real, practical, LeetCode-style programming problem (e.g. algorithmic implementation, system design snippet, or frontend component logic).
+2. The complexity MUST strictly align with the provided Tier/Difficulty. Do not make a Tier 1 problem overly complex, and do not make a Tier 5 problem trivial.
+3. NEVER generate bogus, empty, or placeholder test cases (e.g. input: ""). Every test case must have realistic, edge-case tested inputs and outputs.
+4. Generate a JSON object matching this schema EXACTLY:
 {
-  "description": "Markdown string describing the system design problem clearly, including functional and non-functional requirements, and expected scale.",
+  "description": "Markdown string describing the problem clearly, including constraints, time/space complexity requirements, and examples.",
   "starterCode": {
-    "javascript": "// System Design boilerplate\\n// Outline your high-level architecture here",
-    "python": "# System Design boilerplate\\n# Outline your high-level architecture here",
-    "java": "// System Design boilerplate\\n// Outline your high-level architecture here",
-    "cpp": "// System Design boilerplate\\n// Outline your high-level architecture here"
+    "javascript": "function or class boilerplate here",
+    "python": "def boilerplate_here(): pass",
+    "java": "class Solution { public ... }",
+    "cpp": "class Solution { public: ... }"
   },
   "testCases": [
-    { "input": "Evaluate design", "expectedOutput": "Scalable and reliable architecture", "isHidden": false }
+    { "input": "valid stringified input", "expectedOutput": "valid stringified output", "isHidden": false }
   ],
   "hints": ["String"]
 }
 
 IMPORTANT:
 - Respond STRICTLY with a valid JSON object only. Do not wrap it in markdown code blocks.
-- Since this is System Design, the starter code can just be comments outlining the approach.
+- Ensure all test case input/expectedOutput fields are strings.
 - You MUST provide starterCode for all 4 languages: javascript, python, java, cpp.`;
 
   const result = await model.generateContent(prompt);

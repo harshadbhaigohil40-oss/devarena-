@@ -18,11 +18,16 @@ function generateSlug(title) {
 }
 
 async function generateChallengeData(model, question) {
-  const prompt = `You are an expert Algorithm instructor creating high-quality coding challenges for DevArena.
+  const prompt = `You are a Senior FAANG Engineer and expert Algorithm instructor creating high-quality, practical, LeetCode-style coding challenges for DevArena.
 I have a problem title: "${question.title}" (Topic: ${question.topicId}, Difficulty: ${question.difficulty}).
-Generate a JSON object matching this schema EXACTLY for this problem:
+
+CRITICAL INSTRUCTIONS:
+1. The challenge MUST be a real, practical, LeetCode-style programming problem (e.g. algorithmic implementation, system design snippet, or frontend component logic).
+2. The complexity MUST strictly align with the provided Tier/Difficulty. Do not make a Tier 1 problem overly complex, and do not make a Tier 5 problem trivial.
+3. NEVER generate bogus, empty, or placeholder test cases (e.g. input: ""). Every test case must have realistic, edge-case tested inputs and outputs.
+4. Generate a JSON object matching this schema EXACTLY:
 {
-  "description": "Markdown string describing the algorithmic problem clearly, including constraints and examples.",
+  "description": "Markdown string describing the problem clearly, including constraints, time/space complexity requirements, and examples.",
   "starterCode": {
     "javascript": "function or class boilerplate here",
     "python": "def boilerplate_here(): pass",
@@ -30,7 +35,7 @@ Generate a JSON object matching this schema EXACTLY for this problem:
     "cpp": "class Solution { public: ... }"
   },
   "testCases": [
-    { "input": "value", "expectedOutput": "value", "isHidden": false }
+    { "input": "valid stringified input", "expectedOutput": "valid stringified output", "isHidden": false }
   ],
   "hints": ["String"]
 }

@@ -18,19 +18,24 @@ function generateSlug(title) {
 }
 
 async function generateChallengeData(model, question) {
-  const prompt = `You are an expert Frontend Development instructor creating high-quality interview challenges for DevArena.
+  const prompt = `You are a Senior FAANG Engineer and expert Frontend Development instructor creating high-quality, practical, LeetCode-style coding challenges for DevArena.
 I have a problem title: "${question.title}" (Topic: ${question.topicId}, Difficulty: ${question.difficulty}).
-Generate a JSON object matching this schema EXACTLY for this problem:
+
+CRITICAL INSTRUCTIONS:
+1. The challenge MUST be a real, practical, LeetCode-style programming problem (e.g. algorithmic implementation, system design snippet, or frontend component logic).
+2. The complexity MUST strictly align with the provided Tier/Difficulty. Do not make a Tier 1 problem overly complex, and do not make a Tier 5 problem trivial.
+3. NEVER generate bogus, empty, or placeholder test cases (e.g. input: ""). Every test case must have realistic, edge-case tested inputs and outputs.
+4. Generate a JSON object matching this schema EXACTLY:
 {
-  "description": "Markdown string describing the frontend problem clearly, including visual requirements, logic, constraints, and edge cases.",
+  "description": "Markdown string describing the problem clearly, including constraints, time/space complexity requirements, and examples.",
   "starterCode": {
-    "javascript": "/* Frontend JavaScript Boilerplate */\\n// Implement the logic here",
-    "python": "# Not typically used for Frontend, but provide a dummy script\\npass",
-    "java": "// Not typically used for Frontend, but provide a dummy class\\nclass FrontendSolution {}",
-    "cpp": "// Not typically used for Frontend, but provide a dummy class\\nclass FrontendSolution {}"
+    "javascript": "function or class boilerplate here",
+    "python": "def boilerplate_here(): pass",
+    "java": "class Solution { public ... }",
+    "cpp": "class Solution { public: ... }"
   },
   "testCases": [
-    { "input": "Render Component", "expectedOutput": "Expected UI Behavior", "isHidden": false }
+    { "input": "valid stringified input", "expectedOutput": "valid stringified output", "isHidden": false }
   ],
   "hints": ["String"]
 }
@@ -38,7 +43,7 @@ Generate a JSON object matching this schema EXACTLY for this problem:
 IMPORTANT:
 - Respond STRICTLY with a valid JSON object only. Do not wrap it in markdown code blocks.
 - Ensure all test case input/expectedOutput fields are strings.
-- You MUST provide starterCode for all 4 languages: javascript, python, java, cpp, even if it's just dummy code for non-JS languages.`;
+- You MUST provide starterCode for all 4 languages: javascript, python, java, cpp.`;
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
