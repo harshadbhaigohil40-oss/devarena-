@@ -11,7 +11,7 @@ export default function PageLoader() {
       { at: 35, text: 'Loading challenge data' },
       { at: 55, text: 'Building skill trees' },
       { at: 75, text: 'Preparing dashboard' },
-      { at: 90, text: 'Waking up backend server (may take ~15s)' },
+      { at: 90, text: 'Finalizing setup...' },
     ];
 
     const interval = setInterval(() => {
@@ -24,7 +24,7 @@ export default function PageLoader() {
         
         // If it's been loading for a while and stuck near 99, update text
         if (next > 95 && prev > 95) {
-          setStatusText('Waking up backend server (Render free tier)...');
+          setStatusText('Finalizing setup...');
         }
         
         return next > 99 ? 99 : next;
