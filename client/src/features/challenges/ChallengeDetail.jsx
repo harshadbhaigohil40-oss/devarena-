@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { challengeService } from '../../services';
@@ -14,6 +14,7 @@ const LANG_ICONS  = { javascript: '🟨', python: '🐍', html: '🌐' };
 
 export default function ChallengeDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { theme } = useThemeStore();
   const [language, setLanguage]       = useState('javascript');
@@ -108,17 +109,31 @@ export default function ChallengeDetail() {
     }
   }, [isFrontendHtmlQuestion, language]);
 
-  // Handle Fullscreen Escape key listener
+  // Handle Fullscreen Escape key and Navigation Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isFullscreen) {
         setIsFullscreen(false);
         setTimeout(() => editorRef.current?.layout(), 100);
       }
+
+      // Quick Navigation Shortcuts (Alt + Left/Right/R)
+      if (e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
+        if (e.key === 'ArrowLeft' && challenge?.prevChallengeSlug) {
+          e.preventDefault();
+          navigate(`/challenges/${challenge.prevChallengeSlug}`);
+        } else if (e.key === 'ArrowRight' && challenge?.nextChallengeSlug) {
+          e.preventDefault();
+          navigate(`/challenges/${challenge.nextChallengeSlug}`);
+        } else if (e.key.toLowerCase() === 'r' && challenge?.randomChallengeSlug) {
+          e.preventDefault();
+          navigate(`/challenges/${challenge.randomChallengeSlug}`);
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen]);
+  }, [isFullscreen, challenge, navigate]);
 
   // Vertical Dragging (Height)
   const startHeightDrag = (e) => {
@@ -352,7 +367,7 @@ export default function ChallengeDetail() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container">
 
       {/* ── Header ── */}
-      <div className="flex justify-between items-center mb-lg challenge-detail-header">
+      <div className="flex justify-between items-center mb-lg challenge-detail-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ maxWidth: '100%' }}>
           <div className="flex items-center gap-sm mb-sm" style={{ flexWrap: 'wrap' }}>
             <span style={{ textTransform: 'capitalize', background: `${diffColor}18`, border: `1px solid ${diffColor}40`, color: diffColor, padding: '0.2rem 0.7rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
@@ -361,7 +376,105 @@ export default function ChallengeDetail() {
             <span className="badge badge-primary" style={{ textTransform: 'capitalize' }}>{challenge.category}</span>
             <span style={{ color: 'var(--xp-gold)', fontWeight: 700, fontSize: '0.875rem' }}>⚡ {challenge.xpReward} XP</span>
           </div>
-          <h1 style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', margin: 0, wordBreak: 'break-word' }}>{challenge.title}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', margin: 0, wordBreak: 'break-word' }}>{challenge.title}</h1>
+            
+            <div style={{ display: 'flex', background: 'var(--bg-tertiary)', borderRadius: '100px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+              
+              {/* Prev Button */}
+              <button
+                onClick={() => challenge?.prevChallengeSlug && navigate(`/challenges/${challenge.prevChallengeSlug}`)}
+                disabled={!challenge?.prevChallengeSlug}
+                style={{
+                  padding: '0.45rem 0.75rem',
+                  background: 'transparent',
+                  border: 'none',
+                  color: challenge?.prevChallengeSlug ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  cursor: challenge?.prevChallengeSlug ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  fontSize: '0.85rem', fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  opacity: challenge?.prevChallengeSlug ? 1 : 0.4
+                }}
+                onMouseOver={(e) => challenge?.prevChallengeSlug && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                onMouseOut={(e) => challenge?.prevChallengeSlug && (e.currentTarget.style.background = 'transparent')}
+                title={challenge?.prevChallengeTitle ? `Previous: ${challenge.prevChallengeTitle} (Alt + Left)` : 'No previous challenge'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                <span className="desktop-only">Prev</span>
+              </button>
+
+              {/* Back to list */}
+              <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0.3rem 0' }} />
+              <button
+                onClick={() => navigate('/challenges')}
+                style={{
+                  padding: '0.45rem 0.65rem',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                title="Back to Challenges List"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              </button>
+
+              {/* Shuffle / Random Button */}
+              {challenge?.randomChallengeSlug && (
+                <>
+                  <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0.3rem 0' }} />
+                  <button
+                    onClick={() => navigate(`/challenges/${challenge.randomChallengeSlug}`)}
+                    style={{
+                      padding: '0.45rem 0.65rem',
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                    title="Pick a Random Challenge (Alt + R)"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                  </button>
+                </>
+              )}
+
+              <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0.3rem 0' }} />
+
+              {/* Next Button */}
+              <button
+                onClick={() => challenge?.nextChallengeSlug && navigate(`/challenges/${challenge.nextChallengeSlug}`)}
+                disabled={!challenge?.nextChallengeSlug}
+                style={{
+                  padding: '0.45rem 0.75rem',
+                  background: 'transparent',
+                  border: 'none',
+                  color: challenge?.nextChallengeSlug ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  cursor: challenge?.nextChallengeSlug ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  fontSize: '0.85rem', fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  opacity: challenge?.nextChallengeSlug ? 1 : 0.4
+                }}
+                onMouseOver={(e) => challenge?.nextChallengeSlug && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                onMouseOut={(e) => challenge?.nextChallengeSlug && (e.currentTarget.style.background = 'transparent')}
+                title={challenge?.nextChallengeTitle ? `Next: ${challenge.nextChallengeTitle} (Alt + Right)` : 'No next challenge'}
+              >
+                <span className="desktop-only">Next</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+              
+            </div>
+          </div>
         </div>
 
         {/* Language Selector */}
@@ -579,6 +692,15 @@ export default function ChallengeDetail() {
                           <div style={{ color: 'var(--xp-gold)', fontWeight: 800, fontSize: '1rem' }}>
                             +{result.xpResult.xpEarned} XP
                           </div>
+                        )}
+                        {result.allPassed && challenge?.nextChallengeSlug && (
+                          <button
+                            onClick={() => navigate(`/challenges/${challenge.nextChallengeSlug}`)}
+                            className="btn btn-primary btn-sm"
+                            style={{ marginLeft: 'auto', fontWeight: 700 }}
+                          >
+                            Next Question ⏭️
+                          </button>
                         )}
                       </div>
 
@@ -834,30 +956,34 @@ export default function ChallengeDetail() {
 
           {/* Action Buttons (visible in normal view) */}
           {!isFullscreen && (
-            <div className="challenge-actions-grid">
-              <button
-                onClick={handleRun}
-                disabled={running || submitting}
-                className="challenge-btn-run"
-              >
-                {running ? (
-                  <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Running...</>
-                ) : (
-                  <>▶ Run Code</>
-                )}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="challenge-actions-grid">
+                <button
+                  onClick={handleRun}
+                  disabled={running || submitting}
+                  className="challenge-btn-run"
+                >
+                  {running ? (
+                    <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Running...</>
+                  ) : (
+                    <>▶ Run Code</>
+                  )}
+                </button>
 
-              <button
-                onClick={handleSubmit}
-                disabled={running || submitting}
-                className="challenge-btn-submit"
-              >
-                {submitting ? (
-                  <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Submitting...</>
-                ) : (
-                  <>🚀 Submit Solution</>
-                )}
-              </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={running || submitting}
+                  className="challenge-btn-submit"
+                >
+                  {submitting ? (
+                    <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span> Submitting...</>
+                  ) : (
+                    <>🚀 Submit Solution</>
+                  )}
+                </button>
+              </div>
+              
+
             </div>
           )}
 
