@@ -3,7 +3,11 @@ import api from './api';
 export const authService = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  googleLogin: (credential) => api.post('/auth/google', { credential }),
+  googleLogin: (data) => {
+    const payload = typeof data === 'string' ? { credential: data } : data;
+    return api.post('/auth/google', payload);
+  },
+  resetLockout: (email) => api.post('/auth/reset-lockout', { email }),
   getMe: () => api.get('/auth/me'),
 };
 

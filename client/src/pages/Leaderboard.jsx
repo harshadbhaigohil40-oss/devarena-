@@ -5,7 +5,12 @@ import { leaderboardService } from '../services';
 import { useAuth } from '../context/AuthContext';
 import { formatNumber } from '../utils/helpers';
 
-export default function Leaderboard() {
+export default function Leaderboard({
+  title = "Global Leaderboard",
+  subtitle = "The top performing architects of the DevArena ecosystem.",
+  isAdvisor = false,
+  embedded = false,
+} = {}) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [entries, setEntries] = useState([]);
@@ -35,15 +40,31 @@ export default function Leaderboard() {
   const getAvatar = (username) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffdfbf,ffd5dc`;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className={`${embedded ? 'advisor-leaderboard-embedded' : 'page-container'} advisor-leaderboard-view`} 
+      data-testid="advisor-leaderboard-view"
+      style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}
+    >
       
       {/* Header Section */}
-      <header style={{ textAlign: 'center', marginBottom: '2.5rem', paddingTop: '1rem' }}>
-        <motion.h1 initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem', color: 'var(--text-heading, var(--text-primary))' }}>
-          Global Leaderboard
+      <header style={{ textAlign: 'center', marginBottom: '2.5rem', paddingTop: embedded ? '0.5rem' : '1rem' }}>
+        <motion.h1 
+          initial={{ y: -20, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }} 
+          data-testid="leaderboard-heading"
+          style={{ fontSize: 'clamp(1.75rem, 5vw, 3rem)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem', color: 'var(--text-heading, var(--text-primary))' }}
+        >
+          {isAdvisor && title === "Global Leaderboard" ? "Advisor Leaderboard" : title}
         </motion.h1>
-        <motion.p initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.125rem)', color: 'var(--text-secondary)' }}>
-          The top performing architects of the DevArena ecosystem.
+        <motion.p 
+          initial={{ y: -10, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }} 
+          transition={{ delay: 0.1 }} 
+          style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1.125rem)', color: 'var(--text-secondary)' }}
+        >
+          {subtitle}
         </motion.p>
       </header>
 
