@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
@@ -9,8 +9,16 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const { user, login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      const destination = location.state?.from?.pathname || '/dashboard';
+      navigate(destination, { replace: true });
+    }
+  }, [user, navigate, location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +28,8 @@ export default function Login() {
       const success = await login(email, password);
       if (success) {
         toast.success('Logged in successfully!');
-        navigate('/dashboard');
+        const destination = location.state?.from?.pathname || '/dashboard';
+        navigate(destination, { replace: true });
       }
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Invalid credentials or account locked.';
@@ -37,7 +46,8 @@ export default function Login() {
       const success = await loginWithGoogle(credentialResponse.credential);
       if (success) {
         toast.success('Logged in with Google successfully!');
-        navigate('/dashboard');
+        const destination = location.state?.from?.pathname || '/dashboard';
+        navigate(destination, { replace: true });
       }
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Google authentication failed.';
@@ -55,7 +65,8 @@ export default function Login() {
         const success = await loginWithGoogle({ token: tokenResponse.access_token });
         if (success) {
           toast.success('Logged in with Google successfully!');
-          navigate('/dashboard');
+          const destination = location.state?.from?.pathname || '/dashboard';
+          navigate(destination, { replace: true });
         }
       } catch (err) {
         const errorMsg = err.response?.data?.error || err.message || 'Google authentication failed.';
@@ -68,6 +79,7 @@ export default function Login() {
       toast.error('Google Login Failed');
     }
   });
+
 
   const handleCustomGoogleClick = async () => {
     const isE2ETest = Boolean(

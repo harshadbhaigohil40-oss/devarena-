@@ -11,11 +11,22 @@ export default function Projects() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [form, setForm] = useState({ title: '', description: '', liveUrl: '', repoUrl: '', techStack: '' });
 
   useEffect(() => {
     projectService.list().then(r => setProjects(r.data.data)).catch(() => {}).finally(() => setLoading(false));
   }, []);
+
+  const filteredProjects = projects.filter(p => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    const matchTitle = p.title?.toLowerCase().includes(q);
+    const matchDesc = p.description?.toLowerCase().includes(q);
+    const matchTech = Array.isArray(p.techStack) ? p.techStack.some(t => t.toLowerCase().includes(q)) : false;
+    const matchAuthor = p.author?.username?.toLowerCase().includes(q);
+    return matchTitle || matchDesc || matchTech || matchAuthor;
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -127,6 +138,54 @@ export default function Projects() {
         )}
       </div>
 
+      {/* Search Input for Showcase */}
+      <div className="search-container mb-xl" style={{ maxWidth: '600px', width: '100%' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <span style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)', fontSize: '1.1rem', pointerEvents: 'none' }}>
+            🔍
+          </span>
+          <input
+            type="text"
+            className="input"
+            style={{
+              paddingLeft: '2.8rem',
+              paddingRight: searchQuery ? '2.5rem' : '1rem',
+              width: '100%',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-primary)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--text-primary)',
+              fontSize: '1rem',
+              height: '46px'
+            }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search projects in the showcase..."
+            data-testid="project-search-input"
+            aria-label="Search projects in the showcase"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              type="button"
+              style={{
+                position: 'absolute',
+                right: '0.75rem',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                fontSize: '1.1rem',
+                padding: '0.25rem'
+              }}
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       <AnimatePresence>
         {showForm && (
           <motion.form 
@@ -214,10 +273,17 @@ export default function Projects() {
           <p className="text-muted mt-sm mb-lg">The universe is empty. Be the first to showcase your brilliant work!</p>
           {user && <button onClick={() => setShowForm(true)} className="btn btn-primary">Launch the First Project</button>}
         </motion.div>
+      ) : filteredProjects.length === 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card text-center" style={{ padding: '3rem 2rem' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔍</div>
+          <h3 style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>No matching projects</h3>
+          <p className="text-muted mt-sm mb-md">No showcase projects found matching "{searchQuery}"</p>
+          <button onClick={() => setSearchQuery('')} className="btn btn-secondary">Clear Search</button>
+        </motion.div>
       ) : (
         <motion.div layout className="grid grid-3" style={{ gap: '1.5rem' }}>
           <AnimatePresence>
-            {projects.map((p, i) => (
+            {filteredProjects.map((p, i) => (
               <motion.div 
                 key={p._id} 
                 layout

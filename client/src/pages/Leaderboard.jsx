@@ -75,6 +75,8 @@ export default function Leaderboard({
             <button key={p} 
               className={`tab ${period === p ? 'active' : ''}`} 
               onClick={() => setPeriod(p)} 
+              data-testid={`leaderboard-tab-${p}`}
+              aria-label={p === 'all' ? 'All Time' : p === 'weekly' ? 'Weekly' : 'Monthly'}
               style={{ 
                 textTransform: 'capitalize', 
                 margin: 0, 
@@ -88,11 +90,72 @@ export default function Leaderboard({
                 transition: 'all 0.2s', 
                 whiteSpace: 'nowrap' 
               }}>
-              {p === 'all' ? 'All Time' : p}
+              {p === 'all' ? 'All Time' : p === 'weekly' ? 'Weekly' : 'Monthly'}
             </button>
           ))}
         </div>
       </div>
+
+      {/* Current User Standing Card */}
+      {user && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card mb-xl"
+          data-testid="current-user-standing"
+          style={{
+            background: 'linear-gradient(135deg, rgba(108,92,231,0.12) 0%, rgba(0,206,201,0.06) 100%)',
+            border: '1px solid var(--border-accent)',
+            borderRadius: '16px',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            boxShadow: 'var(--shadow-md)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '50%',
+              background: 'var(--accent-primary)', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: '1.1rem',
+              boxShadow: '0 0 15px rgba(108,92,231,0.4)'
+            }}>
+              {myRank?.rank ? `#${myRank.rank}` : '⭐'}
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                  {user.username}
+                </span>
+                <span className="badge" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', fontSize: '0.75rem' }}>
+                  LVL {user.level || 1}
+                </span>
+              </div>
+              <p className="text-muted text-xs" style={{ marginTop: '2px' }}>Your Current Standing</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+            <div style={{ textAlign: 'right' }}>
+              <span className="text-xs text-muted" style={{ display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Rank</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-secondary)' }}>
+                {myRank?.rank ? `#${myRank.rank}` : 'Top 100'}
+              </span>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span className="text-xs text-muted" style={{ display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total XP</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--xp-gold)' }}>
+                {formatNumber(myRank?.totalXp || user.xp || 0)} XP
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', minHeight: '300px', alignItems: 'flex-end', flexWrap: 'wrap' }}>

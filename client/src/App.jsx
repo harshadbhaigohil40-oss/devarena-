@@ -76,6 +76,8 @@ export default function App() {
                 <Route path="/challenges/:slug" element={<Suspense fallback={<ChallengeSkeleton />}><PageTransition><ChallengeDetail /></PageTransition></Suspense>} />
                 <Route path="/ai-advisor" element={<PageTransition><AIAdvisor /></PageTransition>} />
                 <Route path="/projects" element={<PageTransition><Projects /></PageTransition>} />
+                <Route path="/showcase" element={<PageTransition><Projects /></PageTransition>} />
+                <Route path="/showcase/:id" element={<PageTransition><Projects /></PageTransition>} />
                 <Route path="/skill-trees" element={<PageTransition><SkillTrees /></PageTransition>} />
                 <Route path="/dsa" element={<PageTransition><DSA /></PageTransition>} />
                 <Route path="/leaderboard" element={<PageTransition><Leaderboard /></PageTransition>} />
