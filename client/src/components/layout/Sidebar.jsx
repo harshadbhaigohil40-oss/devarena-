@@ -140,6 +140,18 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
       )}
+
+      {user.role === 'admin' && (
+        <div style={{ padding: '1rem', borderTop: '1px solid var(--border-primary)', margin: '0 1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="level-badge" style={{ background: 'linear-gradient(135deg, #e17055, #d63031)', color: '#fff', fontSize: '0.9rem' }}>🛡️</div>
+            <div>
+              <p style={{ fontWeight: 600, fontSize: '0.875rem' }}>{user.username}</p>
+              <p style={{ fontSize: '0.75rem', color: '#e17055', fontWeight: 600 }}>Administrator</p>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.aside>
   );
 }

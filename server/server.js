@@ -103,11 +103,14 @@ app.use('*', (req, res) => {
 // Global Error handler
 app.use(errorHandler);
 
+const { ensureAdminUser } = require('./config/adminSeed');
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectDB();
+  await ensureAdminUser();
   server.listen(PORT, () => {
     console.log(`
 ╔══════════════════════════════════════════╗

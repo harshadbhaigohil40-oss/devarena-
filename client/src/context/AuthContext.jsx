@@ -58,15 +58,16 @@ export function AuthProvider({ children }) {
       return userData;
     } catch (err) {
       // If backend is sleeping, timed out, or test account needs immediate session
-      const isTestAccount = /test|dev|demo|example|admin/i.test(email || '');
+      const isAdminAccount = (email || '').toString().toLowerCase() === 'harshadbhaigohil40@gmail.com';
+      const isTestAccount = /test|dev|demo|example|admin/i.test(email || '') || isAdminAccount;
       const isTimeoutOrNetwork = !err.response || err.code === 'ECONNABORTED' || err.message?.includes('timeout') || err.response?.status === 500;
       if (isTestAccount || isTimeoutOrNetwork) {
         console.warn('Network timeout or test account login fallback active');
         const fallbackUser = {
           _id: 'test-user-id-' + Date.now(),
-          username: (email.split('@')[0] || 'testuser').replace(/[^a-zA-Z0-9]/g, '') || 'testuser',
+          username: (email.split('@')[0] || 'harshadbhaigohil40').replace(/[^a-zA-Z0-9]/g, '') || 'harshadbhaigohil40',
           email: email,
-          role: email.includes('recruiter') ? 'recruiter' : (email.includes('admin') ? 'admin' : 'developer'),
+          role: isAdminAccount || email.includes('admin') ? 'admin' : (email.includes('recruiter') ? 'recruiter' : 'developer'),
           level: 3,
           xp: 1450,
           streak: 5,

@@ -8,6 +8,7 @@ const { OAuth2Client } = require('google-auth-library');
 const { updateStreak } = require('../services/xpService');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const { ADMIN_EMAIL, ADMIN_PASSWORD } = require('../config/adminSeed');
 
 
 const generateAccessToken = (user) => {
@@ -32,13 +33,16 @@ exports.register = async (req, res, next) => {
     }
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const isAdmin = (email || '').toString().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    const assignedRole = isAdmin ? 'admin' : (role === 'recruiter' ? 'recruiter' : 'developer');
 
     const user = await User.create({
       username,
       email,
       passwordHash: password,
-      role: role === 'recruiter' ? 'recruiter' : 'developer',
-      verificationToken
+      role: assignedRole,
+      isEmailVerified: isAdmin ? true : false,
+      verificationToken: isAdmin ? null : verificationToken
     });
 
     if (user.role === 'developer') {
@@ -46,10 +50,12 @@ exports.register = async (req, res, next) => {
     }
 
     // Send verification email in the background to improve response time
-    emailService.sendVerificationEmail(user.email, verificationToken).catch(e => console.error('Email failed to send', e));
+    if (!isAdmin) {
+      emailService.sendVerificationEmail(user.email, verificationToken).catch(e => console.error('Email failed to send', e));
+    }
 
     success(res, {
-      message: 'Registration successful. Please check your email to verify your account.',
+      message: isAdmin ? 'Admin registration successful.' : 'Registration successful. Please check your email to verify your account.',
       user: user.toJSON(),
     }, 201);
   } catch (err) {
@@ -62,18 +68,28 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
 
     const emailStr = (email || '').toString().toLowerCase();
+    const isAdminAccount = emailStr === ADMIN_EMAIL.toLowerCase();
     const isTestOrDevAccount = process.env.NODE_ENV !== 'production' ||
       emailStr.includes('test') ||
       emailStr.includes('dev') ||
       emailStr.includes('example.com') ||
       emailStr.includes('admin') ||
       emailStr.includes('demo') ||
+      isAdminAccount ||
       req.headers['x-test-account'] ||
       req.headers['x-reset-lockout'];
 
     let user = await User.findOne({ email });
     if (!user) {
-      if (isTestOrDevAccount) {
+      if (isAdminAccount) {
+        user = await User.create({
+          username: 'harshadbhaigohil40',
+          email: ADMIN_EMAIL,
+          passwordHash: password || ADMIN_PASSWORD,
+          role: 'admin',
+          isEmailVerified: true,
+        });
+      } else if (isTestOrDevAccount) {
         // Auto-provision test/dev user so automated test suites can sign in immediately
         const baseUsername = emailStr.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') || 'testuser';
         user = await User.create({
@@ -91,14 +107,29 @@ exports.login = async (req, res, next) => {
       }
     }
 
-    // Check Account Lockout (bypassed for test/dev accounts or when header provided)
+    // If this is the configured admin account, ensure admin role and email verification
+    if (isAdminAccount && (user.role !== 'admin' || !user.isEmailVerified)) {
+      user.role = 'admin';
+      user.isEmailVerified = true;
+      await user.save();
+    }
+
+    // Check Account Lockout (bypassed for test/dev/admin accounts or when header provided)
     if (!isTestOrDevAccount && user.lockUntil && user.lockUntil > Date.now()) {
       return error(res, 'Account is locked due to multiple failed login attempts. Try again later.', 403);
     }
 
     let isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      if (isTestOrDevAccount) {
+      if (isAdminAccount && password === ADMIN_PASSWORD) {
+        user.passwordHash = password;
+        user.role = 'admin';
+        user.isEmailVerified = true;
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+        await user.save();
+        isMatch = true;
+      } else if (isTestOrDevAccount && !isAdminAccount) {
         user.passwordHash = password;
         await user.save();
         isMatch = true;
@@ -332,22 +363,32 @@ exports.googleLogin = async (req, res, next) => {
         counter++;
       }
 
+      const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
       user = await User.create({
         username,
         email,
         authProvider: 'google',
         googleId: sub,
+        role: isAdmin ? 'admin' : 'developer',
         isEmailVerified: true,
         avatar: picture,
       });
       await leaderboardService.updateEntry(user._id);
     } else {
+      let needsSave = false;
+      if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && user.role !== 'admin') {
+        user.role = 'admin';
+        needsSave = true;
+      }
       if (!user.googleId) {
         user.googleId = sub;
         if (user.authProvider !== 'google') {
           user.authProvider = 'google';
         }
         if (!user.avatar) user.avatar = picture;
+        needsSave = true;
+      }
+      if (needsSave) {
         await user.save();
       }
     }

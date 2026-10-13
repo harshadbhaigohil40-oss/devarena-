@@ -10,10 +10,14 @@ const challengeData = require('./challenges');
 const badgeData = require('./badges');
 const skillTreeData = require('./skillTrees');
 
+const { ensureAdminUser } = require('../config/adminSeed');
+
 const seedDB = async () => {
   try {
     await connectDB();
     console.log('🌱 Seeding database...\n');
+
+    await ensureAdminUser();
 
     await Challenge.deleteMany({});
     await Badge.deleteMany({});
