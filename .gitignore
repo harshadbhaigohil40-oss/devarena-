@@ -13,6 +13,7 @@ server/tmp/
 .env.local
 *credentials*
 *.secret
+*backup*
 
 # Logs
 *.log

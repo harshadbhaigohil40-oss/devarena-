@@ -1,13 +1,26 @@
 const mongoose = require('mongoose');
 
+const urlValidator = {
+  validator: function (v) {
+    if (!v || v === '') return true;
+    try {
+      const url = new URL(v);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+      return false;
+    }
+  },
+  message: props => `Invalid URL '${props.value}': only http: and https: protocols are permitted.`
+};
+
 const projectSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
   title: { type: String, required: true },
   description: { type: String, required: true },
-  thumbnailUrl: { type: String, default: '' },
-  liveUrl: { type: String, default: '' },
-  repoUrl: { type: String, default: '' },
+  thumbnailUrl: { type: String, default: '', validate: urlValidator },
+  liveUrl: { type: String, default: '', validate: urlValidator },
+  repoUrl: { type: String, default: '', validate: urlValidator },
 
   techStack: [String],
   tags: [String],

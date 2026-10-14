@@ -41,7 +41,20 @@ initGemini();
 
 // Middleware
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com"],
+      frameSrc: ["'self'", "https://accounts.google.com", "https://apis.google.com"],
+      connectSrc: ["'self'", "https:", "wss:"],
+      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'none'"],
+    },
+  },
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 app.use(cors({

@@ -28,9 +28,29 @@ export default function Projects() {
     return matchTitle || matchDesc || matchTech || matchAuthor;
   });
 
+  const isValidHttpUrl = (str) => {
+    if (!str || typeof str !== 'string' || !str.trim()) return true;
+    try {
+      const parsed = new URL(str.trim());
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if (form.liveUrl && !isValidHttpUrl(form.liveUrl)) {
+      toast.error('Live URL must use http:// or https://');
+      return;
+    }
+    if (form.repoUrl && !isValidHttpUrl(form.repoUrl)) {
+      toast.error('Repository URL must use http:// or https://');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const data = { ...form, techStack: typeof form.techStack === 'string' ? form.techStack.split(',').map(s => s.trim()).filter(Boolean) : form.techStack };
@@ -366,13 +386,13 @@ export default function Projects() {
                         </motion.button>
                       </div>
                       <div className="flex gap-sm">
-                        {p.repoUrl && (
-                          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href={p.repoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', borderRadius: '8px' }}>
+                        {p.repoUrl && isValidHttpUrl(p.repoUrl) && (
+                          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href={p.repoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', color: 'var(--text-primary)', borderRadius: '8px' }}>
                             Code
                           </motion.a>
                         )}
-                        {p.liveUrl && (
-                          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href={p.liveUrl} target="_blank" rel="noreferrer" className="btn btn-sm" style={{ background: 'var(--accent-primary)', color: '#fff', border: 'none', borderRadius: '8px', boxShadow: '0 0 10px rgba(108,92,231,0.4)' }}>
+                        {p.liveUrl && isValidHttpUrl(p.liveUrl) && (
+                          <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ background: 'var(--accent-primary)', color: '#fff', border: 'none', borderRadius: '8px', boxShadow: '0 0 10px rgba(108,92,231,0.4)' }}>
                             Live ↗
                           </motion.a>
                         )}

@@ -287,20 +287,50 @@ exports.googleLogin = async (req, res, next) => {
     // ── REMOVED: test-token bypass. All Google logins must use a real credential.
     // ── In development, developers should use a real Google account or local email login.
 
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return error(res, 'Google authentication is not configured on the server.', 500);
+    }
+
     if (credential) {
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
       const payload = ticket.getPayload();
+      if (!payload) {
+        return error(res, 'Invalid Google token payload.', 401);
+      }
+
+      // Verify issuer
+      const validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
+      if (!validIssuers.includes(payload.iss)) {
+        return error(res, 'Invalid Google token issuer.', 401);
+      }
+
+      // Verify audience
+      if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+        return error(res, 'Invalid Google token audience.', 401);
+      }
+
+      // Verify expiration
+      if (!payload.exp || payload.exp * 1000 < Date.now()) {
+        return error(res, 'Google token has expired.', 401);
+      }
+
+      // Verify email is verified
+      if (!payload.email || (!payload.email_verified && payload.email_verified !== 'true')) {
+        return error(res, 'Google account email must be verified.', 401);
+      }
+
       sub = payload.sub;
-      email = payload.email;
+      email = payload.email.toLowerCase().trim();
       name = payload.name;
       picture = payload.picture;
     } else if (token) {
+      // Validate access token audience via Google's tokeninfo endpoint
       const https = require('https');
-      const userInfo = await new Promise((resolve, reject) => {
-        https.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${encodeURIComponent(token)}`, (resp) => {
+      const tokenInfo = await new Promise((resolve, reject) => {
+        https.get(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`, (resp) => {
           let data = '';
           resp.on('data', chunk => { data += chunk; });
           resp.on('end', () => {
@@ -309,13 +339,44 @@ exports.googleLogin = async (req, res, next) => {
         }).on('error', reject);
       });
 
-      if (!userInfo || !userInfo.email) {
-        throw new Error('Failed to fetch user info with access token');
+      if (!tokenInfo || tokenInfo.error) {
+        return error(res, 'Invalid or expired Google access token.', 401);
       }
-      sub = userInfo.sub;
-      email = userInfo.email;
-      name = userInfo.name;
-      picture = userInfo.picture;
+
+      // CRITICAL: Reject tokens minted for other applications (prevent confused deputy / token substitution)
+      const expectedAud = process.env.GOOGLE_CLIENT_ID;
+      const tokenAud = tokenInfo.aud || tokenInfo.azp;
+      if (tokenAud !== expectedAud) {
+        return error(res, 'Google access token was not issued for this application.', 401);
+      }
+
+      if (!tokenInfo.email || (tokenInfo.email_verified !== 'true' && tokenInfo.email_verified !== true)) {
+        return error(res, 'Google account email must be verified.', 401);
+      }
+
+      if (!tokenInfo.expires_in || parseInt(tokenInfo.expires_in, 10) <= 0) {
+        return error(res, 'Google access token has expired.', 401);
+      }
+
+      sub = tokenInfo.sub || tokenInfo.user_id;
+      email = tokenInfo.email.toLowerCase().trim();
+
+      // Retrieve optional profile details from userinfo now that token is audience-verified
+      try {
+        const userInfo = await new Promise((resolve, reject) => {
+          https.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${encodeURIComponent(token)}`, (resp) => {
+            let data = '';
+            resp.on('data', chunk => { data += chunk; });
+            resp.on('end', () => {
+              try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+            });
+          }).on('error', reject);
+        });
+        name = userInfo?.name;
+        picture = userInfo?.picture;
+      } catch (_) {
+        // Non-critical profile info fallback
+      }
     } else {
       return error(res, 'No Google credential or token provided', 400);
     }

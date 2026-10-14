@@ -39,10 +39,47 @@ exports.getProject = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+function isValidHttpUrl(str) {
+  if (!str || typeof str !== 'string') return true;
+  const trimmed = str.trim();
+  if (trimmed === '') return true;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
 exports.createProject = async (req, res, next) => {
   try {
+    const { title, description, liveUrl, repoUrl, techStack, tags, thumbnailUrl } = req.body;
+
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      return error(res, 'Project title is required.', 400);
+    }
+    if (!description || typeof description !== 'string' || !description.trim()) {
+      return error(res, 'Project description is required.', 400);
+    }
+
+    if (liveUrl && !isValidHttpUrl(liveUrl)) {
+      return error(res, 'Invalid liveUrl: only http: and https: protocols are permitted.', 400);
+    }
+    if (repoUrl && !isValidHttpUrl(repoUrl)) {
+      return error(res, 'Invalid repoUrl: only http: and https: protocols are permitted.', 400);
+    }
+    if (thumbnailUrl && !isValidHttpUrl(thumbnailUrl)) {
+      return error(res, 'Invalid thumbnailUrl: only http: and https: protocols are permitted.', 400);
+    }
+
     const project = await Project.create({
-      ...req.body,
+      title: title.trim(),
+      description: description.trim(),
+      liveUrl: liveUrl ? liveUrl.trim() : '',
+      repoUrl: repoUrl ? repoUrl.trim() : '',
+      thumbnailUrl: thumbnailUrl ? thumbnailUrl.trim() : '',
+      techStack: Array.isArray(techStack) ? techStack : (typeof techStack === 'string' ? techStack.split(',').map(s => s.trim()).filter(Boolean) : []),
+      tags: Array.isArray(tags) ? tags : [],
       userId: req.userId,
     });
 
@@ -61,7 +98,30 @@ exports.updateProject = async (req, res, next) => {
     const project = await Project.findOne({ _id: req.params.id, userId: req.userId });
     if (!project) return error(res, 'Project not found or unauthorized.', 404);
 
-    Object.assign(project, req.body);
+    const { title, description, liveUrl, repoUrl, techStack, tags, thumbnailUrl } = req.body;
+
+    if (liveUrl !== undefined && !isValidHttpUrl(liveUrl)) {
+      return error(res, 'Invalid liveUrl: only http: and https: protocols are permitted.', 400);
+    }
+    if (repoUrl !== undefined && !isValidHttpUrl(repoUrl)) {
+      return error(res, 'Invalid repoUrl: only http: and https: protocols are permitted.', 400);
+    }
+    if (thumbnailUrl !== undefined && !isValidHttpUrl(thumbnailUrl)) {
+      return error(res, 'Invalid thumbnailUrl: only http: and https: protocols are permitted.', 400);
+    }
+
+    if (title !== undefined) project.title = String(title).trim();
+    if (description !== undefined) project.description = String(description).trim();
+    if (liveUrl !== undefined) project.liveUrl = liveUrl ? liveUrl.trim() : '';
+    if (repoUrl !== undefined) project.repoUrl = repoUrl ? repoUrl.trim() : '';
+    if (thumbnailUrl !== undefined) project.thumbnailUrl = thumbnailUrl ? thumbnailUrl.trim() : '';
+    if (techStack !== undefined) {
+      project.techStack = Array.isArray(techStack) ? techStack : (typeof techStack === 'string' ? techStack.split(',').map(s => s.trim()).filter(Boolean) : []);
+    }
+    if (tags !== undefined) {
+      project.tags = Array.isArray(tags) ? tags : [];
+    }
+
     await project.save();
 
     success(res, { project });
