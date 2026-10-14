@@ -33,6 +33,12 @@ const adminRoutes = require('./routes/adminRoutes');
 const app = express();
 const server = http.createServer(app);
 
+// Trust front-facing reverse proxy (single hop for Render / Vercel architecture).
+// Ensures req.ip evaluates accurately for rate limiting while resisting spoofed headers.
+app.set('trust proxy', 1);
+
+const { normalizeOrigin } = require('./utils/urlHelper');
+
 // Initialize Socket.io
 initSocket(server);
 
@@ -62,16 +68,21 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, server-to-server, curl)
     if (!origin) return callback(null, true);
 
-    // Build allowed origins from env — supports comma-separated list
-    const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
-      .split(',')
-      .map(o => o.trim());
+    // Build normalized allowed origins from env — handles trailing slashes safely
+    const allowedOrigins = new Set(
+      (process.env.CLIENT_URL || 'http://localhost:5173')
+        .split(',')
+        .map(normalizeOrigin)
+        .filter(Boolean)
+    );
 
-    if (allowedOrigins.includes(origin)) {
+    const normalizedIncoming = normalizeOrigin(origin);
+    if (normalizedIncoming && allowedOrigins.has(normalizedIncoming)) {
       return callback(null, true);
     }
 
-    callback(new Error('Not allowed by CORS'));
+    // Safely reject untrusted origins without triggering an unhandled 500 error
+    callback(null, false);
   },
   credentials: true,
 }));
@@ -135,7 +146,9 @@ const startServer = async () => {
   });
 };
 
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 // ─── Graceful Shutdown ───────────────────────────────────────────────────────
 const mongoose = require('mongoose');
@@ -178,5 +191,6 @@ process.on('uncaughtException', (error) => {
   gracefulShutdown('uncaughtException');
 });
 
+app._normalizeOrigin = normalizeOrigin;
 module.exports = app;
 

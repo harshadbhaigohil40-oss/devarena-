@@ -1,8 +1,9 @@
 const errorHandler = (err, req, res, next) => {
   console.error('❌ Error:', err.message);
 
-  if (err.name === 'ZodError') {
-    const messages = err.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+  if (err.name === 'ZodError' || Array.isArray(err.issues) || Array.isArray(err.errors)) {
+    const issues = Array.isArray(err.issues) ? err.issues : (Array.isArray(err.errors) ? err.errors : []);
+    const messages = issues.map(e => `${Array.isArray(e.path) ? e.path.join('.') : (e.path || '')}: ${e.message || 'Invalid value'}`);
     return res.status(400).json({ success: false, error: 'Validation Error', details: messages });
   }
 

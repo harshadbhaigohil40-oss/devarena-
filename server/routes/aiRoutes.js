@@ -19,6 +19,6 @@ router.post('/skill-recommendation', auth, aiLimiter, getSkillRecommendation);
 router.post('/code-review', auth, aiLimiter, getCodeReview);
 router.post('/analyze-resume', auth, aiLimiter, upload.single('resume'), analyzeResume);
 router.post('/generate-roadmap', auth, aiLimiter, generateRoadmap);
-router.post('/chat', aiLimiter, generalChat);
+router.post('/chat', auth, aiLimiter, generalChat);
 
 module.exports = router;

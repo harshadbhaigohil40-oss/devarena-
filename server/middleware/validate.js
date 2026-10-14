@@ -5,11 +5,15 @@ const validate = (schema) => (req, res, next) => {
     req.body = schema.parse(req.body);
     next();
   } catch (err) {
-    const errorMessages = err.errors.map((e) => ({
-      field: e.path.join('.'),
-      message: e.message
-    }));
-    return error(res, 'Validation failed', 400, { details: errorMessages });
+    if (err && (err.name === 'ZodError' || Array.isArray(err.issues) || Array.isArray(err.errors))) {
+      const issues = Array.isArray(err.issues) ? err.issues : (Array.isArray(err.errors) ? err.errors : []);
+      const errorMessages = issues.map((e) => ({
+        field: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
+        message: e.message || 'Validation error'
+      }));
+      return error(res, 'Validation failed', 400, { details: errorMessages });
+    }
+    next(err);
   }
 };
 

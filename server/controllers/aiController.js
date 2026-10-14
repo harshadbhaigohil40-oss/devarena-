@@ -70,12 +70,21 @@ exports.generateRoadmap = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const MAX_CHAT_PROMPT_LENGTH = 2000;
+
 exports.generalChat = async (req, res, next) => {
   try {
     const { prompt } = req.body;
-    if (!prompt) return error(res, 'Prompt is required.', 400);
+    if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+      return error(res, 'Prompt is required and must be non-empty text.', 400);
+    }
 
-    const reply = await aiService.generalChat(prompt);
+    const cleanPrompt = prompt.trim();
+    if (cleanPrompt.length > MAX_CHAT_PROMPT_LENGTH) {
+      return error(res, `Prompt exceeds maximum allowed length of ${MAX_CHAT_PROMPT_LENGTH} characters.`, 400);
+    }
+
+    const reply = await aiService.generalChat(cleanPrompt);
     success(res, { reply });
   } catch (err) { next(err); }
 };
