@@ -1,21 +1,33 @@
 const User = require('../models/User');
 
-const ADMIN_EMAIL = 'harshadbhaigohil40@gmail.com';
-const ADMIN_PASSWORD = '963852741';
+// ─── Admin Credentials ──────────────────────────────────────────────────────
+// Credentials MUST be set via environment variables.
+// Never hard-code values here — this file is tracked in Git.
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.warn(
+    '⚠️  ADMIN_EMAIL or ADMIN_PASSWORD environment variables are not set. ' +
+    'The admin account will not be seeded. Set these in your .env file.'
+  );
+}
 
 /**
  * Ensures the administrator account exists with role 'admin',
- * the specified credentials, and verified email status.
- * This runs automatically on server start to guarantee admin access in all environments.
+ * the configured credentials, and verified email status.
+ * Runs automatically on server start if ADMIN_EMAIL and ADMIN_PASSWORD are set.
  */
 const ensureAdminUser = async () => {
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) return null;
+
   try {
     let adminUser = await User.findOne({ email: ADMIN_EMAIL });
 
     if (!adminUser) {
-      console.log(`⚡ Creating admin user for ${ADMIN_EMAIL}...`);
+      console.log(`⚡ Creating admin user for [ADMIN_EMAIL]...`);
       adminUser = new User({
-        username: 'harshadbhaigohil40',
+        username: ADMIN_EMAIL.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') || 'admin',
         email: ADMIN_EMAIL,
         passwordHash: ADMIN_PASSWORD, // Pre-save hook hashes this with bcrypt
         role: 'admin',
@@ -51,9 +63,9 @@ const ensureAdminUser = async () => {
 
       if (needsSave) {
         await adminUser.save();
-        console.log(`✅ Admin user ${ADMIN_EMAIL} updated (role: admin, verified, password confirmed).`);
+        console.log(`✅ Admin user updated (role: admin, verified, password confirmed).`);
       } else {
-        console.log(`✅ Admin user ${ADMIN_EMAIL} is up-to-date with role 'admin'.`);
+        console.log(`✅ Admin user is up-to-date with role 'admin'.`);
       }
     }
     return adminUser;

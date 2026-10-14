@@ -8,9 +8,11 @@ dist/
 build/
 server/tmp/
 
-# Environment variables
+# Environment variables & local secrets
 .env
 .env.local
+*credentials*
+*.secret
 
 # Logs
 *.log

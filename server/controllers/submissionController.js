@@ -33,12 +33,30 @@ const JS_BANNED_PATTERNS = [
   /eval\s*\(/,
 ];
 
-// Modules that should never be imported in Python submissions
+// ─── Python Security: Banned module list ────────────────────────────────────
+// These are checked by pattern AND by the Python-level builtins restriction.
 const PY_BANNED_IMPORTS = [
-  'os', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
+  'os', 'sys', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
   'requests', 'ctypes', 'signal', 'multiprocessing', 'threading',
   'importlib', 'builtins', '__builtin__', 'code', 'codeop',
   'compile', 'compileall', 'py_compile', 'runpy', 'pkgutil',
+  'pty', 'tty', 'termios', 'fcntl', 'mmap', 'gc', 'inspect',
+  'ast', 'dis', 'tokenize', 'traceback', 'warnings', 'zipimport',
+];
+
+// Hex/unicode encoding patterns used to bypass string-match filters:
+// e.g.  __import__('\x6f\x73')  or  __import__('\u006fs')
+const PY_ENCODING_BYPASS_PATTERNS = [
+  /\\x[0-9a-fA-F]{2}/,         // hex escape inside string
+  /\\u[0-9a-fA-F]{4}/,         // unicode escape inside string
+  /chr\s*\(/,                   // chr() function call
+  /ord\s*\(/,                   // ord() often paired with chr()
+  /bytes\s*\(\s*\[/,           // bytes([...]) → decode tricks
+  /__import__/,                 // any __import__ usage
+  /importlib/,
+  /\.load_module/,
+  /\.find_module/,
+  /\.exec_module/,
 ];
 
 // ─── Security Validators ─────────────────────────────────────────────────────
@@ -68,16 +86,33 @@ function detectJSBannedPatterns(code) {
 }
 
 /**
- * Checks Python code for dangerous module imports.
- * Returns an error string if a banned import is found, or null if safe.
+ * Checks Python code for dangerous patterns including:
+ *   - Banned module imports (plain and aliased)
+ *   - Encoding bypass attempts (hex/unicode escapes, chr())
+ *   - Dynamic code execution (exec, eval, compile)
+ *   - File I/O (open)
+ *
+ * NOTE: This is a defense-in-depth layer. The Python runner script also
+ * restricts __builtins__ at the interpreter level. Neither alone is
+ * sufficient; both together significantly raise the attack cost.
+ *
+ * REMAINING RISK: Without Docker/seccomp isolation (e.g., Judge0) a
+ * sufficiently creative exploit may still escape. For a production SaaS,
+ * migrate Python execution to an isolated container service.
  */
 function detectPyBannedImports(code) {
+  // Check encoding bypass patterns first
+  for (const pattern of PY_ENCODING_BYPASS_PATTERNS) {
+    if (pattern.test(code)) {
+      return 'Code contains disallowed patterns. Please use only standard language features.';
+    }
+  }
+
   for (const mod of PY_BANNED_IMPORTS) {
-    // Match: import os, from os import, __import__('os')
+    // Match: import os, from os import, import os as x
     const patterns = [
       new RegExp(`\\bimport\\s+${mod}\\b`),
       new RegExp(`\\bfrom\\s+${mod}\\b`),
-      new RegExp(`__import__\\s*\\(\\s*['"]${mod}['"]\\s*\\)`),
     ];
     for (const p of patterns) {
       if (p.test(code)) {
@@ -86,9 +121,17 @@ function detectPyBannedImports(code) {
     }
   }
 
-  // Block open() for file I/O and exec()/eval() for dynamic code execution
-  if (/\bopen\s*\(/.test(code)) return 'File I/O (open) is not allowed.';
-  if (/\bexec\s*\(/.test(code)) return 'Dynamic code execution (exec) is not allowed.';
+  // Block file I/O and dynamic execution primitives
+  if (/\bopen\s*\(/.test(code))   return 'File I/O (open) is not allowed.';
+  if (/\bexec\s*\(/.test(code))   return 'Dynamic code execution (exec) is not allowed.';
+  if (/\beval\s*\(/.test(code))   return 'Dynamic code evaluation (eval) is not allowed.';
+  if (/\bcompile\s*\(/.test(code)) return 'Dynamic code compilation (compile) is not allowed.';
+  if (/\bvars\s*\(/.test(code))   return 'Reflection (vars) is not allowed.';
+  if (/\bglobals\s*\(/.test(code)) return 'Reflection (globals) is not allowed.';
+  if (/\blocals\s*\(/.test(code))  return 'Reflection (locals) is not allowed.';
+  if (/\bgetattr\s*\(/.test(code)) return 'Reflection (getattr) is not allowed.';
+  if (/\bsetattr\s*\(/.test(code)) return 'Reflection (setattr) is not allowed.';
+  if (/\bdelattr\s*\(/.test(code)) return 'Reflection (delattr) is not allowed.';
 
   return null;
 }
@@ -258,8 +301,21 @@ function evaluateJS(code, testCases, category, starterCode) {
 }
 
 // ─── Python Evaluator ────────────────────────────────────────────────────────
+// SECURITY MODEL (defense-in-depth, no Docker available):
+//   Layer 1 — Static analysis: detectPyBannedImports() rejects dangerous patterns
+//             before the file is even written.
+//   Layer 2 — Python-level builtins restriction: the wrapper script replaces
+//             __builtins__ with a safe allowlist, so even if a module is imported
+//             via an undetected path, destructive builtins are unavailable.
+//   Layer 3 — Process isolation: -S (no site-packages), -I (isolated mode),
+//             clean env (no secrets), hard timeout.
+//   Layer 4 — OS resource limits (Linux/Render only): ulimit caps on file
+//             descriptors, processes, and virtual memory.
+//
+// REMAINING RISK: Pattern-based filtering can be defeated by a creative attacker.
+// For a production SaaS, migrate to Judge0 or a container-based execution service.
 function evaluatePython(code, testCases, category, starterCode) {
-  // Pre-flight security check on user code
+  // Layer 1: Static analysis
   const bannedCheck = detectPyBannedImports(code);
   if (bannedCheck) {
     return testCases.map((_, index) => ({
@@ -273,12 +329,11 @@ function evaluatePython(code, testCases, category, starterCode) {
   return testCases.map((tc, index) => {
     const os = require('os');
     const tempDir = os.tmpdir();
-    // Use crypto random bytes for unique filenames to prevent collisions
     const uniqueId = crypto.randomBytes(8).toString('hex');
     const filePath = path.join(tempDir, `devarena_py_${uniqueId}_${index}.py`);
 
     try {
-      // Detect function name
+      // Detect function name from starter or user code
       let functionName = '';
       const sources = [starterCode, code].filter(Boolean);
       for (const src of sources) {
@@ -286,67 +341,114 @@ function evaluatePython(code, testCases, category, starterCode) {
         if (m) { functionName = m[1]; break; }
       }
 
-      // Build Python test script
-      const inputForPy = (tc.input === '"example_input"' || tc.input === '') ? 'None' : tc.input;
+      const inputForPy = (tc.input === '"example_input"' || tc.input === '') ? '' : tc.input;
+
+      // Layer 2: Python builtins restriction wrapper
+      // We replace __builtins__ with an explicit allowlist so that even if an
+      // import slips through Layer 1, the attacker cannot call open(), exec(),
+      // __import__(), compile(), etc.
+      const SAFE_BUILTINS_PY = `
+_SAFE_BUILTINS = {
+  'abs': abs, 'all': all, 'any': any, 'bin': bin, 'bool': bool,
+  'chr': None,        # disabled — used in encoding bypass attacks
+  'dict': dict, 'divmod': divmod, 'enumerate': enumerate,
+  'filter': filter, 'float': float, 'format': format,
+  'frozenset': frozenset, 'hasattr': hasattr, 'hash': hash,
+  'hex': hex, 'int': int, 'isinstance': isinstance, 'issubclass': issubclass,
+  'iter': iter, 'len': len, 'list': list, 'map': map, 'max': max,
+  'min': min, 'next': next, 'oct': oct, 'pow': pow,
+  'print': print, 'range': range, 'repr': repr, 'reversed': reversed,
+  'round': round, 'set': set, 'slice': slice, 'sorted': sorted,
+  'str': str, 'sum': sum, 'tuple': tuple, 'type': type, 'zip': zip,
+  'True': True, 'False': False, 'None': None,
+  'ValueError': ValueError, 'TypeError': TypeError, 'IndexError': IndexError,
+  'KeyError': KeyError, 'AttributeError': AttributeError,
+  'StopIteration': StopIteration, 'Exception': Exception,
+  'RuntimeError': RuntimeError, 'OverflowError': OverflowError,
+  'ZeroDivisionError': ZeroDivisionError, 'NotImplementedError': NotImplementedError,
+}
+# IMPORTANT: chr is removed to block encoding bypass like chr(111)+chr(115) == 'os'
+__builtins__ = _SAFE_BUILTINS
+`;
+
+      // Safe argument parser — uses JSON.parse instead of Python eval()
+      // The old approach used eval() inside Python which was itself a vector.
+      const safeArgsJson = (() => {
+        const rawInput = inputForPy || '';
+        if (!rawInput || rawInput === 'None') return JSON.stringify([]);
+        try { return JSON.stringify(JSON.parse(`[${rawInput}]`)); } catch (_) { return JSON.stringify([rawInput]); }
+      })();
 
       const testScript = functionName ? `
-import json, sys
+import json as _json
 
-# Alias JS-style literals
+${SAFE_BUILTINS_PY}
+
+# Alias JS-style literals before user code runs
 true = True
 false = False
 null = None
 
 ${code}
 
-def __parse_args__(raw):
-    try:
-        val = eval(f"[{raw}]", {"true": True, "false": False, "null": None})
-        return val
-    except:
-        return [raw]
-
-_args = __parse_args__(${JSON.stringify(inputForPy)})
-_result = ${functionName}(*_args)
+# Safe arg parsing — no eval()
+_raw_args = _json.loads(${JSON.stringify(safeArgsJson)})
+_result = ${functionName}(*_raw_args)
 if _result is None:
     print("null")
 elif isinstance(_result, bool):
     print("true" if _result else "false")
 else:
-    print(json.dumps(_result))
+    print(_json.dumps(_result))
 ` : `
-import sys
+import json as _json
+${SAFE_BUILTINS_PY}
 true = True
 false = False
 null = None
-
 ${code}
 `;
 
-      fs.writeFileSync(filePath, testScript);
+      fs.writeFileSync(filePath, testScript, { mode: 0o600 }); // owner-read only
+
+      // Layer 3 + 4: Spawn with minimal env, -S (no site-pkgs), -I (isolated),
+      // and ulimit resource caps on Linux.
+      const isLinux = process.platform === 'linux';
+      // ulimit: -v 256MB virtual mem, -u 64 max procs, -n 32 max fds, -f 0 no file writes
+      const ulimitPrefix = isLinux
+        ? `ulimit -v 262144 -u 64 -n 32 -f 0; `
+        : '';
+      const command = `${ulimitPrefix}python -S -I -W ignore "${filePath}"`;
 
       const start = process.hrtime();
       let rawResult = '';
       try {
-        // Use -S (no site packages) and -I (isolated mode) for additional safety
-        rawResult = execSync(`python -S -I -W ignore "${filePath}"`, {
+        rawResult = execSync(command, {
           timeout: PY_EXECUTION_TIMEOUT,
           stdio: ['pipe', 'pipe', 'pipe'],
           encoding: 'utf8',
-          // Prevent the child process from inheriting sensitive env vars
-          env: { PATH: process.env.PATH, PYTHONDONTWRITEBYTECODE: '1' },
+          shell: isLinux, // shell required for ulimit on Linux
+          // Minimal env — strictly isolated, no secrets, no database URIs
+          env: {
+            PATH: process.env.PATH || '/usr/bin:/bin',
+            ...(process.platform === 'win32' ? { SystemRoot: process.env.SystemRoot || '' } : {}),
+            PYTHONDONTWRITEBYTECODE: '1',
+            PYTHONHASHSEED: 'random',
+          },
         }).trim();
       } catch (err) {
-        const stderr = err.stderr ? err.stderr.toString().trim() : '';
+        const stderr = (err.stderr || '').toString().trim();
         let errMsg = stderr || err.message || 'Execution failed';
-        // Sanitize path info — never leak server filesystem paths to users
+        // Sanitize: never leak server filesystem paths
         errMsg = errMsg
           .replace(new RegExp(filePath.replace(/\\/g, '\\\\'), 'g'), 'solution.py')
           .replace(new RegExp(path.basename(filePath), 'g'), 'solution.py')
-          .replace(/line (\d+)/g, (_, n) => `line ${Math.max(1, parseInt(n) - 16)}`);
+          .replace(/\/tmp\S*/g, 'solution.py')
+          .replace(/line (\d+)/g, (_, n) => `line ${Math.max(1, parseInt(n) - 35)}`);
         throw new Error(errMsg);
       } finally {
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        // Always clean up temp file
+        try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (_) {}
       }
 
       const end = process.hrtime(start);
@@ -359,11 +461,9 @@ ${code}
       if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
 
       let expectedStr;
-      try {
-        expectedStr = JSON.stringify(JSON.parse(tc.expectedOutput));
-      } catch (e) {
-        expectedStr = JSON.stringify(tc.expectedOutput);
-      }
+      try { expectedStr = JSON.stringify(JSON.parse(tc.expectedOutput)); }
+      catch (_) { expectedStr = JSON.stringify(tc.expectedOutput); }
+
       const normalizedResult = lastLine.replace(/\s+/g, '');
       const normalizedExpected = expectedStr.replace(/\s+/g, '');
       const passed = normalizedResult === normalizedExpected;
@@ -380,7 +480,7 @@ ${code}
         executionTime: executionTime || 1,
       };
     } catch (e) {
-      if (fs.existsSync(filePath)) { try { fs.unlinkSync(filePath); } catch (_) {} }
+      try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (_) {}
       const msg = e.message || String(e);
       return {
         testCaseIndex: index,
@@ -391,7 +491,7 @@ ${code}
         actualOutput: 'Error',
         error: msg.startsWith('Error') ? msg : `Error: ${msg}`,
         output: msg.startsWith('Error') ? msg : `Error: ${msg}`,
-        executionTime: 0
+        executionTime: 0,
       };
     }
   });
@@ -571,5 +671,14 @@ exports.getSubmissions = async (req, res, next) => {
     }).sort({ submittedAt: -1 }).limit(10).lean();
     success(res, { submissions });
   } catch (err) { next(err); }
+};
+
+// Internal exports for regression testing
+exports._testExports = {
+  detectPyBannedImports,
+  detectJSBannedPatterns,
+  evaluateJS,
+  evaluatePython,
+  parseArgs,
 };
 

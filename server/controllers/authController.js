@@ -8,8 +8,9 @@ const { OAuth2Client } = require('google-auth-library');
 const { updateStreak } = require('../services/xpService');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const { ADMIN_EMAIL, ADMIN_PASSWORD } = require('../config/adminSeed');
 
+// Admin email is read from environment only — never hardcoded.
+const { ADMIN_EMAIL, ADMIN_PASSWORD } = require('../config/adminSeed');
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -33,7 +34,8 @@ exports.register = async (req, res, next) => {
     }
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const isAdmin = (email || '').toString().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    // Admin detection only works if ADMIN_EMAIL env var is configured
+    const isAdmin = ADMIN_EMAIL && (email || '').toString().toLowerCase() === ADMIN_EMAIL.toLowerCase();
     const assignedRole = isAdmin ? 'admin' : (role === 'recruiter' ? 'recruiter' : 'developer');
 
     const user = await User.create({
@@ -42,7 +44,7 @@ exports.register = async (req, res, next) => {
       passwordHash: password,
       role: assignedRole,
       isEmailVerified: isAdmin ? true : false,
-      verificationToken: isAdmin ? null : verificationToken
+      verificationToken: isAdmin ? null : verificationToken,
     });
 
     if (user.role === 'developer') {
@@ -55,7 +57,9 @@ exports.register = async (req, res, next) => {
     }
 
     success(res, {
-      message: isAdmin ? 'Admin registration successful.' : 'Registration successful. Please check your email to verify your account.',
+      message: isAdmin
+        ? 'Admin registration successful.'
+        : 'Registration successful. Please check your email to verify your account.',
       user: user.toJSON(),
     }, 201);
   } catch (err) {
@@ -68,43 +72,30 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
 
     const emailStr = (email || '').toString().toLowerCase();
-    const isAdminAccount = emailStr === ADMIN_EMAIL.toLowerCase();
-    const isTestOrDevAccount = process.env.NODE_ENV !== 'production' ||
-      emailStr.includes('test') ||
-      emailStr.includes('dev') ||
-      emailStr.includes('example.com') ||
-      emailStr.includes('admin') ||
-      emailStr.includes('demo') ||
-      isAdminAccount ||
-      req.headers['x-test-account'] ||
-      req.headers['x-reset-lockout'];
+    const isAdminAccount = ADMIN_EMAIL && emailStr === ADMIN_EMAIL.toLowerCase();
 
-    let user = await User.findOne({ email });
+    // Test account auto-provisioning removed for production security.
+    // In development/test, use a seeded database instead.
+
+    const user = await User.findOne({ email });
     if (!user) {
-      if (isAdminAccount) {
-        user = await User.create({
-          username: 'harshadbhaigohil40',
+      // Auto-seed admin on first login ONLY if credentials match ADMIN_EMAIL and ADMIN_PASSWORD
+      if (isAdminAccount && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
+        const newAdmin = new User({
+          username: (ADMIN_EMAIL.split('@')[0] || 'admin').replace(/[^a-zA-Z0-9]/g, '') || 'admin',
           email: ADMIN_EMAIL,
-          passwordHash: password || ADMIN_PASSWORD,
+          passwordHash: ADMIN_PASSWORD,
           role: 'admin',
           isEmailVerified: true,
         });
-      } else if (isTestOrDevAccount) {
-        // Auto-provision test/dev user so automated test suites can sign in immediately
-        const baseUsername = emailStr.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') || 'testuser';
-        user = await User.create({
-          username: baseUsername,
-          email,
-          passwordHash: password,
-          role: emailStr.includes('admin') ? 'admin' : (emailStr.includes('recruiter') ? 'recruiter' : 'developer'),
-          isEmailVerified: true,
-        });
-        if (user.role === 'developer') {
-          await leaderboardService.updateEntry(user._id);
+        await newAdmin.save();
+        // Re-fetch with the full document
+        const seededAdmin = await User.findOne({ email: ADMIN_EMAIL });
+        if (seededAdmin) {
+          return issueTokens(req, res, seededAdmin);
         }
-      } else {
-        return error(res, 'Invalid email or password.', 401);
       }
+      return error(res, 'Invalid email or password.', 401);
     }
 
     // If this is the configured admin account, ensure admin role and email verification
@@ -114,64 +105,67 @@ exports.login = async (req, res, next) => {
       await user.save();
     }
 
-    // Check Account Lockout (bypassed for test/dev/admin accounts or when header provided)
-    if (!isTestOrDevAccount && user.lockUntil && user.lockUntil > Date.now()) {
+    // Check Account Lockout
+    if (user.lockUntil && user.lockUntil > Date.now()) {
       return error(res, 'Account is locked due to multiple failed login attempts. Try again later.', 403);
     }
 
-    let isMatch = await user.comparePassword(password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      if (isAdminAccount && password === ADMIN_PASSWORD) {
-        user.passwordHash = password;
+      // If admin password changed in env, re-hash it (env is authoritative for admin)
+      if (isAdminAccount && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
+        user.passwordHash = ADMIN_PASSWORD;
         user.role = 'admin';
         user.isEmailVerified = true;
         user.failedLoginAttempts = 0;
         user.lockUntil = null;
         await user.save();
-        isMatch = true;
-      } else if (isTestOrDevAccount && !isAdminAccount) {
-        user.passwordHash = password;
-        await user.save();
-        isMatch = true;
-      } else {
-        user.failedLoginAttempts += 1;
-        if (user.failedLoginAttempts >= 5) {
-          user.lockUntil = Date.now() + 15 * 60 * 1000; // Lock for 15 mins
-        }
-        await user.save();
-        return error(res, 'Invalid email or password.', 401);
+        return issueTokens(req, res, user);
       }
+
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil = Date.now() + 15 * 60 * 1000; // Lock for 15 mins
+      }
+      await user.save();
+      return error(res, 'Invalid email or password.', 401);
     }
 
-    // Login successful — always clear lockout and failed attempts
+    // Login successful — clear lockout
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
 
-    
-    await updateStreak(user._id);
-
-    // Tokens
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken();
-
-    user.refreshToken = refreshToken;
-    await user.save();
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    success(res, {
-      accessToken,
-      user: user.toJSON(),
-    });
+    return issueTokens(req, res, user);
   } catch (err) {
     next(err);
   }
 };
+
+/**
+ * Internal helper: updates streak, generates tokens, sets cookie, returns response.
+ * Extracted to avoid duplicating logic across login paths.
+ */
+async function issueTokens(req, res, user) {
+  await updateStreak(user._id);
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken();
+
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  return success(res, {
+    accessToken,
+    user: user.toJSON(),
+  });
+}
 
 exports.refresh = async (req, res, next) => {
   try {
@@ -191,7 +185,7 @@ exports.refresh = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     success(res, { accessToken: newAccessToken });
@@ -237,7 +231,7 @@ exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    
+
     if (user) {
       const resetToken = crypto.randomBytes(32).toString('hex');
       user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
@@ -247,6 +241,7 @@ exports.forgotPassword = async (req, res, next) => {
       await emailService.sendPasswordResetEmail(user.email, resetToken);
     }
 
+    // Always return the same message to prevent email enumeration
     success(res, { message: 'If that email exists, a password reset link has been sent.' });
   } catch (err) {
     next(err);
@@ -260,7 +255,7 @@ exports.resetPassword = async (req, res, next) => {
 
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() }
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) return error(res, 'Token is invalid or has expired', 400);
@@ -286,23 +281,13 @@ exports.getMe = async (req, res, next) => {
 
 exports.googleLogin = async (req, res, next) => {
   try {
-    const { credential, token, testToken } = req.body;
+    const { credential, token } = req.body;
     let email, sub, name, picture;
 
-    const isTestMode = Boolean(
-      testToken ||
-      credential === 'test-token' ||
-      token === 'test-token' ||
-      ((process.env.NODE_ENV !== 'production' || req.headers['x-test-account']) &&
-       ((typeof credential === 'string' && credential.startsWith('test-')) || (typeof token === 'string' && token.startsWith('test-'))))
-    );
+    // ── REMOVED: test-token bypass. All Google logins must use a real credential.
+    // ── In development, developers should use a real Google account or local email login.
 
-    if (isTestMode) {
-      email = 'google-test@example.com';
-      sub = 'google-test-id-12345';
-      name = 'Test Google User';
-      picture = 'https://api.dicebear.com/7.x/avataaars/svg?seed=googletest';
-    } else if (credential) {
+    if (credential) {
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -313,39 +298,24 @@ exports.googleLogin = async (req, res, next) => {
       name = payload.name;
       picture = payload.picture;
     } else if (token) {
-      try {
-        const https = require('https');
-        const userInfo = await new Promise((resolve, reject) => {
-          https.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${encodeURIComponent(token)}`, (resp) => {
-            let data = '';
-            resp.on('data', chunk => { data += chunk; });
-            resp.on('end', () => {
-              try {
-                resolve(JSON.parse(data));
-              } catch (e) {
-                reject(e);
-              }
-            });
-          }).on('error', reject);
-        });
+      const https = require('https');
+      const userInfo = await new Promise((resolve, reject) => {
+        https.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${encodeURIComponent(token)}`, (resp) => {
+          let data = '';
+          resp.on('data', chunk => { data += chunk; });
+          resp.on('end', () => {
+            try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+          });
+        }).on('error', reject);
+      });
 
-        if (!userInfo || !userInfo.email) {
-          throw new Error('Failed to fetch user info with access token');
-        }
-        sub = userInfo.sub;
-        email = userInfo.email;
-        name = userInfo.name;
-        picture = userInfo.picture;
-      } catch (err) {
-        if (process.env.NODE_ENV !== 'production' || req.headers['x-test-account']) {
-          email = 'google-test@example.com';
-          sub = 'google-test-id-12345';
-          name = 'Test Google User';
-          picture = 'https://api.dicebear.com/7.x/avataaars/svg?seed=googletest';
-        } else {
-          throw err;
-        }
+      if (!userInfo || !userInfo.email) {
+        throw new Error('Failed to fetch user info with access token');
       }
+      sub = userInfo.sub;
+      email = userInfo.email;
+      name = userInfo.name;
+      picture = userInfo.picture;
     } else {
       return error(res, 'No Google credential or token provided', 400);
     }
@@ -353,17 +323,16 @@ exports.googleLogin = async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Create a new user
       let baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
       if (baseUsername.length < 3) baseUsername += 'user';
       let username = baseUsername;
       let counter = 1;
-      while(await User.findOne({username})) {
+      while (await User.findOne({ username })) {
         username = `${baseUsername}${counter}`;
         counter++;
       }
 
-      const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      const isAdmin = ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
       user = await User.create({
         username,
         email,
@@ -376,69 +345,35 @@ exports.googleLogin = async (req, res, next) => {
       await leaderboardService.updateEntry(user._id);
     } else {
       let needsSave = false;
-      if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && user.role !== 'admin') {
+      if (ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && user.role !== 'admin') {
         user.role = 'admin';
         needsSave = true;
       }
       if (!user.googleId) {
         user.googleId = sub;
-        if (user.authProvider !== 'google') {
-          user.authProvider = 'google';
-        }
+        if (user.authProvider !== 'google') user.authProvider = 'google';
         if (!user.avatar) user.avatar = picture;
         needsSave = true;
       }
-      if (needsSave) {
-        await user.save();
-      }
+      if (needsSave) await user.save();
     }
 
-    const isTestAccount = process.env.NODE_ENV !== 'production' || user.email.includes('test') || user.email.includes('dev') || req.headers['x-test-account'];
-    if (!isTestAccount && user.lockUntil && user.lockUntil > Date.now()) {
+    // Enforce lockout for all accounts
+    if (user.lockUntil && user.lockUntil > Date.now()) {
       return error(res, 'Account is locked. Try again later.', 403);
     }
 
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
 
-    
-    await updateStreak(user._id);
-
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken();
-
-    user.refreshToken = refreshToken;
-    await user.save();
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    success(res, {
-      accessToken,
-      user: user.toJSON(),
-    });
-
+    return issueTokens(req, res, user);
   } catch (err) {
-    console.error('Google login error:', err);
+    console.error('Google login error:', err.message);
     return error(res, 'Google authentication failed', 401);
   }
 };
 
-exports.resetLockout = async (req, res, next) => {
-  try {
-    const { email } = req.body;
-    if (email) {
-      await User.updateOne({ email }, { $set: { failedLoginAttempts: 0, lockUntil: null } });
-    } else if (process.env.NODE_ENV !== 'production' || req.headers['x-test-account']) {
-      await User.updateMany({}, { $set: { failedLoginAttempts: 0, lockUntil: null } });
-    }
-    success(res, { message: 'Lockout state reset successfully.' });
-  } catch (err) {
-    next(err);
-  }
-};
-
+// ── REMOVED: resetLockout export.
+// ── The /reset-lockout route is removed from authRoutes.js.
+// ── Account lockout expires automatically after 15 minutes.
+// ── Admins can unlock accounts directly via the admin dashboard or DB.

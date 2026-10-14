@@ -4,6 +4,7 @@
   "description": "DEVARENA Backend API",
   "main": "server.js",
   "scripts": {
+    "test": "node --test tests/**/*.test.js",
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed": "node seeds/index.js",
