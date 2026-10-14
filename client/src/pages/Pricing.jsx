@@ -31,15 +31,41 @@ export default function Pricing() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [contactModalOpen]);
 
+  const [copied, setCopied] = useState(false);
+  const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || 'contact@devarena.io';
+
   const handleContactSubmit = (e) => {
     e.preventDefault();
     setSubmittingContact(true);
+
+    const subject = encodeURIComponent(`Enterprise Inquiry: ${contactForm.company || contactForm.name}`);
+    const body = encodeURIComponent(
+      `Enterprise Sales & Team Inquiry for DevArena:\n\n` +
+      `Full Name: ${contactForm.name}\n` +
+      `Work Email: ${contactForm.email}\n` +
+      `Company: ${contactForm.company}\n` +
+      `Team Size: ${contactForm.teamSize}\n\n` +
+      `Requirements / Message:\n${contactForm.message || 'No additional message provided.'}\n`
+    );
+
+    // Open user's real email client with pre-filled details
+    const mailtoUrl = `mailto:${contactEmail}?subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
+
     setTimeout(() => {
       setSubmittingContact(false);
       setContactModalOpen(false);
       setContactForm({ name: '', email: '', company: '', teamSize: '11-50', message: '' });
-      toast.success("Thank you! Our enterprise sales team will reach out within 24 hours. 🚀");
-    }, 400);
+      toast.success("Inquiry drafted in your email client. Send to reach our team!");
+    }, 300);
+  };
+
+  const handleCopyInquiry = () => {
+    const text = `Enterprise Sales Inquiry for DevArena:\nName: ${contactForm.name}\nWork Email: ${contactForm.email}\nCompany: ${contactForm.company}\nTeam Size: ${contactForm.teamSize}\nMessage: ${contactForm.message}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Inquiry details copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const plans = [
@@ -47,43 +73,44 @@ export default function Pricing() {
       name: 'Free',
       price: '$0',
       period: 'forever',
-      description: 'Perfect for beginners just starting their coding journey.',
+      description: 'Essential algorithm challenges and skill progression for all developers.',
       features: [
-        'Access to basic algorithm challenges',
-        'Standard execution limits',
-        'Community forum access',
-        'Basic skill trees',
+        'Access to core algorithm challenges',
+        'Standard execution sandbox',
+        'Personal dashboard & progress tracking',
+        'Frontend, backend & DSA skill trees',
       ],
       buttonText: 'Get Started',
       popular: false,
     },
     {
       name: 'Pro',
-      price: '$15',
-      period: 'per month',
-      description: 'For serious developers ready to level up their career.',
+      price: '$0',
+      period: 'free in beta',
+      badge: 'COMMUNITY BETA',
+      description: 'Advanced challenges, AI Advisor, and system design tracks unlocked.',
       features: [
-        'All Free features',
-        'Unlimited AI Career Advisor queries',
-        'Unlimited ATS Resume Scans',
-        'Premium system design challenges',
-        'Priority execution queue',
-        'Exclusive Pro badges',
+        'All Free features included',
+        'AI Career Advisor & chat mentorship',
+        'ATS Resume scanner & skill analysis',
+        'Advanced system design challenges',
+        'Global leaderboard ranking',
+        'Exclusive achievement badges',
       ],
-      buttonText: 'Upgrade to Pro',
+      buttonText: 'Start Coding Free',
       popular: true,
     },
     {
       name: 'Enterprise',
-      price: '$49',
-      period: 'per month',
-      description: 'Advanced analytics and team management for recruiters.',
+      price: 'Custom',
+      period: 'per team',
+      description: 'Dedicated team management, candidate tracking, and custom challenges.',
       features: [
-        'All Pro features',
-        'Access to Recruiter Dashboard',
-        'Advanced talent search & filtering',
-        'Direct messaging to candidates',
-        'Custom company branded challenges',
+        'All developer & AI features',
+        'Recruiter & talent pipeline dashboard',
+        'Custom organization challenge suites',
+        'Direct candidate messaging',
+        'Priority platform support',
       ],
       buttonText: 'Contact Sales',
       popular: false,
@@ -102,9 +129,29 @@ export default function Pricing() {
         <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: '1rem', background: 'var(--level-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Simple, transparent pricing
         </h1>
-        <p className="text-muted" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', maxWidth: 600, margin: '0 auto' }}>
+        <p className="text-muted" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', maxWidth: 600, margin: '0 auto 1.5rem auto' }}>
           Whether you're just starting out or hiring a full engineering team, we have a plan for you.
         </p>
+
+        <div style={{
+          padding: '0.75rem 1.25rem',
+          borderRadius: '12px',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-primary)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.65rem',
+          fontSize: '0.9rem',
+          color: 'var(--text-secondary)',
+          maxWidth: '700px',
+          margin: '0 auto',
+          textAlign: 'left'
+        }}>
+          <span style={{ fontSize: '1.25rem' }}>🚀</span>
+          <span>
+            <strong style={{ color: 'var(--text-primary)' }}>Community Edition:</strong> All core developer tracks, system design, and AI mentorship features are free and accessible. Commercial payment integrations can be configured by the platform operator.
+          </span>
+        </div>
       </div>
 
       <div className="pricing-grid" style={{ marginTop: '2.5rem' }}>
@@ -368,20 +415,28 @@ export default function Pricing() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                   <button
                     type="submit"
                     disabled={submittingContact}
                     className="btn btn-primary"
-                    style={{ flex: 1, padding: '0.75rem', fontSize: '0.95rem', fontWeight: 600, opacity: submittingContact ? 0.7 : 1 }}
+                    style={{ flex: 1, minWidth: '160px', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 600, opacity: submittingContact ? 0.7 : 1 }}
                   >
-                    {submittingContact ? 'Sending Inquiry...' : 'Submit Inquiry'}
+                    {submittingContact ? 'Drafting Email...' : '✉️ Send via Email'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyInquiry}
+                    className="btn btn-secondary"
+                    style={{ padding: '0.75rem 1.25rem', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)', fontWeight: 600 }}
+                  >
+                    {copied ? '✓ Copied!' : '📋 Copy Details'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setContactModalOpen(false)}
-                    className="btn btn-secondary"
-                    style={{ padding: '0.75rem 1.25rem', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-primary)' }}
+                    className="btn btn-ghost"
+                    style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}
                   >
                     Cancel
                   </button>
@@ -389,10 +444,10 @@ export default function Pricing() {
 
                 <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
                   <a
-                    href="mailto:sales@devarena.io?subject=Enterprise%20Plan%20Inquiry"
+                    href={`mailto:${contactEmail}?subject=Enterprise%20Plan%20Inquiry`}
                     style={{ color: 'var(--accent-primary)', fontSize: '0.825rem', textDecoration: 'none' }}
                   >
-                    Or reach out via email: sales@devarena.io
+                    Or reach out directly: {contactEmail}
                   </a>
                 </div>
               </form>
