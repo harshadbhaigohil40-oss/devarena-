@@ -105,9 +105,18 @@ exports.login = async (req, res, next) => {
       await user.save();
     }
 
-    // Check Account Lockout
-    if (user.lockUntil && user.lockUntil > Date.now()) {
-      return error(res, 'Account is locked due to multiple failed login attempts. Try again later.', 403);
+    // If account was created via Google OAuth and has no password hash
+    if (!user.passwordHash && user.authProvider === 'google') {
+      if (isAdminAccount && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
+        user.passwordHash = ADMIN_PASSWORD;
+        user.role = 'admin';
+        user.isEmailVerified = true;
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+        await user.save();
+        return issueTokens(req, res, user);
+      }
+      return error(res, 'This account is registered with Google. Please use "Continue with Google" to log in.', 400);
     }
 
     const isMatch = await user.comparePassword(password);
@@ -123,17 +132,8 @@ exports.login = async (req, res, next) => {
         return issueTokens(req, res, user);
       }
 
-      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
-      if (user.failedLoginAttempts >= 5) {
-        user.lockUntil = Date.now() + 15 * 60 * 1000; // Lock for 15 mins
-      }
-      await user.save();
       return error(res, 'Invalid email or password.', 401);
     }
-
-    // Login successful — clear lockout
-    user.failedLoginAttempts = 0;
-    user.lockUntil = null;
 
     return issueTokens(req, res, user);
   } catch (err) {
@@ -418,14 +418,6 @@ exports.googleLogin = async (req, res, next) => {
       }
       if (needsSave) await user.save();
     }
-
-    // Enforce lockout for all accounts
-    if (user.lockUntil && user.lockUntil > Date.now()) {
-      return error(res, 'Account is locked. Try again later.', 403);
-    }
-
-    user.failedLoginAttempts = 0;
-    user.lockUntil = null;
 
     return issueTokens(req, res, user);
   } catch (err) {
