@@ -1,0 +1,684 @@
+const Submission = require('../models/Submission');
+const Challenge = require('../models/Challenge');
+const User = require('../models/User');
+const { awardXP } = require('../services/xpService');
+const { emitChallengeCompleted } = require('../services/socketService');
+const { success, error } = require('../utils/responseHelper');
+
+const vm = require('vm');
+const { execSync } = require('child_process');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+// ─── Security Constants ──────────────────────────────────────────────────────
+const MAX_CODE_LENGTH = 50000; // 50KB max code size
+const JS_EXECUTION_TIMEOUT = 3000; // 3 seconds
+const PY_EXECUTION_TIMEOUT = 5000; // 5 seconds
+const ALLOWED_LANGUAGES = ['javascript', 'python', 'html'];
+
+// Patterns that indicate sandbox escape attempts in JavaScript
+const JS_BANNED_PATTERNS = [
+  /this\s*\.\s*constructor/i,
+  /\.__proto__/i,
+  /\[['"]__proto__['"]\]/i,
+  /Object\s*\.\s*getPrototypeOf/i,
+  /Reflect\s*\./i,
+  /globalThis/i,
+  /\bprocess\b/,
+  /\bchild_process\b/,
+  /\brequire\s*\(/,
+  /\bimport\s*\(/,
+  /Function\s*\(/,
+  /eval\s*\(/,
+];
+
+// ─── Python Security: Banned module list ────────────────────────────────────
+// These are checked by pattern AND by the Python-level builtins restriction.
+const PY_BANNED_IMPORTS = [
+  'os', 'sys', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
+  'requests', 'ctypes', 'signal', 'multiprocessing', 'threading',
+  'importlib', 'builtins', '__builtin__', 'code', 'codeop',
+  'compile', 'compileall', 'py_compile', 'runpy', 'pkgutil',
+  'pty', 'tty', 'termios', 'fcntl', 'mmap', 'gc', 'inspect',
+  'ast', 'dis', 'tokenize', 'traceback', 'warnings', 'zipimport',
+];
+
+// Hex/unicode encoding patterns used to bypass string-match filters:
+// e.g.  __import__('\x6f\x73')  or  __import__('\u006fs')
+const PY_ENCODING_BYPASS_PATTERNS = [
+  /\\x[0-9a-fA-F]{2}/,         // hex escape inside string
+  /\\u[0-9a-fA-F]{4}/,         // unicode escape inside string
+  /chr\s*\(/,                   // chr() function call
+  /ord\s*\(/,                   // ord() often paired with chr()
+  /bytes\s*\(\s*\[/,           // bytes([...]) → decode tricks
+  /__import__/,                 // any __import__ usage
+  /importlib/,
+  /\.load_module/,
+  /\.find_module/,
+  /\.exec_module/,
+];
+
+// ─── Security Validators ─────────────────────────────────────────────────────
+
+/**
+ * Validates submitted code for size and language constraints.
+ * Returns an error string if invalid, or null if valid.
+ */
+function validateCodeInput(code, language) {
+  if (!code || typeof code !== 'string') return 'Code is required.';
+  if (code.length > MAX_CODE_LENGTH) return `Code exceeds maximum allowed length of ${MAX_CODE_LENGTH} characters.`;
+  if (!ALLOWED_LANGUAGES.includes(language)) return `Unsupported language: ${language}. Allowed: ${ALLOWED_LANGUAGES.join(', ')}`;
+  return null;
+}
+
+/**
+ * Checks JavaScript code for known sandbox escape patterns.
+ * Returns an error string if a banned pattern is found, or null if safe.
+ */
+function detectJSBannedPatterns(code) {
+  for (const pattern of JS_BANNED_PATTERNS) {
+    if (pattern.test(code)) {
+      return 'Code contains disallowed patterns. Please use only standard language features.';
+    }
+  }
+  return null;
+}
+
+/**
+ * Checks Python code for dangerous patterns including:
+ *   - Banned module imports (plain and aliased)
+ *   - Encoding bypass attempts (hex/unicode escapes, chr())
+ *   - Dynamic code execution (exec, eval, compile)
+ *   - File I/O (open)
+ *
+ * NOTE: This is a defense-in-depth layer. The Python runner script also
+ * restricts __builtins__ at the interpreter level. Neither alone is
+ * sufficient; both together significantly raise the attack cost.
+ *
+ * REMAINING RISK: Without Docker/seccomp isolation (e.g., Judge0) a
+ * sufficiently creative exploit may still escape. For a production SaaS,
+ * migrate Python execution to an isolated container service.
+ */
+function detectPyBannedImports(code) {
+  // Check encoding bypass patterns first
+  for (const pattern of PY_ENCODING_BYPASS_PATTERNS) {
+    if (pattern.test(code)) {
+      return 'Code contains disallowed patterns. Please use only standard language features.';
+    }
+  }
+
+  for (const mod of PY_BANNED_IMPORTS) {
+    // Match: import os, from os import, import os as x
+    const patterns = [
+      new RegExp(`\\bimport\\s+${mod}\\b`),
+      new RegExp(`\\bfrom\\s+${mod}\\b`),
+    ];
+    for (const p of patterns) {
+      if (p.test(code)) {
+        return `Import of '${mod}' is not allowed for security reasons.`;
+      }
+    }
+  }
+
+  // Block file I/O and dynamic execution primitives
+  if (/\bopen\s*\(/.test(code))   return 'File I/O (open) is not allowed.';
+  if (/\bexec\s*\(/.test(code))   return 'Dynamic code execution (exec) is not allowed.';
+  if (/\beval\s*\(/.test(code))   return 'Dynamic code evaluation (eval) is not allowed.';
+  if (/\bcompile\s*\(/.test(code)) return 'Dynamic code compilation (compile) is not allowed.';
+  if (/\bvars\s*\(/.test(code))   return 'Reflection (vars) is not allowed.';
+  if (/\bglobals\s*\(/.test(code)) return 'Reflection (globals) is not allowed.';
+  if (/\blocals\s*\(/.test(code))  return 'Reflection (locals) is not allowed.';
+  if (/\bgetattr\s*\(/.test(code)) return 'Reflection (getattr) is not allowed.';
+  if (/\bsetattr\s*\(/.test(code)) return 'Reflection (setattr) is not allowed.';
+  if (/\bdelattr\s*\(/.test(code)) return 'Reflection (delattr) is not allowed.';
+
+  return null;
+}
+
+// ─── Argument Parser ─────────────────────────────────────────────────────────
+// Splits a test-case input string like `[1,2,3], 9` into JS values safely.
+function parseArgs(inputStr) {
+  if (!inputStr || inputStr.trim() === '""' || inputStr.trim() === "''") return [];
+
+  // Wrap in array brackets so JSON.parse handles it as a tuple
+  const wrapped = `[${inputStr}]`;
+  try {
+    return JSON.parse(wrapped);
+  } catch (_) {
+    // Fallback: eval in a restricted sandbox (only literal value constructors)
+    try {
+      const sandbox = Object.create(null);
+      sandbox.Math = Math;
+      sandbox.String = String;
+      sandbox.Number = Number;
+      sandbox.Array = Array;
+      sandbox.Object = Object;
+      vm.createContext(sandbox);
+      return vm.runInContext(`(function(){ return [${inputStr}]; })()`, sandbox, { timeout: 500 });
+    } catch (_2) {
+      return [inputStr]; // last resort: treat as single string
+    }
+  }
+}
+
+// ─── JS Evaluator ────────────────────────────────────────────────────────────
+function evaluateJS(code, testCases, category, starterCode) {
+  // Pre-flight security check on user code
+  const bannedCheck = detectJSBannedPatterns(code);
+  if (bannedCheck) {
+    return testCases.map((_, index) => ({
+      testCaseIndex: index,
+      passed: false,
+      output: `Security Error: ${bannedCheck}`,
+      executionTime: 0,
+    }));
+  }
+
+  return testCases.map((tc, index) => {
+    try {
+      let capturedLogs = [];
+
+      // Build a sandbox with null prototype to prevent prototype chain escapes.
+      // Using Object.create(null) ensures there is no __proto__ to climb.
+      const sandbox = Object.create(null);
+      sandbox.console = {
+        log: (...args) => {
+          if (capturedLogs.length < 100) { // Cap log output to prevent memory abuse
+            capturedLogs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
+          }
+        }
+      };
+      // Provide safe, frozen copies of built-in constructors
+      sandbox.Math = Math;
+      sandbox.String = String;
+      sandbox.Number = Number;
+      sandbox.Boolean = Boolean;
+      sandbox.Array = Array;
+      sandbox.Object = Object;
+      sandbox.Set = Set;
+      sandbox.Map = Map;
+      sandbox.parseInt = parseInt;
+      sandbox.parseFloat = parseFloat;
+      sandbox.isNaN = isNaN;
+      sandbox.isFinite = isFinite;
+      sandbox.JSON = JSON;
+      sandbox.undefined = undefined;
+      // Intentionally excluded: process, Buffer, require, Promise, setTimeout,
+      // globalThis, Reflect, Proxy, Function — these enable sandbox escapes.
+      sandbox.setTimeout = () => {};
+
+      vm.createContext(sandbox);
+
+      // Detect function name from starter or user code
+      let functionName = '';
+      const sources = [starterCode, code].filter(Boolean);
+      for (const src of sources) {
+        const m = src.match(/function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/) ||
+                  src.match(/(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?(?:function|\([^)]*\)\s*=>|[a-zA-Z_$][a-zA-Z0-9_$]*\s*=>)/) ||
+                  src.match(/class\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\{/);
+        if (m) { functionName = m[1]; break; }
+      }
+
+      const args = parseArgs(tc.input);
+
+      // Build runner – call the detected function with parsed args
+      const runner = functionName
+        ? `${code}
+(function __runner__() {
+  const __fn__ = typeof ${functionName} === 'function' ? ${functionName} : (new ${functionName}());
+  return __fn__(${args.map((_, i) => `__args__[${i}]`).join(', ')});
+})()`
+        : code;
+
+      vm.runInContext(`var __args__ = ${JSON.stringify(args)};`, sandbox, { timeout: 500 });
+      const script = new vm.Script(runner);
+      const start = process.hrtime();
+      const rawResult = script.runInContext(sandbox, { timeout: JS_EXECUTION_TIMEOUT });
+      const end = process.hrtime(start);
+      const executionTime = Math.round(end[0] * 1000 + end[1] / 1e6);
+
+      let resultStr;
+      if (rawResult === undefined) resultStr = 'undefined';
+      else if (rawResult instanceof Set) resultStr = JSON.stringify(Array.from(rawResult));
+      else if (rawResult instanceof Map) resultStr = JSON.stringify(Object.fromEntries(rawResult));
+      else resultStr = JSON.stringify(rawResult);
+
+      const logsOutput = capturedLogs.length > 0 ? `\nLogs:\n${capturedLogs.join('\n')}` : '';
+
+      if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
+      if (rawResult === undefined && tc.expectedOutput !== 'undefined') {
+        throw new Error('Function returned nothing. Make sure to use the `return` keyword.');
+      }
+      if (rawResult === null && tc.expectedOutput !== 'null' && tc.expectedOutput !== null) {
+        throw new Error('Function returned nothing. Make sure to use the `return` keyword.');
+      }
+
+      let expectedStr;
+      try {
+        expectedStr = JSON.stringify(JSON.parse(tc.expectedOutput));
+      } catch (e) {
+        expectedStr = JSON.stringify(tc.expectedOutput);
+      }
+      const normalizedResult = resultStr.replace(/\s+/g, '');
+      const normalizedExpected = expectedStr.replace(/\s+/g, '');
+      const passed = normalizedResult === normalizedExpected;
+      return {
+        testCaseIndex: index,
+        passed,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: tc.isHidden ? '[Hidden]' : (resultStr === undefined ? 'undefined' : resultStr),
+        output: passed
+          ? `✓ Output: ${resultStr}${logsOutput}`
+          : `Expected: ${tc.expectedOutput}\nGot:      ${resultStr}${logsOutput}`,
+        executionTime: executionTime || 1,
+      };
+    } catch (e) {
+      let msg = e.message || String(e);
+      if (e.stack && e.stack.includes('evalmachine')) {
+        const stackLines = e.stack.split('\n');
+        const errIdx = stackLines.findIndex(l => l.includes(e.message));
+        if (errIdx > 0) {
+           const snippet = stackLines.slice(0, errIdx).join('\n').replace(/evalmachine\.<anonymous>:/g, 'Line ');
+           msg = `${e.name || 'Error'}: ${e.message}\n${snippet}`;
+        }
+      }
+      return {
+        testCaseIndex: index,
+        passed: false,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: 'Error',
+        error: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        output: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        executionTime: 0
+      };
+    }
+  });
+}
+
+// ─── Python Evaluator ────────────────────────────────────────────────────────
+// SECURITY MODEL (defense-in-depth, no Docker available):
+//   Layer 1 — Static analysis: detectPyBannedImports() rejects dangerous patterns
+//             before the file is even written.
+//   Layer 2 — Python-level builtins restriction: the wrapper script replaces
+//             __builtins__ with a safe allowlist, so even if a module is imported
+//             via an undetected path, destructive builtins are unavailable.
+//   Layer 3 — Process isolation: -S (no site-packages), -I (isolated mode),
+//             clean env (no secrets), hard timeout.
+//   Layer 4 — OS resource limits (Linux/Render only): ulimit caps on file
+//             descriptors, processes, and virtual memory.
+//
+// REMAINING RISK: Pattern-based filtering can be defeated by a creative attacker.
+// For a production SaaS, migrate to Judge0 or a container-based execution service.
+function evaluatePython(code, testCases, category, starterCode) {
+  // Layer 1: Static analysis
+  const bannedCheck = detectPyBannedImports(code);
+  if (bannedCheck) {
+    return testCases.map((_, index) => ({
+      testCaseIndex: index,
+      passed: false,
+      output: `Security Error: ${bannedCheck}`,
+      executionTime: 0,
+    }));
+  }
+
+  return testCases.map((tc, index) => {
+    const os = require('os');
+    const tempDir = os.tmpdir();
+    const uniqueId = crypto.randomBytes(8).toString('hex');
+    const filePath = path.join(tempDir, `devarena_py_${uniqueId}_${index}.py`);
+
+    try {
+      // Detect function name from starter or user code
+      let functionName = '';
+      const sources = [starterCode, code].filter(Boolean);
+      for (const src of sources) {
+        const m = src.match(/def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+        if (m) { functionName = m[1]; break; }
+      }
+
+      const inputForPy = (tc.input === '"example_input"' || tc.input === '') ? '' : tc.input;
+
+      // Layer 2: Python builtins restriction wrapper
+      // We replace __builtins__ with an explicit allowlist so that even if an
+      // import slips through Layer 1, the attacker cannot call open(), exec(),
+      // __import__(), compile(), etc.
+      const SAFE_BUILTINS_PY = `
+_SAFE_BUILTINS = {
+  'abs': abs, 'all': all, 'any': any, 'bin': bin, 'bool': bool,
+  'chr': None,        # disabled — used in encoding bypass attacks
+  'dict': dict, 'divmod': divmod, 'enumerate': enumerate,
+  'filter': filter, 'float': float, 'format': format,
+  'frozenset': frozenset, 'hasattr': hasattr, 'hash': hash,
+  'hex': hex, 'int': int, 'isinstance': isinstance, 'issubclass': issubclass,
+  'iter': iter, 'len': len, 'list': list, 'map': map, 'max': max,
+  'min': min, 'next': next, 'oct': oct, 'pow': pow,
+  'print': print, 'range': range, 'repr': repr, 'reversed': reversed,
+  'round': round, 'set': set, 'slice': slice, 'sorted': sorted,
+  'str': str, 'sum': sum, 'tuple': tuple, 'type': type, 'zip': zip,
+  'True': True, 'False': False, 'None': None,
+  'ValueError': ValueError, 'TypeError': TypeError, 'IndexError': IndexError,
+  'KeyError': KeyError, 'AttributeError': AttributeError,
+  'StopIteration': StopIteration, 'Exception': Exception,
+  'RuntimeError': RuntimeError, 'OverflowError': OverflowError,
+  'ZeroDivisionError': ZeroDivisionError, 'NotImplementedError': NotImplementedError,
+}
+# IMPORTANT: chr is removed to block encoding bypass like chr(111)+chr(115) == 'os'
+__builtins__ = _SAFE_BUILTINS
+`;
+
+      // Safe argument parser — uses JSON.parse instead of Python eval()
+      // The old approach used eval() inside Python which was itself a vector.
+      const safeArgsJson = (() => {
+        const rawInput = inputForPy || '';
+        if (!rawInput || rawInput === 'None') return JSON.stringify([]);
+        try { return JSON.stringify(JSON.parse(`[${rawInput}]`)); } catch (_) { return JSON.stringify([rawInput]); }
+      })();
+
+      const testScript = functionName ? `
+import json as _json
+
+${SAFE_BUILTINS_PY}
+
+# Alias JS-style literals before user code runs
+true = True
+false = False
+null = None
+
+${code}
+
+# Safe arg parsing — no eval()
+_raw_args = _json.loads(${JSON.stringify(safeArgsJson)})
+_result = ${functionName}(*_raw_args)
+if _result is None:
+    print("null")
+elif isinstance(_result, bool):
+    print("true" if _result else "false")
+else:
+    print(_json.dumps(_result))
+` : `
+import json as _json
+${SAFE_BUILTINS_PY}
+true = True
+false = False
+null = None
+${code}
+`;
+
+      fs.writeFileSync(filePath, testScript, { mode: 0o600 }); // owner-read only
+
+      // Layer 3 + 4: Spawn with minimal env, -S (no site-pkgs), -I (isolated),
+      // and ulimit resource caps on Linux.
+      const isLinux = process.platform === 'linux';
+      // ulimit: -v 256MB virtual mem, -u 64 max procs, -n 32 max fds, -f 0 no file writes
+      const ulimitPrefix = isLinux
+        ? `ulimit -v 262144 -u 64 -n 32 -f 0; `
+        : '';
+      const command = `${ulimitPrefix}python -S -I -W ignore "${filePath}"`;
+
+      const start = process.hrtime();
+      let rawResult = '';
+      try {
+        rawResult = execSync(command, {
+          timeout: PY_EXECUTION_TIMEOUT,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          encoding: 'utf8',
+          shell: isLinux, // shell required for ulimit on Linux
+          // Minimal env — strictly isolated, no secrets, no database URIs
+          env: {
+            PATH: process.env.PATH || '/usr/bin:/bin',
+            ...(process.platform === 'win32' ? { SystemRoot: process.env.SystemRoot || '' } : {}),
+            PYTHONDONTWRITEBYTECODE: '1',
+            PYTHONHASHSEED: 'random',
+          },
+        }).trim();
+      } catch (err) {
+        const stderr = (err.stderr || '').toString().trim();
+        let errMsg = stderr || err.message || 'Execution failed';
+        // Sanitize: never leak server filesystem paths
+        errMsg = errMsg
+          .replace(new RegExp(filePath.replace(/\\/g, '\\\\'), 'g'), 'solution.py')
+          .replace(new RegExp(path.basename(filePath), 'g'), 'solution.py')
+          .replace(/\/tmp\S*/g, 'solution.py')
+          .replace(/line (\d+)/g, (_, n) => `line ${Math.max(1, parseInt(n) - 35)}`);
+        throw new Error(errMsg);
+      } finally {
+        // Always clean up temp file
+        try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (_) {}
+      }
+
+      const end = process.hrtime(start);
+      const executionTime = Math.round(end[0] * 1000 + end[1] / 1e6);
+
+      const lines = rawResult.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const lastLine = lines.pop() || '';
+      const logsOutput = lines.length > 0 ? `\nLogs:\n${lines.join('\n')}` : '';
+
+      if (!functionName) throw new Error('Could not find a function to call. Define your function first.');
+
+      let expectedStr;
+      try { expectedStr = JSON.stringify(JSON.parse(tc.expectedOutput)); }
+      catch (_) { expectedStr = JSON.stringify(tc.expectedOutput); }
+
+      const normalizedResult = lastLine.replace(/\s+/g, '');
+      const normalizedExpected = expectedStr.replace(/\s+/g, '');
+      const passed = normalizedResult === normalizedExpected;
+      return {
+        testCaseIndex: index,
+        passed,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: tc.isHidden ? '[Hidden]' : lastLine,
+        output: passed
+          ? `✓ Output: ${lastLine}${logsOutput}`
+          : `Expected: ${tc.expectedOutput}\nGot:      ${lastLine}${logsOutput}`,
+        executionTime: executionTime || 1,
+      };
+    } catch (e) {
+      try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (_) {}
+      const msg = e.message || String(e);
+      return {
+        testCaseIndex: index,
+        passed: false,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: 'Error',
+        error: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        output: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        executionTime: 0,
+      };
+    }
+  });
+}
+
+// ─── HTML Evaluator ───────────────────────────────────────────────────────────
+function evaluateHTML(code, testCases) {
+  return testCases.map((tc, index) => {
+    try {
+      const startTime = Date.now();
+      const cleanCode = code.replace(/\s+/g, ' ').trim().toLowerCase();
+      const cleanExpected = (tc.expectedOutput || '').trim().toLowerCase();
+
+      let passed = false;
+
+      // If expected output is a simple pass/true marker
+      if (['true', 'passed', 'pass'].includes(cleanExpected)) {
+        // Pass if the HTML has meaningful content (more than just boilerplate)
+        passed = cleanCode.length > 20 && !cleanCode.includes('<!-- write your');
+      } else if (cleanExpected.length > 0) {
+        // Check if the HTML contains the expected structural elements
+        const expectedParts = cleanExpected.split(/[,;|]+/).map(p => p.trim()).filter(Boolean);
+        if (expectedParts.length > 1) {
+          // Multiple expected elements: all must be present
+          passed = expectedParts.every(part => cleanCode.includes(part));
+        } else {
+          // Single expected output: check inclusion
+          passed = cleanCode.includes(cleanExpected) || code.toLowerCase().includes(cleanExpected);
+        }
+      } else {
+        // No expected output specified — pass if code is non-trivial
+        passed = cleanCode.length > 30;
+      }
+
+      const executionTime = Date.now() - startTime;
+      return {
+        testCaseIndex: index,
+        passed,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: passed ? tc.expectedOutput : 'Structure mismatch',
+        output: passed ? `✅ HTML structure matches expected output` : `❌ HTML does not contain expected structure`,
+        executionTime,
+      };
+    } catch (e) {
+      return {
+        testCaseIndex: index,
+        passed: false,
+        isHidden: Boolean(tc.isHidden),
+        input: tc.isHidden ? '[Hidden]' : tc.input,
+        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        actualOutput: 'Error',
+        error: e.message || String(e),
+        output: `Error: ${e.message || String(e)}`,
+        executionTime: 0,
+      };
+    }
+  });
+}
+
+// ─── Main Evaluator ───────────────────────────────────────────────────────────
+const evaluateCode = (code, testCases, language, category, starterCode = '') => {
+  if (language === 'python') return evaluatePython(code, testCases, category, starterCode);
+  if (language === 'javascript') return evaluateJS(code, testCases, category, starterCode);
+  if (language === 'html') return evaluateHTML(code, testCases);
+
+  // Unsupported language — reject instead of mocking results
+  return testCases.map((_, index) => ({
+    testCaseIndex: index,
+    passed: false,
+    output: `Unsupported language: ${language}. Please use JavaScript or Python.`,
+    executionTime: 0,
+  }));
+};
+
+// ─── Run (test without saving) ────────────────────────────────────────────────
+exports.runCode = async (req, res, next) => {
+  try {
+    const { code, language = 'javascript' } = req.body;
+    const challengeId = req.params.id;
+
+    // Validate input
+    const validationError = validateCodeInput(code, language);
+    if (validationError) return error(res, validationError, 400);
+
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) return error(res, 'Challenge not found.', 404);
+
+    // Only run visible test cases
+    const visibleTests = challenge.testCases.filter(tc => !tc.isHidden);
+    const testResults = evaluateCode(code, visibleTests, language, challenge.category, challenge.starterCode?.[language] || '');
+    const allPassed = testResults.every(r => r.passed);
+    const passedCount = testResults.filter(r => r.passed).length;
+    const totalCount = testResults.length;
+
+    success(res, {
+      testResults,
+      results: testResults,
+      passedCount,
+      totalCount,
+      allPassed,
+      isRun: true
+    });
+  } catch (err) { next(err); }
+};
+
+// ─── Submit (full evaluation + save) ─────────────────────────────────────────
+exports.submitSolution = async (req, res, next) => {
+  try {
+    const { code, language = 'javascript' } = req.body;
+    const challengeId = req.params.id;
+
+    // Validate input
+    const validationError = validateCodeInput(code, language);
+    if (validationError) return error(res, validationError, 400);
+
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) return error(res, 'Challenge not found.', 404);
+
+    // Reject empty / starter-only submissions
+    const cleanCode = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').replace(/#.*/g, '').trim();
+    const isStarterCode = challenge.starterCode && (
+      code.trim() === challenge.starterCode.javascript?.trim() ||
+      code.trim() === challenge.starterCode.python?.trim()
+    );
+    if (cleanCode.length < 3 || isStarterCode) {
+      return error(res, 'Please write actual code logic before submitting.', 400);
+    }
+
+    const alreadySolved = await Submission.findOne({ userId: req.userId, challengeId, status: 'passed' });
+
+    const testResults = evaluateCode(code, challenge.testCases, language, challenge.category, challenge.starterCode?.[language] || '');
+    const allPassed = testResults.every(r => r.passed);
+    const passedCount = testResults.filter(r => r.passed).length;
+    const totalCount = testResults.length;
+    const status = allPassed ? 'passed' : 'failed';
+
+    const submission = await Submission.create({
+      userId: req.userId,
+      challengeId,
+      code,
+      language,
+      status,
+      testResults,
+      xpEarned: allPassed && !alreadySolved ? challenge.xpReward : 0,
+    });
+
+    let xpResult = null;
+    if (allPassed && !alreadySolved) {
+      xpResult = await awardXP(req.userId, challenge.xpReward, 'challenge', challengeId, `Solved: ${challenge.title}`);
+      // Use atomic $inc to prevent race conditions under concurrent submissions
+      await Challenge.findByIdAndUpdate(challengeId, { $inc: { completionCount: 1, attemptCount: 1 } });
+      await User.findByIdAndUpdate(req.userId, { $inc: { challengesSolved: 1 } });
+      emitChallengeCompleted(req.userId, challengeId, challenge.xpReward);
+    } else {
+      await Challenge.findByIdAndUpdate(challengeId, { $inc: { attemptCount: 1 } });
+    }
+
+    success(res, {
+      submission,
+      testResults,
+      results: testResults,
+      passedCount,
+      totalCount,
+      xpResult,
+      allPassed
+    });
+  } catch (err) { next(err); }
+};
+
+exports.getSubmissions = async (req, res, next) => {
+  try {
+    const submissions = await Submission.find({
+      userId: req.userId,
+      challengeId: req.params.id,
+    }).sort({ submittedAt: -1 }).limit(10).lean();
+    success(res, { submissions });
+  } catch (err) { next(err); }
+};
+
+// Internal exports for regression testing
+exports._testExports = {
+  detectPyBannedImports,
+  detectJSBannedPatterns,
+  evaluateJS,
+  evaluatePython,
+  parseArgs,
+};
+

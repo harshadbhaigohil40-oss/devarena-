@@ -1,0 +1,41 @@
+[
+  { "topicId": "html-css", "title": "Build a Semantic HTML Blog Layout", "difficulty": "Easy", "link": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element" },
+  { "topicId": "html-css", "title": "Center a Div (3 different ways)", "difficulty": "Easy", "link": "" },
+  { "topicId": "html-css", "title": "Build a CSS Flexbox Navbar", "difficulty": "Easy", "link": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/" },
+  { "topicId": "html-css", "title": "Build a CSS Grid Photo Gallery", "difficulty": "Medium", "link": "https://css-tricks.com/snippets/css/complete-guide-grid/" },
+  { "topicId": "html-css", "title": "Create a Pure-CSS Accordion (no JS)", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "javascript", "title": "Implement debounce()", "difficulty": "Medium", "link": "" },
+  { "topicId": "javascript", "title": "Implement throttle()", "difficulty": "Medium", "link": "" },
+  { "topicId": "javascript", "title": "Implement a Deep Clone Function", "difficulty": "Medium", "link": "" },
+  { "topicId": "javascript", "title": "Implement Promise.all() from Scratch", "difficulty": "Hard", "link": "" },
+  { "topicId": "javascript", "title": "Flatten a Nested Array", "difficulty": "Easy", "link": "https://leetcode.com/problems/flatten-nested-list-iterator/" },
+  { "topicId": "javascript", "title": "Event Delegation: Build a Dynamic To-Do List", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "responsive-design", "title": "Convert a Fixed-Width Layout to Fully Responsive", "difficulty": "Medium", "link": "" },
+  { "topicId": "responsive-design", "title": "Build a Mobile-First Pricing Table", "difficulty": "Medium", "link": "" },
+  { "topicId": "responsive-design", "title": "Implement a Responsive Image Set (srcset/sizes)", "difficulty": "Medium", "link": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#responsive_images" },
+  { "topicId": "responsive-design", "title": "Build a Hamburger Menu with Container Queries", "difficulty": "Hard", "link": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_container_queries" },
+
+  { "topicId": "react", "title": "Build a Counter with useState", "difficulty": "Easy", "link": "" },
+  { "topicId": "react", "title": "Build a Todo App with useReducer", "difficulty": "Medium", "link": "" },
+  { "topicId": "react", "title": "Fetch and Display Data with useEffect", "difficulty": "Medium", "link": "" },
+  { "topicId": "react", "title": "Build a Reusable Modal Component", "difficulty": "Medium", "link": "" },
+  { "topicId": "react", "title": "Build a Controlled Multi-Step Form", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "advanced-react", "title": "Implement a Custom Hook: useDebounce", "difficulty": "Medium", "link": "" },
+  { "topicId": "advanced-react", "title": "Build a Context-Based Theme Switcher", "difficulty": "Medium", "link": "" },
+  { "topicId": "advanced-react", "title": "Optimize Re-renders with useMemo/useCallback", "difficulty": "Hard", "link": "" },
+  { "topicId": "advanced-react", "title": "Build an Infinite Scroll List", "difficulty": "Hard", "link": "" },
+  { "topicId": "advanced-react", "title": "Implement a Virtualized List (windowing)", "difficulty": "Hard", "link": "" },
+
+  { "topicId": "testing", "title": "Write Unit Tests for a Utility Function (Jest)", "difficulty": "Easy", "link": "https://jestjs.io/docs/getting-started" },
+  { "topicId": "testing", "title": "Test a React Component with React Testing Library", "difficulty": "Medium", "link": "https://testing-library.com/docs/react-testing-library/intro/" },
+  { "topicId": "testing", "title": "Mock an API Call in a Test", "difficulty": "Medium", "link": "" },
+  { "topicId": "testing", "title": "Write an End-to-End Test with Playwright/Cypress", "difficulty": "Hard", "link": "https://playwright.dev/" },
+
+  { "topicId": "frontend-expert", "title": "Build a Design-System Button with Variants + Theming", "difficulty": "Hard", "link": "" },
+  { "topicId": "frontend-expert", "title": "Diagnose and Fix a Memory Leak in a React App", "difficulty": "Hard", "link": "" },
+  { "topicId": "frontend-expert", "title": "Implement Code-Splitting and Lazy Loading Routes", "difficulty": "Hard", "link": "" },
+  { "topicId": "frontend-expert", "title": "Audit and Improve Core Web Vitals on a Real Page", "difficulty": "Hard", "link": "https://web.dev/vitals/" }
+]

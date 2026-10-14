@@ -1,0 +1,6 @@
+{
+  "name": "devarena-shared",
+  "version": "1.0.0",
+  "description": "Shared constants and configurations for DEVARENA",
+  "main": "index.js"
+}

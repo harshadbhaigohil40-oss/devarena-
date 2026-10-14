@@ -1,0 +1,38 @@
+[
+  { "topicId": "fundamentals", "title": "Explain CAP Theorem with a Real Example", "difficulty": "Easy", "link": "" },
+  { "topicId": "fundamentals", "title": "Vertical vs Horizontal Scaling: When to Use Each", "difficulty": "Easy", "link": "" },
+  { "topicId": "fundamentals", "title": "Design a URL Shortener (bit.ly)", "difficulty": "Medium", "link": "" },
+  { "topicId": "fundamentals", "title": "Estimate Back-of-the-Envelope Capacity for 1M DAU App", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "storage-systems", "title": "SQL vs NoSQL: Pick the Right Store for a Use Case", "difficulty": "Easy", "link": "" },
+  { "topicId": "storage-systems", "title": "Design a Key-Value Store", "difficulty": "Medium", "link": "" },
+  { "topicId": "storage-systems", "title": "Design a Sharded Database for a Multi-Tenant App", "difficulty": "Hard", "link": "" },
+  { "topicId": "storage-systems", "title": "Design an Object Storage Service (like S3)", "difficulty": "Hard", "link": "" },
+
+  { "topicId": "compute", "title": "Design a Rate Limiter", "difficulty": "Medium", "link": "" },
+  { "topicId": "compute", "title": "Design a Job Scheduler", "difficulty": "Medium", "link": "" },
+  { "topicId": "compute", "title": "Design an API Gateway", "difficulty": "Medium", "link": "" },
+  { "topicId": "compute", "title": "Design a Serverless Function Platform (concept)", "difficulty": "Hard", "link": "" },
+
+  { "topicId": "distributed-systems", "title": "Explain Consistent Hashing and Why It's Used", "difficulty": "Medium", "link": "" },
+  { "topicId": "distributed-systems", "title": "Design a Distributed Cache", "difficulty": "Medium", "link": "" },
+  { "topicId": "distributed-systems", "title": "Design a Message Queue (like Kafka, simplified)", "difficulty": "Hard", "link": "" },
+  { "topicId": "distributed-systems", "title": "Design a Leader Election Mechanism", "difficulty": "Hard", "link": "" },
+  { "topicId": "distributed-systems", "title": "Design a Distributed Lock Service", "difficulty": "Hard", "link": "" },
+
+  { "topicId": "interview-prep", "title": "Design Twitter's News Feed", "difficulty": "Medium", "link": "" },
+  { "topicId": "interview-prep", "title": "Design WhatsApp/Chat System", "difficulty": "Medium", "link": "" },
+  { "topicId": "interview-prep", "title": "Design an Uber-like Ride Matching System", "difficulty": "Hard", "link": "" },
+  { "topicId": "interview-prep", "title": "Design YouTube/Video Streaming Platform", "difficulty": "Hard", "link": "" },
+  { "topicId": "interview-prep", "title": "Design a Notification System (push/email/SMS)", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "cloud-architecture", "title": "Design a Multi-Region Active-Active Deployment", "difficulty": "Hard", "link": "" },
+  { "topicId": "cloud-architecture", "title": "Design a CI/CD Pipeline for a Microservices App", "difficulty": "Medium", "link": "" },
+  { "topicId": "cloud-architecture", "title": "Design a Disaster Recovery Strategy (RTO/RPO)", "difficulty": "Hard", "link": "" },
+  { "topicId": "cloud-architecture", "title": "Design an Auto-Scaling Strategy for Bursty Traffic", "difficulty": "Medium", "link": "" },
+
+  { "topicId": "architect", "title": "Design a Global Payments System", "difficulty": "Hard", "link": "" },
+  { "topicId": "architect", "title": "Design a Search Engine (like Google, simplified)", "difficulty": "Hard", "link": "" },
+  { "topicId": "architect", "title": "Design a Large-Scale Ad Auction System", "difficulty": "Hard", "link": "" },
+  { "topicId": "architect", "title": "Design a Global CDN Strategy", "difficulty": "Hard", "link": "" }
+]
