@@ -35,6 +35,70 @@ export default function FloatingChatbot() {
     scrollToBottom('smooth');
   }, [messages, isLoading]);
 
+  // Maximum character limit safely below backend MAX_CHAT_PROMPT_LENGTH (2000)
+  const MAX_ALLOWED_PROMPT_CHARS = 1850;
+
+  const buildSafeContextPrompt = (historyMessages, userInput) => {
+    // 1. Prioritize user query (up to 1400 chars to leave space for context)
+    let cleanInput = userInput.trim();
+    if (cleanInput.length > 1400) {
+      cleanInput = cleanInput.slice(0, 1400);
+    }
+    const userLine = `User: ${cleanInput}`;
+
+    // 2. Calculate remaining budget for conversation context
+    let remainingBudget = MAX_ALLOWED_PROMPT_CHARS - userLine.length - 2;
+
+    // 3. Filter out non-contextual or error messages
+    const candidateHistory = historyMessages.filter(m => {
+      if (!m || !m.content || typeof m.content !== 'string') return false;
+      const content = m.content.trim();
+      if (m.role === 'assistant') {
+        if (content.startsWith('Hi there! I am **DevArena AI**')) return false;
+        if (content.startsWith('Conversation cleared!')) return false;
+        if (content.includes('Prompt exceeds maximum allowed length')) return false;
+        if (content.includes('circuits are a bit scrambled')) return false;
+        if (content.includes('Server Error')) return false;
+        if (content.includes('Please try again')) return false;
+      }
+      return true;
+    });
+
+    // 4. Collect past messages backwards from most recent, truncating long past answers
+    const contextLines = [];
+    for (let i = candidateHistory.length - 1; i >= 0 && remainingBudget > 40; i--) {
+      const msg = candidateHistory[i];
+      const roleLabel = msg.role === 'user' ? 'User' : 'AI';
+      let text = msg.content.trim();
+
+      // Summarize / truncate long past messages so they don't consume the entire budget
+      if (msg.role === 'assistant' && text.length > 250) {
+        text = text.slice(0, 250) + '...';
+      } else if (msg.role === 'user' && text.length > 350) {
+        text = text.slice(0, 350) + '...';
+      }
+
+      const line = `${roleLabel}: ${text}`;
+      if (line.length + 1 <= remainingBudget) {
+        contextLines.unshift(line);
+        remainingBudget -= (line.length + 1);
+      } else if (remainingBudget > 60) {
+        const allowedSnippetLen = remainingBudget - roleLabel.length - 7;
+        if (allowedSnippetLen > 20) {
+          contextLines.unshift(`${roleLabel}: ${text.slice(0, allowedSnippetLen)}...`);
+          remainingBudget = 0;
+        }
+        break;
+      } else {
+        break;
+      }
+    }
+
+    return contextLines.length > 0
+      ? `${contextLines.join('\n')}\n${userLine}`
+      : userLine;
+  };
+
   const handleSendPrompt = async (promptToSend) => {
     const text = (promptToSend ?? input).trim();
     if (!text || isLoading) return;
@@ -44,15 +108,37 @@ export default function FloatingChatbot() {
     setIsLoading(true);
 
     try {
-      // Pass the recent conversation context to Gemini
-      const contextPrompt = messages.slice(-5).map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n') + `\nUser: ${text}`;
+      // Build safe context prompt guaranteed to stay under 1850 chars
+      const contextPrompt = buildSafeContextPrompt(messages, text);
       
       const res = await api.post('/ai/chat', { prompt: contextPrompt });
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.data.reply }]);
     } catch (error) {
-      const apiError = error.response?.data?.error || error.response?.data?.message;
+      const rawError = error.response?.data?.error || error.response?.data?.message || '';
+      const isLengthError = typeof rawError === 'string' && rawError.toLowerCase().includes('exceeds maximum allowed length');
+
+      if (isLengthError) {
+        // Automatic graceful recovery: retry with just the user's latest query without past bloated context
+        try {
+          const soloPrompt = text.slice(0, 1400);
+          const retryRes = await api.post('/ai/chat', { prompt: soloPrompt });
+          setMessages(prev => [...prev, { role: 'assistant', content: retryRes.data.data.reply }]);
+          return;
+        } catch (retryErr) {
+          console.error('Chat length fallback failed:', retryErr);
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: "Your question was a bit too long for me to process all at once. Could you please ask a more concise question or click the trash icon above to clear the chat? 😊"
+            }
+          ]);
+          return;
+        }
+      }
+
       const fallbackMsg = "Oops! My AI circuits are a bit scrambled right now (Server Error). Please try again in a moment! 🤖🔌";
-      setMessages(prev => [...prev, { role: 'assistant', content: apiError || fallbackMsg }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: rawError || fallbackMsg }]);
     } finally {
       setIsLoading(false);
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -167,26 +253,34 @@ export default function FloatingChatbot() {
 
             {/* Input */}
             <form onSubmit={(e) => { e.preventDefault(); handleSendPrompt(); }} className="chatbot-input-bar">
-              <input
-                ref={inputRef}
-                type="text"
-                className="input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about code, algorithms, or careers..."
-                enterKeyHint="send"
-                style={{
-                  flex: 1,
-                  padding: '0.65rem 0.9rem',
-                  fontSize: '16px', // Prevents iOS auto-zoom
-                  borderRadius: 'var(--radius-full)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  color: 'var(--text-primary)',
-                  outline: 'none',
-                  minHeight: '40px'
-                }}
-              />
+              <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="input"
+                  value={input}
+                  maxLength={1500}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask about code, algorithms, or careers..."
+                  enterKeyHint="send"
+                  style={{
+                    width: '100%',
+                    padding: input.length > 1000 ? '0.65rem 3.5rem 0.65rem 0.9rem' : '0.65rem 0.9rem',
+                    fontSize: '16px', // Prevents iOS auto-zoom
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    color: 'var(--text-primary)',
+                    outline: 'none',
+                    minHeight: '40px'
+                  }}
+                />
+                {input.length > 1000 && (
+                  <span style={{ position: 'absolute', right: '12px', fontSize: '0.65rem', color: 'var(--text-tertiary)', pointerEvents: 'none' }}>
+                    {input.length}/1500
+                  </span>
+                )}
+              </div>
               <button 
                 type="submit"
                 disabled={isLoading || !input.trim()}
