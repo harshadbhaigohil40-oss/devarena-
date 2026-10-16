@@ -32,7 +32,14 @@ export default function Login() {
         navigate(destination, { replace: true });
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.error || err.message || 'Invalid credentials or account locked.';
+      let errorMsg = err.response?.data?.error;
+      if (!errorMsg) {
+        if (err.message === 'Network Error' || !err.response) {
+          errorMsg = 'Server is unreachable or waking up. Please wait a moment and try again.';
+        } else {
+          errorMsg = err.message || 'Invalid credentials or account locked.';
+        }
+      }
       toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);

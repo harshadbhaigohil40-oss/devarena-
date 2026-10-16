@@ -44,7 +44,7 @@ const server = http.createServer(app);
 // Ensures req.ip evaluates accurately for rate limiting while resisting spoofed headers.
 app.set('trust proxy', 1);
 
-const { normalizeOrigin } = require('./utils/urlHelper');
+const { isAllowedOrigin } = require('./utils/urlHelper');
 
 // Initialize Socket.io
 initSocket(server);
@@ -75,16 +75,7 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, server-to-server, curl)
     if (!origin) return callback(null, true);
 
-    // Build normalized allowed origins from env — handles trailing slashes safely
-    const allowedOrigins = new Set(
-      (process.env.CLIENT_URL || 'http://localhost:5173')
-        .split(',')
-        .map(normalizeOrigin)
-        .filter(Boolean)
-    );
-
-    const normalizedIncoming = normalizeOrigin(origin);
-    if (normalizedIncoming && allowedOrigins.has(normalizedIncoming)) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
 

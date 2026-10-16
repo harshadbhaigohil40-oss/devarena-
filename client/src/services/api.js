@@ -16,7 +16,7 @@ const api = axios.create({
   baseURL: getApiBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // Crucial for sending the refresh token cookie
-  timeout: 30000, // 30 seconds timeout to prevent infinite hanging
+  timeout: 60000, // 60 seconds timeout to accommodate free-tier cold starts
 });
 
 let inMemoryAccessToken = null;

@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Message = require('../models/Message');
-const { normalizeOrigin } = require('../utils/urlHelper');
+const { isAllowedOrigin } = require('../utils/urlHelper');
 const logger = require('../utils/logger');
 
 let io;
@@ -13,14 +13,7 @@ const initSocket = (server) => {
     cors: {
       origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        const allowedOrigins = new Set(
-          (process.env.CLIENT_URL || 'http://localhost:5173')
-            .split(',')
-            .map(normalizeOrigin)
-            .filter(Boolean)
-        );
-        const normalizedIncoming = normalizeOrigin(origin);
-        if (normalizedIncoming && allowedOrigins.has(normalizedIncoming)) {
+        if (isAllowedOrigin(origin)) {
           return callback(null, true);
         }
         return callback(new Error('Not allowed by CORS'), false);
