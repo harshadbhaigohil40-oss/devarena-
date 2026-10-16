@@ -22,6 +22,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { parse: parseHTML } = require('node-html-parser');
 
 // Concurrency Cap & Queue for Worker Execution
 class ConcurrencyQueue {
@@ -33,12 +34,19 @@ class ConcurrencyQueue {
   }
 
   async acquire() {
-    if (this.running < this.maxConcurrent) {
+    const maxConcurrent = process.env.CODE_EXECUTION_MAX_CONCURRENT
+      ? parseInt(process.env.CODE_EXECUTION_MAX_CONCURRENT, 10)
+      : this.maxConcurrent;
+    const maxQueue = process.env.CODE_EXECUTION_MAX_QUEUE
+      ? parseInt(process.env.CODE_EXECUTION_MAX_QUEUE, 10)
+      : this.maxQueue;
+
+    if (this.running < maxConcurrent) {
       this.running++;
       return () => this.release();
     }
 
-    if (this.queue.length >= this.maxQueue) {
+    if (this.queue.length >= maxQueue) {
       const err = new Error('Execution concurrency limit reached. Server is busy, please retry shortly.');
       err.status = 503;
       err.statusCode = 503;
@@ -58,6 +66,11 @@ class ConcurrencyQueue {
       this.running = Math.max(0, this.running - 1);
     }
   }
+
+  reset() {
+    this.running = 0;
+    this.queue = [];
+  }
 }
 
 const executionQueue = new ConcurrencyQueue(
@@ -65,7 +78,102 @@ const executionQueue = new ConcurrencyQueue(
   parseInt(process.env.CODE_EXECUTION_MAX_QUEUE || '20', 10)
 );
 
+// ─── Static Security Validators ───────────────────────────────────────────────
+const JS_BANNED_PATTERNS = [
+  /this\s*\.\s*constructor/i,
+  /\.__proto__/i,
+  /\[['"]__proto__['"]\]/i,
+  /Object\s*\.\s*getPrototypeOf/i,
+  /Reflect\s*\./i,
+  /globalThis/i,
+  /\bprocess\b/,
+  /\bchild_process\b/,
+  /\brequire\s*\(/,
+  /\bimport\s*\(/,
+  /Function\s*\(/,
+  /eval\s*\(/,
+];
+
+const PY_BANNED_IMPORTS = [
+  'os', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
+  'requests', 'ctypes', 'signal', 'multiprocessing', 'threading',
+  'importlib', 'builtins', '__builtin__', 'code', 'codeop',
+  'compile', 'compileall', 'py_compile', 'runpy', 'pkgutil',
+  'pty', 'tty', 'termios', 'fcntl', 'mmap', 'gc', 'inspect',
+  'ast', 'dis', 'tokenize', 'traceback', 'warnings', 'zipimport',
+];
+
+const PY_ENCODING_BYPASS_PATTERNS = [
+  /\\x[0-9a-fA-F]{2}/,
+  /\\u[0-9a-fA-F]{4}/,
+  /bytes\s*\(\s*\[/,
+  /__import__/,
+  /importlib/,
+  /\.load_module/,
+  /\.find_module/,
+  /\.exec_module/,
+];
+
+function detectJSBannedPatterns(code) {
+  if (!code || typeof code !== 'string') return null;
+  for (const pattern of JS_BANNED_PATTERNS) {
+    if (pattern.test(code)) {
+      return 'Code contains disallowed patterns. Please use only standard language features.';
+    }
+  }
+  return null;
+}
+
+function detectPyBannedImports(code) {
+  if (!code || typeof code !== 'string') return null;
+  for (const pattern of PY_ENCODING_BYPASS_PATTERNS) {
+    if (pattern.test(code)) {
+      return 'Code contains disallowed patterns. Please use only standard language features.';
+    }
+  }
+
+  for (const mod of PY_BANNED_IMPORTS) {
+    const patterns = [
+      new RegExp(`\\bimport\\s+${mod}\\b`),
+      new RegExp(`\\bfrom\\s+${mod}\\b`),
+    ];
+    for (const p of patterns) {
+      if (p.test(code)) {
+        return `Import of '${mod}' is not allowed for security reasons.`;
+      }
+    }
+  }
+
+  if (/\bopen\s*\(/.test(code)) return 'File I/O (open) is not allowed.';
+  if (/\bexec\s*\(/.test(code)) return 'Dynamic code execution (exec) is not allowed.';
+  if (/\beval\s*\(/.test(code)) return 'Dynamic code evaluation (eval) is not allowed.';
+  if (/\bcompile\s*\(/.test(code)) return 'Dynamic code compilation (compile) is not allowed.';
+  if (/\bglobals\s*\(/.test(code)) return 'Reflection (globals) is not allowed.';
+  if (/\blocals\s*\(/.test(code)) return 'Reflection (locals) is not allowed.';
+  if (/\bsetattr\s*\(/.test(code)) return 'Reflection (setattr) is not allowed.';
+  if (/\bdelattr\s*\(/.test(code)) return 'Reflection (delattr) is not allowed.';
+
+  return null;
+}
+
 // ─── Remote Code Runner (Judge0 / Piston Adapter Stub) ─────────────────────────
+const { z } = require('zod');
+
+const RemoteResultItemSchema = z.object({
+  passed: z.boolean(),
+  executionTime: z.number().optional(),
+  testCaseIndex: z.number().optional(),
+  input: z.any().optional(),
+  expectedOutput: z.any().optional(),
+  actualOutput: z.any().optional(),
+  output: z.any().optional(),
+  error: z.any().optional(),
+}).passthrough();
+
+const RemoteResponseSchema = z.object({
+  results: z.array(RemoteResultItemSchema),
+});
+
 class RemoteCodeRunner {
   constructor(runnerUrl) {
     this.runnerUrl = runnerUrl.replace(/\/+$/, '');
@@ -86,42 +194,171 @@ class RemoteCodeRunner {
       timeout: options.timeout || 5000,
     };
 
-    const response = await fetch(`${this.runnerUrl}/api/v1/execute`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    const headers = { 'Content-Type': 'application/json' };
+    if (process.env.RUNNER_API_KEY) {
+      headers['Authorization'] = `Bearer ${process.env.RUNNER_API_KEY}`;
+    }
+
+    const runnerTimeoutMs = parseInt(process.env.RUNNER_TIMEOUT_MS || '10000', 10);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), runnerTimeoutMs);
+
+    let response;
+    try {
+      response = await fetch(`${this.runnerUrl}/api/v1/execute`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err.name === 'AbortError' || err.code === 'ABORT_ERR') {
+        const timeoutErr = new Error(`Remote runner request timed out after ${runnerTimeoutMs}ms`);
+        timeoutErr.status = 504;
+        timeoutErr.statusCode = 504;
+        throw timeoutErr;
+      }
+      const netErr = new Error(`Remote runner network failure: ${err.message}`);
+      netErr.status = 502;
+      netErr.statusCode = 502;
+      throw netErr;
+    } finally {
+      clearTimeout(timer);
+    }
 
     if (!response.ok) {
       const err = new Error(`Remote runner responded with status ${response.status}`);
       err.status = response.status >= 500 ? 502 : response.status;
+      err.statusCode = err.status;
       throw err;
     }
 
-    const data = await response.json();
-    // Ensure hidden test masking on remote responses as well
-    return (data.results || []).map((r, idx) => {
+    let data;
+    try {
+      data = await response.json();
+    } catch (_) {
+      const err = new Error('Remote runner returned malformed JSON');
+      err.status = 502;
+      err.statusCode = 502;
+      throw err;
+    }
+
+    let parsed;
+    try {
+      parsed = RemoteResponseSchema.parse(data);
+    } catch (validationErr) {
+      const err = new Error(`Remote runner response failed schema validation: ${validationErr.message}`);
+      err.status = 502;
+      err.statusCode = 502;
+      throw err;
+    }
+
+    if (parsed.results.length !== testCases.length) {
+      const err = new Error(
+        `Remote runner returned ${parsed.results.length} results, expected ${testCases.length}`
+      );
+      err.status = 502;
+      err.statusCode = 502;
+      throw err;
+    }
+
+    const truncate = (val) => {
+      if (typeof val === 'string' && val.length > 5000) {
+        return val.slice(0, 5000);
+      }
+      return val;
+    };
+
+    // Build whitelisted test case results and ensure hidden tests are strictly masked
+    return parsed.results.map((r, idx) => {
       const tc = testCases[idx] || {};
+      const passed = Boolean(r.passed);
+      const executionTime = typeof r.executionTime === 'number' ? r.executionTime : 1;
+
       if (tc.isHidden) {
         return {
           testCaseIndex: idx,
-          passed: Boolean(r.passed),
+          passed,
           isHidden: true,
           input: '[Hidden]',
           expectedOutput: '[Hidden]',
           actualOutput: '[Hidden]',
-          output: r.passed ? '✓ Passed (Hidden Test Case)' : '✗ Failed (Hidden Test Case)',
-          executionTime: r.executionTime || 1,
+          output: passed ? '✓ Passed (Hidden Test Case)' : '✗ Failed (Hidden Test Case)',
+          executionTime,
         };
       }
-      return r;
+
+      const res = {
+        testCaseIndex: idx,
+        passed,
+        isHidden: false,
+        input: truncate(r.input !== undefined ? String(r.input) : (tc.input || '')),
+        expectedOutput: truncate(r.expectedOutput !== undefined ? String(r.expectedOutput) : (tc.expectedOutput || '')),
+        actualOutput: truncate(r.actualOutput !== undefined ? String(r.actualOutput) : (passed ? (tc.expectedOutput || '') : 'Mismatch')),
+        output: truncate(r.output !== undefined ? String(r.output) : (passed ? `✓ Output: ${r.actualOutput || ''}` : 'Failed')),
+        executionTime,
+      };
+
+      if (r.error !== undefined) {
+        res.error = truncate(String(r.error));
+      }
+
+      return res;
     });
   }
+}
+
+let cachedPythonBin = null;
+function getPythonBinary() {
+  if (cachedPythonBin) return cachedPythonBin;
+  const { execSync } = require('child_process');
+  for (const bin of ['python3', 'python']) {
+    try {
+      execSync(`${bin} --version`, { stdio: 'ignore' });
+      cachedPythonBin = bin;
+      return bin;
+    } catch (_) {}
+  }
+  cachedPythonBin = 'python';
+  return cachedPythonBin;
 }
 
 // ─── Local Spawn Code Runner ───────────────────────────────────────────────────
 class LocalSpawnCodeRunner {
   async run(code, language, testCases, options = {}) {
+    if (language === 'javascript') {
+      const banned = detectJSBannedPatterns(code);
+      if (banned) {
+        return testCases.map((tc, index) => ({
+          testCaseIndex: index,
+          passed: false,
+          isHidden: Boolean(tc.isHidden),
+          input: tc.isHidden ? '[Hidden]' : tc.input,
+          expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+          actualOutput: '[Hidden]',
+          output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : `Security Error: ${banned}`,
+          error: tc.isHidden ? undefined : `Security Error: ${banned}`,
+          executionTime: 0,
+        }));
+      }
+    }
+    if (language === 'python') {
+      const banned = detectPyBannedImports(code);
+      if (banned) {
+        return testCases.map((tc, index) => ({
+          testCaseIndex: index,
+          passed: false,
+          isHidden: Boolean(tc.isHidden),
+          input: tc.isHidden ? '[Hidden]' : tc.input,
+          expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+          actualOutput: '[Hidden]',
+          output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : `Security Error: ${banned}`,
+          error: tc.isHidden ? undefined : `Security Error: ${banned}`,
+          executionTime: 0,
+        }));
+      }
+    }
+
     const release = await executionQueue.acquire();
     try {
       if (language === 'javascript') {
@@ -145,23 +382,121 @@ class LocalSpawnCodeRunner {
   }
 
   runHTML(code, testCases) {
+    if (!code || typeof code !== 'string') {
+      return testCases.map((tc, index) => {
+        if (tc.isHidden) {
+          return {
+            testCaseIndex: index,
+            passed: false,
+            isHidden: true,
+            input: '[Hidden]',
+            expectedOutput: '[Hidden]',
+            actualOutput: '[Hidden]',
+            output: '✗ Failed (Hidden Test Case)',
+            executionTime: 0,
+          };
+        }
+        return {
+          testCaseIndex: index,
+          passed: false,
+          isHidden: false,
+          input: tc.input || '',
+          expectedOutput: tc.expectedOutput || '',
+          actualOutput: 'Empty submission',
+          output: '❌ HTML submission is empty',
+          executionTime: 0,
+        };
+      });
+    }
+
+    let root;
+    let parseError = null;
+    try {
+      root = parseHTML(code, {
+        lowerCaseTagName: false,
+        comment: false,
+        blockTextElements: {
+          script: true,
+          noscript: true,
+          style: true,
+          pre: true,
+        },
+      });
+    } catch (err) {
+      parseError = err;
+    }
+
     return testCases.map((tc, index) => {
       const startTime = Date.now();
-      const cleanCode = code.replace(/\s+/g, ' ').trim().toLowerCase();
-      const cleanExpected = (tc.expectedOutput || '').trim().toLowerCase();
       let passed = false;
+      let actualOutput = 'Structure mismatch';
 
-      if (['true', 'passed', 'pass'].includes(cleanExpected)) {
-        passed = cleanCode.length > 20 && !cleanCode.includes('<!-- write your');
-      } else if (cleanExpected.length > 0) {
-        const expectedParts = cleanExpected.split(/[,;|]+/).map((p) => p.trim()).filter(Boolean);
-        if (expectedParts.length > 1) {
-          passed = expectedParts.every((part) => cleanCode.includes(part));
-        } else {
-          passed = cleanCode.includes(cleanExpected) || code.toLowerCase().includes(cleanExpected);
-        }
+      if (parseError) {
+        passed = false;
+        actualOutput = 'HTML Parse Error';
       } else {
-        passed = cleanCode.length > 30;
+        const cleanExpected = (tc.expectedOutput != null ? String(tc.expectedOutput) : '').trim();
+        const inputSelector = (tc.input != null ? String(tc.input) : '').trim();
+
+        // Check if expected is boolean-like pass
+        if (['true', 'passed', 'pass'].includes(cleanExpected.toLowerCase())) {
+          // Verify DOM contains real elements and not just empty whitespace/comments
+          const elementNodes = root.querySelectorAll('*');
+          passed = elementNodes.length > 0;
+          if (passed) {
+            actualOutput = cleanExpected;
+          }
+        } else if (cleanExpected.length > 0) {
+          // Split multi-part expected criteria (e.g. "form, input[type='email'], button")
+          const expectedParts = cleanExpected.split(/[,;|]+/).map((p) => p.trim()).filter(Boolean);
+
+          if (expectedParts.length > 1) {
+            passed = expectedParts.every((part) => {
+              try {
+                return root.querySelector(part) !== null;
+              } catch (e) {
+                return root.text.toLowerCase().includes(part.toLowerCase());
+              }
+            });
+            if (passed) actualOutput = cleanExpected;
+          } else {
+            // Single part expected
+            try {
+              const matchedEl = root.querySelector(cleanExpected);
+              if (matchedEl) {
+                passed = true;
+                actualOutput = cleanExpected;
+              } else {
+                // Check if input was a selector and expectedOutput is expected text content or attribute
+                if (inputSelector) {
+                  try {
+                    const target = root.querySelector(inputSelector);
+                    if (target) {
+                      const text = target.text.trim();
+                      if (text.toLowerCase() === cleanExpected.toLowerCase() || text.toLowerCase().includes(cleanExpected.toLowerCase())) {
+                        passed = true;
+                        actualOutput = text;
+                      }
+                    }
+                  } catch (e) { /* ignore */ }
+                }
+
+                if (!passed) {
+                  passed = root.text.toLowerCase().includes(cleanExpected.toLowerCase());
+                  if (passed) actualOutput = cleanExpected;
+                }
+              }
+            } catch (selErr) {
+              passed = root.text.toLowerCase().includes(cleanExpected.toLowerCase());
+              if (passed) actualOutput = cleanExpected;
+            }
+          }
+        } else {
+          // No specific expectedOutput; check that document has at least one element node
+          const elementNodes = root.querySelectorAll('*');
+          passed = elementNodes.length > 0;
+          if (passed) actualOutput = 'Valid DOM';
+        }
       }
 
       const executionTime = Date.now() - startTime;
@@ -184,8 +519,10 @@ class LocalSpawnCodeRunner {
         isHidden: false,
         input: tc.input,
         expectedOutput: tc.expectedOutput,
-        actualOutput: passed ? tc.expectedOutput : 'Structure mismatch',
-        output: passed ? '✅ HTML structure matches expected output' : '❌ HTML does not contain expected structure',
+        actualOutput: passed ? tc.expectedOutput : actualOutput,
+        output: passed
+          ? '✅ HTML structure and attributes match expected criteria'
+          : `❌ HTML does not match expected structure (${actualOutput})`,
         executionTime,
       };
     });
@@ -359,14 +696,32 @@ console.log('__RESULTS_START__' + JSON.stringify(results) + '__RESULTS_END__');
           },
         });
 
+        const timeout = options.timeout || 3000;
         let stdout = '';
         let stderr = '';
         let timer = setTimeout(() => {
           child.kill('SIGKILL');
-        }, 4000);
+        }, timeout);
 
         child.stdout.on('data', (d) => { stdout += d; });
         child.stderr.on('data', (d) => { stderr += d; });
+
+        child.on('error', (err) => {
+          clearTimeout(timer);
+          resolve(
+            testCases.map((tc, index) => ({
+              testCaseIndex: index,
+              passed: false,
+              isHidden: Boolean(tc.isHidden),
+              input: tc.isHidden ? '[Hidden]' : tc.input,
+              expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+              actualOutput: '[Hidden]',
+              output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : `Execution environment unavailable: ${err.message || 'spawn error'}`,
+              error: tc.isHidden ? undefined : `Execution environment unavailable: ${err.message || 'spawn error'}`,
+              executionTime: 0,
+            }))
+          );
+        });
 
         child.on('close', (code, signal) => {
           clearTimeout(timer);
@@ -379,9 +734,9 @@ console.log('__RESULTS_START__' + JSON.stringify(results) + '__RESULTS_END__');
                 input: tc.isHidden ? '[Hidden]' : tc.input,
                 expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
                 actualOutput: '[Hidden]',
-                output: 'Execution timed out (3000ms limit).',
-                error: tc.isHidden ? undefined : 'Execution timed out (3000ms limit).',
-                executionTime: 3000,
+                output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : `Execution timed out (${timeout}ms limit).`,
+                error: tc.isHidden ? undefined : `Execution timed out (${timeout}ms limit).`,
+                executionTime: timeout,
               }))
             );
             return;
@@ -467,7 +822,7 @@ null = None
 
 ${code}
 
-_test_cases = ${_json.dumps(testCases)}
+_test_cases = _json.loads(${JSON.stringify(JSON.stringify(testCases))})
 _fn_name = ${JSON.stringify(functionName)}
 
 _results = []
@@ -572,26 +927,44 @@ print('__RESULTS_START__' + _json.dumps(_results) + '__RESULTS_END__')
         let child;
         if (isLinux) {
           // Semicolon-separated ulimit sequence so /bin/sh (dash) parses without "too many arguments"
-          const ulimitCmd = 'ulimit -v 262144; ulimit -u 64; ulimit -n 32; ulimit -f 0; exec python -S -I -W ignore "$1"';
+          const ulimitCmd = 'ulimit -v 262144; ulimit -u 64; ulimit -n 32; ulimit -f 0; exec python3 -S -I -W ignore "$1" 2>/dev/null || exec python -S -I -W ignore "$1"';
           child = spawn('sh', ['-c', ulimitCmd, 'sh', filePath], {
             stdio: ['pipe', 'pipe', 'pipe'],
             env: cleanEnv,
           });
         } else {
-          child = spawn('python', ['-S', '-I', '-W', 'ignore', filePath], {
+          child = spawn(getPythonBinary(), ['-S', '-I', '-W', 'ignore', filePath], {
             stdio: ['pipe', 'pipe', 'pipe'],
             env: cleanEnv,
           });
         }
 
+        const timeout = options.timeout || 5000;
         let stdout = '';
         let stderr = '';
         let timer = setTimeout(() => {
           child.kill('SIGKILL');
-        }, 5500);
+        }, timeout);
 
         child.stdout.on('data', (d) => { stdout += d; });
         child.stderr.on('data', (d) => { stderr += d; });
+
+        child.on('error', (err) => {
+          clearTimeout(timer);
+          resolve(
+            testCases.map((tc, index) => ({
+              testCaseIndex: index,
+              passed: false,
+              isHidden: Boolean(tc.isHidden),
+              input: tc.isHidden ? '[Hidden]' : tc.input,
+              expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+              actualOutput: '[Hidden]',
+              output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : `Execution environment unavailable: ${err.message || 'spawn error'}`,
+              error: tc.isHidden ? undefined : `Execution environment unavailable: ${err.message || 'spawn error'}`,
+              executionTime: 0,
+            }))
+          );
+        });
 
         child.on('close', (code, signal) => {
           clearTimeout(timer);
@@ -604,9 +977,9 @@ print('__RESULTS_START__' + _json.dumps(_results) + '__RESULTS_END__')
                 input: tc.isHidden ? '[Hidden]' : tc.input,
                 expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
                 actualOutput: '[Hidden]',
-                output: 'Execution timed out (5000ms limit).',
-                error: tc.isHidden ? undefined : 'Execution timed out (5000ms limit).',
-                executionTime: 5000,
+                output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : `Execution timed out (${timeout}ms limit).`,
+                error: tc.isHidden ? undefined : `Execution timed out (${timeout}ms limit).`,
+                executionTime: timeout,
               }))
             );
             return;
@@ -620,12 +993,15 @@ print('__RESULTS_START__' + _json.dumps(_results) + '__RESULTS_END__')
             } catch (_) {}
           }
 
-          // Strip shell and ulimit diagnostics from user-facing error
+          // Strip shell and ulimit diagnostics from user-facing error and sanitize all paths
           let cleanErr = (stderr || stdout || 'Execution failed')
             .replace(/^sh:\s*\d*:\s*ulimit:.*$/gmi, '')
             .replace(/ulimit:.*$/gmi, '')
             .replace(new RegExp(filePath.replace(/\\/g, '\\\\'), 'g'), 'solution.py')
+            .replace(new RegExp(path.basename(filePath), 'g'), 'solution.py')
+            .replace(new RegExp(tempDir.replace(/\\/g, '\\\\') + '[^\\s"]*', 'gi'), 'solution.py')
             .replace(/\/tmp\S*/g, 'solution.py')
+            .replace(/[a-zA-Z]:\\[^:\n"]*devarena\S*/gi, 'solution.py')
             .trim();
 
           resolve(
@@ -672,5 +1048,9 @@ module.exports = {
   CodeRunner,
   LocalSpawnCodeRunner,
   RemoteCodeRunner,
+  ConcurrencyQueue,
   executionQueue,
+  detectJSBannedPatterns,
+  detectPyBannedImports,
 };
+

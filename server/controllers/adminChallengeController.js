@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const Challenge = require('../models/Challenge');
 const { success, error } = require('../utils/responseHelper');
+const logger = require('../utils/logger');
 
 const GENERATED_DIR = path.join(__dirname, '..', 'generated');
 
@@ -582,7 +583,7 @@ Respond STRICTLY in this JSON format (no markdown fences):
     const review = JSON.parse(jsonMatch[0]);
     success(res, { review });
   } catch (err) {
-    console.error('AI Review error:', err.message);
+    logger.error({ err }, 'AI Review error');
     error(res, 'AI review failed: ' + err.message, 500);
   }
 };

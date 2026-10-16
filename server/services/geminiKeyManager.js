@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const logger = require('../utils/logger');
 
 class GeminiKeyManager {
   /**
@@ -203,7 +204,7 @@ class GeminiKeyManager {
     keyObj.failureReason = reason;
     keyObj.totalFailures = (keyObj.totalFailures || 0) + 1;
 
-    console.warn(`[GeminiKeyManager] Key ${keyObj.maskedKey} hit ${reason}. Quarantining for ${quarantineMs / 1000}s.`);
+    logger.warn({ key: keyObj.maskedKey, reason, quarantineSeconds: quarantineMs / 1000 }, '[GeminiKeyManager] Key quarantined');
   }
 
   /**
@@ -247,7 +248,7 @@ class GeminiKeyManager {
 
         if (this.isRotatableError(error)) {
           this.markKeyFailed(keyObj, error);
-          console.log(`[GeminiKeyManager] Rotating to next available key... (Attempt ${attempt + 1}/${maxAttempts})`);
+          logger.info({ attempt: attempt + 1, maxAttempts }, '[GeminiKeyManager] Rotating to next available key...');
         } else {
           // Non-rotatable error (e.g. invalid prompt payload)
           throw error;

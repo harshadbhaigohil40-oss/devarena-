@@ -1,5 +1,7 @@
+const logger = require('../utils/logger');
+
 const errorHandler = (err, req, res, next) => {
-  console.error('❌ Error:', err.message);
+  logger.error({ err }, 'Unhandled request error');
 
   if (err.name === 'ZodError' || Array.isArray(err.issues) || Array.isArray(err.errors)) {
     const issues = Array.isArray(err.issues) ? err.issues : (Array.isArray(err.errors) ? err.errors : []);

@@ -1,4 +1,6 @@
-import api from './api';
+import api, { setAccessToken, getAccessToken, onTokenChange } from './api';
+
+export { setAccessToken, getAccessToken, onTokenChange };
 
 export const authService = {
   register: (data) => api.post('/auth/register', data),
@@ -8,6 +10,7 @@ export const authService = {
     return api.post('/auth/google', payload);
   },
   resetLockout: (email) => api.post('/auth/reset-lockout', { email }),
+  refreshToken: () => api.post('/auth/refresh'),
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
 };

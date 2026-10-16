@@ -1,18 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { authService } from '../services';
+import { authService, setAccessToken, onTokenChange } from '../services';
 
 const AuthContext = createContext(null);
 
-/**
- * ARCHITECTURAL ROADMAP NOTE (Phase 5 Hardening):
- * Storing the access token in localStorage exposes it to potential exfiltration if an XSS
- * flaw exists. The recommended follow-up architecture is to store the access token strictly
- * in memory (React State / closure), bootstrapping the session on page refresh via the httpOnly
- * refreshToken cookie (POST /api/auth/refresh).
- */
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('devarena_token'));
+  const [token, setTokenState] = useState(null);
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('devarena_user');
@@ -23,31 +16,45 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('devarena_token');
-    if (!storedToken) {
-      setLoading(false);
-      return;
-    }
+  const updateToken = (newToken) => {
+    setAccessToken(newToken);
+    setTokenState(newToken);
+  };
 
-    // Verify or refresh the current user session once on app mount
-    authService.getMe()
-      .then((res) => {
-        const userData = res.data?.data?.user;
-        if (userData) {
-          setUser(userData);
-          localStorage.setItem('devarena_user', JSON.stringify(userData));
+  useEffect(() => {
+    // Listen to token changes from axios interceptors
+    const unsubscribe = onTokenChange((newToken) => {
+      setTokenState(newToken);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    // Remove any legacy token from localStorage
+    localStorage.removeItem('devarena_token');
+
+    // Bootstrap session on app mount via httpOnly refreshToken cookie
+    authService.refreshToken()
+      .then(async (res) => {
+        const newToken = res.data?.data?.accessToken;
+        if (newToken) {
+          updateToken(newToken);
+          try {
+            const userRes = await authService.getMe();
+            const userData = userRes.data?.data?.user;
+            if (userData) {
+              setUser(userData);
+              localStorage.setItem('devarena_user', JSON.stringify(userData));
+            }
+          } catch (e) {
+            // Non-critical if getMe fails
+          }
         }
       })
-      .catch((err) => {
-        console.error('Auth check failed:', err);
-        // Clear session if backend explicitly rejects credentials
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          localStorage.removeItem('devarena_token');
-          localStorage.removeItem('devarena_user');
-          setToken(null);
-          setUser(null);
-        }
+      .catch(() => {
+        updateToken(null);
+        setUser(null);
+        localStorage.removeItem('devarena_user');
       })
       .finally(() => {
         setLoading(false);
@@ -55,42 +62,36 @@ export function AuthProvider({ children }) {
   }, []); // Run ONCE on mount
 
   const login = async (email, password) => {
-    // Call the real backend — no client-side fallback sessions.
-    // If the request fails, propagate the error so the UI can display it.
     const res = await authService.login({ email, password });
     const { accessToken: newToken, user: userData } = res.data.data;
-    localStorage.setItem('devarena_token', newToken);
+    updateToken(newToken);
     localStorage.setItem('devarena_user', JSON.stringify(userData));
-    setToken(newToken);
     setUser(userData);
     return userData;
   };
 
   const loginWithGoogle = async (credentialOrParams) => {
-    // Call the real backend — no client-side fallback sessions.
     const payload = typeof credentialOrParams === 'string'
       ? { credential: credentialOrParams }
       : credentialOrParams;
     const res = await authService.googleLogin(payload);
     const { accessToken: newToken, user: userData } = res.data.data;
-    localStorage.setItem('devarena_token', newToken);
+    updateToken(newToken);
     localStorage.setItem('devarena_user', JSON.stringify(userData));
-    setToken(newToken);
     setUser(userData);
     return userData;
   };
 
   const register = async (username, email, password, role) => {
     const res = await authService.register({ username, email, password, role });
-    // Backend doesn't return a token on registration, just a success message
     return res.data;
   };
 
   const logout = () => {
     authService.logout().catch(() => {});
-    localStorage.removeItem('devarena_token');
+    updateToken(null);
     localStorage.removeItem('devarena_user');
-    setToken(null);
+    localStorage.removeItem('devarena_token');
     setUser(null);
   };
 

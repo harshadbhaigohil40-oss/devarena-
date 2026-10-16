@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https: wss: http://localhost:5000 ws://localhost:5000; frame-src 'self' blob: data: https://accounts.google.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self';"
+          "value": "default-src 'self'; script-src 'self' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://accounts.google.com https://apis.google.com wss: http://localhost:5000 ws://localhost:5000; frame-src 'self' blob: data: https://accounts.google.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self';"
         },
         {
           "key": "X-Frame-Options",

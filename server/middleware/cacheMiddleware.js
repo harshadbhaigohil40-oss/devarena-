@@ -6,6 +6,7 @@
  * cache consistency is required.
  */
 const NodeCache = require('node-cache');
+const logger = require('../utils/logger');
 const cache = new NodeCache({
   stdTTL: 300,
   checkperiod: 320,
@@ -64,7 +65,7 @@ const cacheMiddleware = (duration) => (req, res, next) => {
         const plainBody = JSON.parse(JSON.stringify(body));
         cache.set(key, plainBody, duration || 300);
       } catch (e) {
-        console.error('Cache serialization error:', e);
+        logger.error({ err: e }, 'Cache serialization error');
       }
     }
     originalJson.call(res, body);

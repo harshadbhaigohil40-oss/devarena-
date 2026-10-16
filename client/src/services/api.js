@@ -19,9 +19,28 @@ const api = axios.create({
   timeout: 30000, // 30 seconds timeout to prevent infinite hanging
 });
 
+let inMemoryAccessToken = null;
+let tokenChangeListeners = [];
+
+export const setAccessToken = (token) => {
+  inMemoryAccessToken = token;
+  tokenChangeListeners.forEach(cb => {
+    try { cb(token); } catch (e) { /* ignore */ }
+  });
+};
+
+export const getAccessToken = () => inMemoryAccessToken;
+
+export const onTokenChange = (cb) => {
+  tokenChangeListeners.push(cb);
+  return () => {
+    tokenChangeListeners = tokenChangeListeners.filter(fn => fn !== cb);
+  };
+};
+
 // Attach token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('devarena_token');
+  const token = inMemoryAccessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -69,12 +88,6 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Only attempt refresh if a token existed in localStorage
-    const currentToken = localStorage.getItem('devarena_token');
-    if (!currentToken) {
-      return Promise.reject(error);
-    }
-
     if (isRefreshing) {
       return new Promise(function(resolve, reject) {
         failedQueue.push({ resolve, reject });
@@ -97,7 +110,7 @@ api.interceptors.response.use(
       );
 
       const newAccessToken = data.data.accessToken;
-      localStorage.setItem('devarena_token', newAccessToken);
+      setAccessToken(newAccessToken);
       api.defaults.headers.common['Authorization'] = 'Bearer ' + newAccessToken;
       originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
       
@@ -106,8 +119,9 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (err) {
       processQueue(err, null);
-      localStorage.removeItem('devarena_token');
+      setAccessToken(null);
       localStorage.removeItem('devarena_user');
+      localStorage.removeItem('devarena_token');
       return Promise.reject(err);
     } finally {
       isRefreshing = false;

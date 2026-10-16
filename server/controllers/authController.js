@@ -6,6 +6,7 @@ const leaderboardService = require('../services/leaderboardService');
 const emailService = require('../services/emailService');
 const { OAuth2Client } = require('google-auth-library');
 const { updateStreak } = require('../services/xpService');
+const logger = require('../utils/logger');
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -25,18 +26,26 @@ exports.register = async (req, res, next) => {
   try {
     const { username, email, password, role } = req.body;
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const adminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.toLowerCase().trim() : null;
+    const normalizedEmail = (email || '').toLowerCase().trim();
+
+    if (adminEmail && normalizedEmail === adminEmail) {
+      return error(res, 'This email is reserved for system administration. Sign in with the seeded credentials.', 400);
+    }
+
+    const existingUser = await User.findOne({ $or: [{ email: normalizedEmail }, { username }] });
     if (existingUser) {
       return error(res, 'User with this email or username already exists.', 409);
     }
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const rawVerificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationToken = hashToken(rawVerificationToken);
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const assignedRole = role === 'recruiter' ? 'recruiter' : 'developer';
 
     const user = await User.create({
       username,
-      email,
+      email: normalizedEmail,
       passwordHash: password,
       role: assignedRole,
       isEmailVerified: false,
@@ -49,7 +58,7 @@ exports.register = async (req, res, next) => {
     }
 
     // Send verification email in the background to improve response time
-    emailService.sendVerificationEmail(user.email, verificationToken).catch(e => console.error('Email failed to send', e));
+    emailService.sendVerificationEmail(user.email, rawVerificationToken).catch(e => logger.error({ err: e }, 'Email failed to send'));
 
     success(res, {
       message: 'Registration successful. Please check your email to verify your account.',
@@ -162,7 +171,8 @@ exports.verifyEmail = async (req, res, next) => {
     const { token } = req.body;
     if (!token) return error(res, 'Verification token is required', 400);
 
-    const user = await User.findOne({ verificationToken: token });
+    const hashedToken = hashToken(token);
+    const user = await User.findOne({ verificationToken: hashedToken });
 
     if (!user) return error(res, 'Invalid or expired verification token', 400);
 
@@ -247,6 +257,7 @@ exports.googleLogin = async (req, res, next) => {
     }
 
     if (credential) {
+      const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -336,6 +347,11 @@ exports.googleLogin = async (req, res, next) => {
       return error(res, 'No Google credential or token provided', 400);
     }
 
+    const adminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.toLowerCase().trim() : null;
+    if (adminEmail && email === adminEmail) {
+      return error(res, 'This email is reserved for system administration. Sign in with the seeded credentials.', 403);
+    }
+
     let user = await User.findOne({ email });
 
     if (!user) {
@@ -371,7 +387,7 @@ exports.googleLogin = async (req, res, next) => {
 
     return issueTokens(req, res, user);
   } catch (err) {
-    console.error('Google login error:', err.message);
+    logger.error({ err }, 'Google login error');
     return error(res, 'Google authentication failed', 401);
   }
 };

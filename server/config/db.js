@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const logger = require('../utils/logger');
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
@@ -6,37 +7,34 @@ const RETRY_DELAY_MS = 5000;
 const connectDB = async (retryCount = 0) => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      // Connection pool size — tune based on expected concurrency
       maxPoolSize: 10,
-      // How long to wait for a server to respond to selection
       serverSelectionTimeoutMS: 5000,
-      // How long to wait for a socket timeout
       socketTimeoutMS: 45000,
     });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    logger.info({ host: conn.connection.host }, 'MongoDB Connected');
   } catch (error) {
-    console.error(`❌ MongoDB Connection Error (attempt ${retryCount + 1}/${MAX_RETRIES}): ${error.message}`);
+    logger.error({ attempt: retryCount + 1, maxRetries: MAX_RETRIES, err: error }, 'MongoDB Connection Error');
     if (retryCount < MAX_RETRIES - 1) {
-      console.log(`🔄 Retrying in ${RETRY_DELAY_MS / 1000}s...`);
+      logger.info({ retryDelaySeconds: RETRY_DELAY_MS / 1000 }, 'Retrying MongoDB connection...');
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
       return connectDB(retryCount + 1);
     }
-    console.error('❌ Max retries reached. Exiting.');
+    logger.fatal('Max MongoDB connection retries reached. Exiting.');
     process.exit(1);
   }
 };
 
 // Connection event listeners for monitoring
 mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️ MongoDB disconnected. Mongoose will attempt to reconnect.');
+  logger.warn('MongoDB disconnected. Mongoose will attempt to reconnect.');
 });
 
 mongoose.connection.on('reconnected', () => {
-  console.log('✅ MongoDB reconnected.');
+  logger.info('MongoDB reconnected.');
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB connection error:', err.message);
+  logger.error({ err }, 'MongoDB connection error');
 });
 
 module.exports = connectDB;

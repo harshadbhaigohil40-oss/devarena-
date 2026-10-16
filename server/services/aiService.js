@@ -1,4 +1,5 @@
 const { getModel } = require('../config/gemini');
+const logger = require('../utils/logger');
 
 const getCareerAdvice = async (userProfile, question) => {
   try {
@@ -24,7 +25,7 @@ Use an encouraging, professional tone. Format beautifully using markdown headers
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
-    console.error('Gemini API error:', error.message);
+    logger.error({ err: error }, 'Gemini API error');
     throw new Error('Failed to generate career advice. Please try again later.');
   }
 };
@@ -47,7 +48,7 @@ Format the output using clear markdown with emojis to make it engaging and reada
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
-    console.error('Gemini API error:', error.message);
+    logger.error({ err: error }, 'Gemini API error');
     throw new Error('Failed to generate skill recommendations. Please try again later.');
   }
 };
@@ -72,7 +73,7 @@ Format using clean markdown.`;
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
-    console.error('Gemini API error:', error.message);
+    logger.error({ err: error }, 'Gemini API error');
     throw new Error('Failed to generate code review. Please try again later.');
   }
 };
@@ -112,7 +113,7 @@ Provide your analysis STRICTLY in the following JSON format, do not use markdown
     
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
-    console.error('Gemini API error:', error.message);
+    logger.error({ err: error }, 'Gemini API error');
     throw new Error('Failed to analyze resume. Please try again later.');
   }
 };
@@ -148,7 +149,7 @@ Provide your roadmap STRICTLY in the following JSON format, do not use markdown 
     
     return JSON.parse(jsonMatch[0]);
   } catch (error) {
-    console.error('Gemini API error:', error.message);
+    logger.error({ err: error }, 'Gemini API error');
     throw new Error('Failed to generate roadmap. Please try again later.');
   }
 };
@@ -161,7 +162,7 @@ const generalChat = async (prompt) => {
     const result = await model.generateContent(systemPrompt);
     return result.response.text();
   } catch (error) {
-    console.error('Gemini API error:', error.message);
+    logger.error({ err: error }, 'Gemini API error');
     throw new Error('Failed to respond. Please try again later.');
   }
 };

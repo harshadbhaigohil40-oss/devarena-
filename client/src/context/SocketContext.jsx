@@ -11,10 +11,7 @@ export function SocketProvider({ children }) {
   const { user, token } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
-
-    const currentToken = token || localStorage.getItem('devarena_token');
-    if (!currentToken) return;
+    if (!user || !token) return;
 
     const getSocketUrl = () => {
       const envUrl = import.meta.env.VITE_API_BASE_URL;
@@ -27,8 +24,12 @@ export function SocketProvider({ children }) {
     const newSocket = io(getSocketUrl(), {
       transports: ['websocket', 'polling'],
       auth: {
-        token: currentToken,
+        token,
       },
+    });
+
+    newSocket.on('token_expired', () => {
+      newSocket.disconnect();
     });
 
     newSocket.on('xp:gained', ({ amount, source }) => {

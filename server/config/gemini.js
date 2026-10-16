@@ -1,4 +1,5 @@
 const GeminiKeyManager = require('../services/geminiKeyManager');
+const logger = require('../utils/logger');
 
 let keyManager = null;
 let modelWrapper = null;
@@ -10,13 +11,13 @@ const initGemini = () => {
     .join(',');
 
   if (!keysString || keysString.trim() === '') {
-    console.error('❌ Gemini API key(s) not configured. AI features will fail.');
+    logger.error('Gemini API key(s) not configured. AI features will fail.');
     return null;
   }
   try {
     keyManager = new GeminiKeyManager(keysString);
     if (keyManager.getKeyCount() === 0) {
-      console.error('❌ No valid Gemini API keys configured. AI features will fail.');
+      logger.error('No valid Gemini API keys configured. AI features will fail.');
       return null;
     }
     
@@ -25,10 +26,10 @@ const initGemini = () => {
       generateContent: (prompt, options) => keyManager.generateContent(prompt, options)
     };
     
-    console.log(`✅ Gemini AI initialized with key rotation support (${keyManager.getKeyCount()} key(s) loaded)`);
+    logger.info({ keyCount: keyManager.getKeyCount() }, 'Gemini AI initialized with key rotation support');
     return modelWrapper;
   } catch (error) {
-    console.error('❌ Gemini init error:', error.message);
+    logger.error({ err: error }, 'Gemini init error');
     return null;
   }
 };

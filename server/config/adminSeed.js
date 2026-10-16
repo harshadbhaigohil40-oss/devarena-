@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 // ─── Admin Credentials ──────────────────────────────────────────────────────
 // Credentials MUST be set via environment variables.
@@ -13,9 +14,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
  */
 const ensureAdminUser = async () => {
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    console.warn(
-      '⚠️  ADMIN_EMAIL or ADMIN_PASSWORD environment variables are not set. ' +
-      'The admin account will not be seeded. Set these in your .env file.'
+    logger.warn(
+      'ADMIN_EMAIL or ADMIN_PASSWORD environment variables are not set. The admin account will not be seeded. Set these in your .env file.'
     );
     return;
   }
@@ -25,7 +25,7 @@ const ensureAdminUser = async () => {
     let adminUser = await User.findOne({ email });
 
     if (!adminUser) {
-      console.log(`⚡ Creating admin user for [ADMIN]...`);
+      logger.info('Creating admin user from environment credentials...');
       adminUser = new User({
         username: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') || 'admin',
         email,
@@ -34,14 +34,14 @@ const ensureAdminUser = async () => {
         isEmailVerified: true,
       });
       await adminUser.save();
-      console.log(`✅ Admin user created successfully with role 'admin'.`);
+      logger.info("Admin user created successfully with role 'admin'.");
     } else {
-      let needsSave = false;
-
       if (adminUser.role !== 'admin') {
-        adminUser.role = 'admin';
-        needsSave = true;
+        logger.error('User exists with non-admin role; manual promotion required');
+        return;
       }
+
+      let needsSave = false;
 
       if (!adminUser.isEmailVerified) {
         adminUser.isEmailVerified = true;
@@ -56,13 +56,13 @@ const ensureAdminUser = async () => {
 
       if (needsSave) {
         await adminUser.save();
-        console.log(`✅ Admin user updated (role: admin, verified).`);
+        logger.info('Admin user updated (verified, unlocked).');
       } else {
-        console.log(`✅ Admin user is up-to-date with role 'admin'.`);
+        logger.info("Admin user is up-to-date with role 'admin'.");
       }
     }
   } catch (err) {
-    console.error('❌ Error ensuring admin user:', err.message);
+    logger.error({ err }, 'Error ensuring admin user');
   }
 };
 

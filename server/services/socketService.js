@@ -1,12 +1,13 @@
 const { getIO } = require('../config/socket');
 const { SOCKET_EVENTS } = require('../utils/constants');
+const logger = require('../utils/logger');
 
 const emitToUser = (userId, event, data) => {
   try {
     const io = getIO();
     io.to(`user:${userId}`).emit(event, data);
   } catch (e) {
-    console.warn('Socket emit failed:', e.message);
+    logger.warn({ err: e, event, userId }, 'Socket emit failed');
   }
 };
 
@@ -31,7 +32,7 @@ const emitLeaderboardUpdate = (top10) => {
     const io = getIO();
     io.emit(SOCKET_EVENTS.LEADERBOARD_UPDATE, { top10 });
   } catch (e) {
-    console.warn('Socket emit failed:', e.message);
+    logger.warn({ err: e }, 'Socket emit failed');
   }
 };
 

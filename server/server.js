@@ -136,6 +136,7 @@ app.use('*', (req, res) => {
 app.use(errorHandler);
 
 const { ensureAdminUser } = require('./config/adminSeed');
+const { initScheduler, stopScheduler } = require('./services/leaderboardService');
 
 // Start server
 const PORT = process.env.PORT || 5000;
@@ -143,6 +144,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   await ensureAdminUser();
+  initScheduler();
   server.listen(PORT, () => {
     logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, `DEVARENA API Server running on port ${PORT}`);
   });
@@ -157,6 +159,7 @@ const mongoose = require('mongoose');
 
 function gracefulShutdown(signal) {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
+  stopScheduler();
   server.close(() => {
     logger.info('HTTP server closed.');
     mongoose.connection.close(false).then(() => {

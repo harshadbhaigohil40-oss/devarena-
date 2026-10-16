@@ -26,4 +26,16 @@ export default [
       'no-constant-condition': 'warn',
     },
   },
+  {
+    files: ['server/**/*.js'],
+    ignores: [
+      'server/scripts/**',
+      'server/seeds/**',
+      'server/tests/**',
+      'scripts/**',
+    ],
+    rules: {
+      'no-console': 'error',
+    },
+  },
 ];

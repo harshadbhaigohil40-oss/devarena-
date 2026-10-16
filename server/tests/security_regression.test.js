@@ -83,12 +83,8 @@ describe('Security Remediation Verification', () => {
 
   describe('C-6: Python and JS Execution Sandbox Defenses', () => {
     const { _testExports } = require('../controllers/submissionController');
-    const {
-      detectPyBannedImports,
-      detectJSBannedPatterns,
-      evaluatePython,
-      evaluateJS,
-    } = _testExports;
+    const { detectPyBannedImports, detectJSBannedPatterns } = _testExports;
+    const { CodeRunner } = require('../services/codeRunner');
 
     it('should detect banned Python imports directly and with aliases', () => {
       assert.ok(detectPyBannedImports('import os'));
@@ -127,7 +123,7 @@ def two_sum(nums, target):
       );
     });
 
-    it('should safely execute valid Python solutions and return correct answers', () => {
+    it('should safely execute valid Python solutions and return correct answers', async () => {
       const code = `
 def add(a, b):
     return a + b
@@ -136,21 +132,21 @@ def add(a, b):
         { input: '2, 3', expectedOutput: '5' },
         { input: '10, -4', expectedOutput: '6' },
       ];
-      const results = evaluatePython(code, testCases, 'algorithms', 'def add(a, b):');
+      const results = await CodeRunner.run(code, 'python', testCases, { starterCode: 'def add(a, b):' });
 
       assert.strictEqual(results.length, 2);
       assert.strictEqual(results[0].passed, true, `Expected test 1 to pass: ${results[0].output}`);
       assert.strictEqual(results[1].passed, true, `Expected test 2 to pass: ${results[1].output}`);
     });
 
-    it('should block attempts to read environment secrets from Python', () => {
+    it('should block attempts to read environment secrets from Python', async () => {
       const exploitCode = `
 def get_secret():
     import os
     return os.environ.get('JWT_SECRET', 'none')
 `;
       const testCases = [{ input: '', expectedOutput: 'null' }];
-      const results = evaluatePython(exploitCode, testCases, 'algorithms', 'def get_secret():');
+      const results = await CodeRunner.run(exploitCode, 'python', testCases, { starterCode: 'def get_secret():' });
 
       assert.strictEqual(results[0].passed, false);
       assert.ok(results[0].output.includes('Security Error'));
@@ -163,7 +159,7 @@ def get_secret():
       assert.ok(detectJSBannedPatterns('Function("return process")()'));
     });
 
-    it('should safely execute valid JavaScript solutions', () => {
+    it('should safely execute valid JavaScript solutions', async () => {
       const code = `
 function multiply(a, b) {
   return a * b;
@@ -173,7 +169,7 @@ function multiply(a, b) {
         { input: '3, 4', expectedOutput: '12' },
         { input: '5, 0', expectedOutput: '0' },
       ];
-      const results = evaluateJS(code, testCases, 'algorithms', 'function multiply(a, b) {}');
+      const results = await CodeRunner.run(code, 'javascript', testCases, { starterCode: 'function multiply(a, b) {}' });
 
       assert.strictEqual(results.length, 2);
       assert.strictEqual(results[0].passed, true);

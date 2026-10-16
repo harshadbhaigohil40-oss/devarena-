@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('../utils/logger');
 
 const isSmtpConfigured = () => {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
@@ -52,7 +53,7 @@ const createTransporter = async () => {
         },
       });
     } catch (e) {
-      console.warn('[EmailService] Could not initialize Ethereal test account:', e.message);
+      logger.warn({ err: e }, '[EmailService] Could not initialize Ethereal test account');
       return null;
     }
   }
@@ -65,7 +66,7 @@ exports.sendVerificationEmail = async (email, token) => {
     const transporter = await createTransporter();
     if (!transporter) {
       if (process.env.NODE_ENV === 'production') {
-        console.warn('[EmailService] Outgoing email skipped: SMTP is not configured in production.');
+        logger.warn('[EmailService] Outgoing email skipped: SMTP is not configured in production.');
       }
       return false;
     }
@@ -85,12 +86,11 @@ exports.sendVerificationEmail = async (email, token) => {
     });
 
     if (process.env.NODE_ENV === 'development' && info) {
-      console.log('✉️ Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      logger.info({ previewUrl: nodemailer.getTestMessageUrl(info) }, 'Preview URL for verification email');
     }
     return true;
   } catch (error) {
-    // Fail safely without leaking credentials in logs
-    console.error('[EmailService] Failed to send verification email:', error.message);
+    logger.error({ err: error }, '[EmailService] Failed to send verification email');
     return false;
   }
 };
@@ -100,7 +100,7 @@ exports.sendPasswordResetEmail = async (email, token) => {
     const transporter = await createTransporter();
     if (!transporter) {
       if (process.env.NODE_ENV === 'production') {
-        console.warn('[EmailService] Outgoing email skipped: SMTP is not configured in production.');
+        logger.warn('[EmailService] Outgoing email skipped: SMTP is not configured in production.');
       }
       return false;
     }
@@ -120,12 +120,11 @@ exports.sendPasswordResetEmail = async (email, token) => {
     });
 
     if (process.env.NODE_ENV === 'development' && info) {
-      console.log('✉️ Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      logger.info({ previewUrl: nodemailer.getTestMessageUrl(info) }, 'Preview URL for password reset email');
     }
     return true;
   } catch (error) {
-    // Fail safely without leaking credentials in logs
-    console.error('[EmailService] Failed to send password reset email:', error.message);
+    logger.error({ err: error }, '[EmailService] Failed to send password reset email');
     return false;
   }
 };
