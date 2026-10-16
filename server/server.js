@@ -2,11 +2,18 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
 const http = require('http');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const compression = require('compression');
+const hpp = require('hpp');
+
+const logger = require('./utils/logger');
+const requestLogger = require('./middleware/requestLogger');
+const { validateEnv } = require('./config/envValidator');
+
+// Validate environment variables on startup
+validateEnv(logger);
 
 const connectDB = require('./config/db');
 const { initSocket } = require('./config/socket');
@@ -86,9 +93,10 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(morgan('dev'));
+app.use(requestLogger);
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
+app.use(hpp()); // HTTP Parameter Pollution protection
 app.use(cookieParser());
 app.use(mongoSanitize()); // Prevent NoSQL injection
 app.use('/api', apiLimiter);
@@ -136,13 +144,7 @@ const startServer = async () => {
   await connectDB();
   await ensureAdminUser();
   server.listen(PORT, () => {
-    console.log(`
-╔══════════════════════════════════════════╗
-║         🚀 DEVARENA API Server          ║
-║         Running on port ${PORT}            ║
-║         Environment: ${process.env.NODE_ENV || 'development'}    ║
-╚══════════════════════════════════════════╝
-    `);
+    logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, `DEVARENA API Server running on port ${PORT}`);
   });
 };
 
@@ -154,21 +156,21 @@ if (process.env.NODE_ENV !== 'test') {
 const mongoose = require('mongoose');
 
 function gracefulShutdown(signal) {
-  console.log(`\n⚡ Received ${signal}. Starting graceful shutdown...`);
+  logger.info(`Received ${signal}. Starting graceful shutdown...`);
   server.close(() => {
-    console.log('✅ HTTP server closed.');
+    logger.info('HTTP server closed.');
     mongoose.connection.close(false).then(() => {
-      console.log('✅ MongoDB connection closed.');
+      logger.info('MongoDB connection closed.');
       process.exit(0);
     }).catch((err) => {
-      console.error('❌ Error closing MongoDB connection:', err);
+      logger.error({ err }, 'Error closing MongoDB connection');
       process.exit(1);
     });
   });
 
   // Force exit if graceful shutdown takes too long (10 seconds)
   setTimeout(() => {
-    console.error('❌ Forced shutdown after timeout.');
+    logger.error('Forced shutdown after timeout.');
     process.exit(1);
   }, 10000);
 }
@@ -179,14 +181,14 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // ─── Global Error Handlers ───────────────────────────────────────────────────
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Promise Rejection:', reason);
+  logger.error({ reason }, 'Unhandled Promise Rejection');
   // In production, log and continue; in development, crash to surface bugs
   if (process.env.NODE_ENV === 'production') return;
   gracefulShutdown('unhandledRejection');
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
+  logger.error({ error }, 'Uncaught Exception');
   // Always exit on uncaught exceptions — the process is in an undefined state
   gracefulShutdown('uncaughtException');
 });

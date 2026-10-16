@@ -16,6 +16,7 @@ const XP_REWARDS = {
   project: {
     create: 150,
     featured: 500,
+    maxRewardedProjects: 5,
   },
   streak: {
     daily: 10,

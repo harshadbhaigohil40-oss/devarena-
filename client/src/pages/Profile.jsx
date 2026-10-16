@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { userService, badgeService } from '../services';
-import { formatNumber, progressToNextLevel } from '../utils/helpers';
+import { formatNumber, progressToNextLevel, isValidHttpUrl } from '../utils/helpers';
 
 export default function Profile() {
   const { id } = useParams();
@@ -50,7 +50,21 @@ export default function Profile() {
             <p className="text-muted" style={{ wordBreak: 'break-word' }}>{profile.bio || 'No bio yet'}</p>
             <div className="flex items-center gap-md mt-sm" style={{ flexWrap: 'wrap' }}>
               {profile.location && <span className="text-sm text-muted">📍 {profile.location}</span>}
-              {profile.githubUrl && <a href={profile.githubUrl} target="_blank" rel="noreferrer" className="text-sm">🔗 GitHub</a>}
+              {isValidHttpUrl(profile.githubUrl) && (
+                <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer" className="text-sm">
+                  🔗 GitHub
+                </a>
+              )}
+              {isValidHttpUrl(profile.linkedinUrl) && (
+                <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-sm">
+                  💼 LinkedIn
+                </a>
+              )}
+              {isValidHttpUrl(profile.portfolioUrl) && (
+                <a href={profile.portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-sm">
+                  🌐 Portfolio
+                </a>
+              )}
               <span className="badge badge-primary" style={{ textTransform: 'capitalize' }}>{profile.role}</span>
             </div>
           </div>

@@ -1,25 +1,36 @@
 const User = require('../models/User');
+const { toPublicProfile } = require('../models/User');
 const { success, error, paginated } = require('../utils/responseHelper');
+
+const { escapeRegex, clampPagination } = require('../utils/queryHelper');
 
 exports.searchTalent = async (req, res, next) => {
   try {
-    const { skill, minLevel, minXP, location, page = 1, limit = 20 } = req.query;
+    const { skill, minLevel, minXP, location } = req.query;
+    const { page, limit, skip } = clampPagination(req.query, 20, 100);
     const filter = { role: 'developer' };
 
-    if (minLevel) filter.level = { $gte: parseInt(minLevel) };
-    if (minXP) filter.xp = { $gte: parseInt(minXP) };
-    if (location) filter.location = { $regex: location, $options: 'i' };
-    if (skill) filter['topSkills.name'] = { $regex: skill, $options: 'i' };
+    const parsedMinLevel = parseInt(minLevel, 10);
+    if (Number.isFinite(parsedMinLevel)) filter.level = { $gte: parsedMinLevel };
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const parsedMinXP = parseInt(minXP, 10);
+    if (Number.isFinite(parsedMinXP)) filter.xp = { $gte: parsedMinXP };
+
+    if (location && typeof location === 'string') {
+      filter.location = { $regex: escapeRegex(location), $options: 'i' };
+    }
+    if (skill && typeof skill === 'string') {
+      filter['topSkills.name'] = { $regex: escapeRegex(skill), $options: 'i' };
+    }
+
     const developers = await User.find(filter)
       .select('username avatar bio level xp topSkills recentBadges location githubUrl challengesSolved streak')
       .sort({ xp: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limit);
 
     const total = await User.countDocuments(filter);
-    paginated(res, developers, total, parseInt(page), parseInt(limit));
+    paginated(res, developers, total, page, limit);
   } catch (err) { next(err); }
 };
 
@@ -30,7 +41,7 @@ exports.viewCandidate = async (req, res, next) => {
     if (!user || user.role !== 'developer') {
       return error(res, 'Developer not found.', 404);
     }
-    success(res, { developer: user });
+    success(res, { developer: toPublicProfile(user) });
   } catch (err) { next(err); }
 };
 

@@ -8,6 +8,7 @@ export const authService = {
     return api.post('/auth/google', payload);
   },
   resetLockout: (email) => api.post('/auth/reset-lockout', { email }),
+  logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
 };
 

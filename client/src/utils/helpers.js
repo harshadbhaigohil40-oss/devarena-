@@ -48,3 +48,16 @@ export const difficultyBadgeClass = (difficulty) => `badge difficulty-badge-${di
 
 // Rarity color class
 export const rarityBadgeClass = (rarity) => `badge badge-rarity-${rarity}`;
+
+// Safe HTTP/HTTPS URL validator
+export const isValidHttpUrl = (str) => {
+  if (!str || typeof str !== 'string') return false;
+  const trimmed = str.trim();
+  if (trimmed === '') return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+};

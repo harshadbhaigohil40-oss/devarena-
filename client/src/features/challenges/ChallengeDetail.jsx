@@ -648,7 +648,7 @@ export default function ChallengeDetail() {
                     <iframe
                       title="HTML Preview Sandbox"
                       srcDoc={activeCode}
-                      sandbox="allow-scripts allow-same-origin"
+                      sandbox="allow-scripts"
                       style={{ width: '100%', flex: 1, minHeight: '380px', border: 'none', background: '#ffffff', display: 'block' }}
                     />
                   </div>
@@ -776,7 +776,7 @@ export default function ChallengeDetail() {
                             <iframe
                               title="HTML Result Render"
                               srcDoc={activeCode}
-                              sandbox="allow-scripts allow-same-origin"
+                              sandbox="allow-scripts"
                               style={{ width: '100%', flex: 1, minHeight: '300px', border: 'none', background: '#ffffff', display: 'block' }}
                             />
                           </div>

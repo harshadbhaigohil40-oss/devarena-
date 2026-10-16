@@ -12,8 +12,20 @@ const skillTreeData = require('./skillTrees');
 
 const { ensureAdminUser } = require('../config/adminSeed');
 
+function checkProductionSafety(nodeEnv = process.env.NODE_ENV, argv = process.argv) {
+  if (nodeEnv === 'production' && !argv.includes('--force')) {
+    return false;
+  }
+  return true;
+}
+
 const seedDB = async () => {
   try {
+    if (!checkProductionSafety(process.env.NODE_ENV, process.argv)) {
+      console.error('❌ Refusing to run destructive seed operations in production without --force flag.');
+      process.exit(1);
+    }
+
     await connectDB();
     console.log('🌱 Seeding database...\n');
 
@@ -109,4 +121,8 @@ const seedDB = async () => {
   }
 };
 
-seedDB();
+if (require.main === module) {
+  seedDB();
+}
+
+module.exports = { seedDB, checkProductionSafety };

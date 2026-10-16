@@ -1,9 +1,11 @@
 const Submission = require('../models/Submission');
 const Challenge = require('../models/Challenge');
 const User = require('../models/User');
+const SolvedChallenge = require('../models/SolvedChallenge');
 const { awardXP } = require('../services/xpService');
 const { emitChallengeCompleted } = require('../services/socketService');
 const { success, error } = require('../utils/responseHelper');
+const { CodeRunner } = require('../services/codeRunner');
 
 const vm = require('vm');
 const { execSync } = require('child_process');
@@ -36,7 +38,7 @@ const JS_BANNED_PATTERNS = [
 // ─── Python Security: Banned module list ────────────────────────────────────
 // These are checked by pattern AND by the Python-level builtins restriction.
 const PY_BANNED_IMPORTS = [
-  'os', 'sys', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
+  'os', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
   'requests', 'ctypes', 'signal', 'multiprocessing', 'threading',
   'importlib', 'builtins', '__builtin__', 'code', 'codeop',
   'compile', 'compileall', 'py_compile', 'runpy', 'pkgutil',
@@ -49,8 +51,6 @@ const PY_BANNED_IMPORTS = [
 const PY_ENCODING_BYPASS_PATTERNS = [
   /\\x[0-9a-fA-F]{2}/,         // hex escape inside string
   /\\u[0-9a-fA-F]{4}/,         // unicode escape inside string
-  /chr\s*\(/,                   // chr() function call
-  /ord\s*\(/,                   // ord() often paired with chr()
   /bytes\s*\(\s*\[/,           // bytes([...]) → decode tricks
   /__import__/,                 // any __import__ usage
   /importlib/,
@@ -126,10 +126,8 @@ function detectPyBannedImports(code) {
   if (/\bexec\s*\(/.test(code))   return 'Dynamic code execution (exec) is not allowed.';
   if (/\beval\s*\(/.test(code))   return 'Dynamic code evaluation (eval) is not allowed.';
   if (/\bcompile\s*\(/.test(code)) return 'Dynamic code compilation (compile) is not allowed.';
-  if (/\bvars\s*\(/.test(code))   return 'Reflection (vars) is not allowed.';
   if (/\bglobals\s*\(/.test(code)) return 'Reflection (globals) is not allowed.';
   if (/\blocals\s*\(/.test(code))  return 'Reflection (locals) is not allowed.';
-  if (/\bgetattr\s*\(/.test(code)) return 'Reflection (getattr) is not allowed.';
   if (/\bsetattr\s*\(/.test(code)) return 'Reflection (setattr) is not allowed.';
   if (/\bdelattr\s*\(/.test(code)) return 'Reflection (delattr) is not allowed.';
 
@@ -270,9 +268,9 @@ function evaluateJS(code, testCases, category, starterCode) {
         input: tc.isHidden ? '[Hidden]' : tc.input,
         expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
         actualOutput: tc.isHidden ? '[Hidden]' : (resultStr === undefined ? 'undefined' : resultStr),
-        output: passed
-          ? `✓ Output: ${resultStr}${logsOutput}`
-          : `Expected: ${tc.expectedOutput}\nGot:      ${resultStr}${logsOutput}`,
+        output: tc.isHidden
+          ? (passed ? '✓ Passed (Hidden Test Case)' : '✗ Failed (Hidden Test Case)')
+          : (passed ? `✓ Output: ${resultStr}${logsOutput}` : `Expected: ${tc.expectedOutput}\nGot:      ${resultStr}${logsOutput}`),
         executionTime: executionTime || 1,
       };
     } catch (e) {
@@ -291,9 +289,9 @@ function evaluateJS(code, testCases, category, starterCode) {
         isHidden: Boolean(tc.isHidden),
         input: tc.isHidden ? '[Hidden]' : tc.input,
         expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
-        actualOutput: 'Error',
-        error: msg.startsWith('Error') ? msg : `Error: ${msg}`,
-        output: msg.startsWith('Error') ? msg : `Error: ${msg}`,
+        actualOutput: '[Hidden]',
+        error: tc.isHidden ? undefined : (msg.startsWith('Error') ? msg : `Error: ${msg}`),
+        output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : (msg.startsWith('Error') ? msg : `Error: ${msg}`),
         executionTime: 0
       };
     }
@@ -350,7 +348,7 @@ function evaluatePython(code, testCases, category, starterCode) {
       const SAFE_BUILTINS_PY = `
 _SAFE_BUILTINS = {
   'abs': abs, 'all': all, 'any': any, 'bin': bin, 'bool': bool,
-  'chr': None,        # disabled — used in encoding bypass attacks
+  'chr': chr, 'ord': ord, 'getattr': getattr, 'vars': vars,
   'dict': dict, 'divmod': divmod, 'enumerate': enumerate,
   'filter': filter, 'float': float, 'format': format,
   'frozenset': frozenset, 'hasattr': hasattr, 'hash': hash,
@@ -367,7 +365,6 @@ _SAFE_BUILTINS = {
   'RuntimeError': RuntimeError, 'OverflowError': OverflowError,
   'ZeroDivisionError': ZeroDivisionError, 'NotImplementedError': NotImplementedError,
 }
-# IMPORTANT: chr is removed to block encoding bypass like chr(111)+chr(115) == 'os'
 __builtins__ = _SAFE_BUILTINS
 `;
 
@@ -414,11 +411,10 @@ ${code}
       // Layer 3 + 4: Spawn with minimal env, -S (no site-pkgs), -I (isolated),
       // and ulimit resource caps on Linux.
       const isLinux = process.platform === 'linux';
-      // ulimit: -v 256MB virtual mem, -u 64 max procs, -n 32 max fds, -f 0 no file writes
-      const ulimitPrefix = isLinux
-        ? `ulimit -v 262144 -u 64 -n 32 -f 0; `
-        : '';
-      const command = `${ulimitPrefix}python -S -I -W ignore "${filePath}"`;
+      // ulimit: semicolon-separated commands for dash (/bin/sh) compatibility
+      const command = isLinux
+        ? `sh -c 'ulimit -v 262144; ulimit -u 64; ulimit -n 32; ulimit -f 0; exec python -S -I -W ignore "$1"' sh "${filePath}"`
+        : `python -S -I -W ignore "${filePath}"`;
 
       const start = process.hrtime();
       let rawResult = '';
@@ -427,7 +423,7 @@ ${code}
           timeout: PY_EXECUTION_TIMEOUT,
           stdio: ['pipe', 'pipe', 'pipe'],
           encoding: 'utf8',
-          shell: isLinux, // shell required for ulimit on Linux
+          shell: isLinux,
           // Minimal env — strictly isolated, no secrets, no database URIs
           env: {
             PATH: process.env.PATH || '/usr/bin:/bin',
@@ -439,13 +435,16 @@ ${code}
       } catch (err) {
         const stderr = (err.stderr || '').toString().trim();
         let errMsg = stderr || err.message || 'Execution failed';
-        // Sanitize: never leak server filesystem paths
+        // Sanitize: strip shell and ulimit diagnostics and filesystem paths
         errMsg = errMsg
+          .replace(/^sh:\s*\d*:\s*ulimit:.*$/gmi, '')
+          .replace(/ulimit:.*$/gmi, '')
           .replace(new RegExp(filePath.replace(/\\/g, '\\\\'), 'g'), 'solution.py')
           .replace(new RegExp(path.basename(filePath), 'g'), 'solution.py')
           .replace(/\/tmp\S*/g, 'solution.py')
-          .replace(/line (\d+)/g, (_, n) => `line ${Math.max(1, parseInt(n) - 35)}`);
-        throw new Error(errMsg);
+          .replace(/line (\d+)/g, (_, n) => `line ${Math.max(1, parseInt(n) - 35)}`)
+          .trim();
+        throw new Error(errMsg || 'Execution failed');
       } finally {
         // Always clean up temp file
         try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (_) {}
@@ -467,13 +466,27 @@ ${code}
       const normalizedResult = lastLine.replace(/\s+/g, '');
       const normalizedExpected = expectedStr.replace(/\s+/g, '');
       const passed = normalizedResult === normalizedExpected;
+
+      if (tc.isHidden) {
+        return {
+          testCaseIndex: index,
+          passed,
+          isHidden: true,
+          input: '[Hidden]',
+          expectedOutput: '[Hidden]',
+          actualOutput: '[Hidden]',
+          output: passed ? '✓ Passed (Hidden Test Case)' : '✗ Failed (Hidden Test Case)',
+          executionTime: executionTime || 1,
+        };
+      }
+
       return {
         testCaseIndex: index,
         passed,
-        isHidden: Boolean(tc.isHidden),
-        input: tc.isHidden ? '[Hidden]' : tc.input,
-        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
-        actualOutput: tc.isHidden ? '[Hidden]' : lastLine,
+        isHidden: false,
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
+        actualOutput: lastLine,
         output: passed
           ? `✓ Output: ${lastLine}${logsOutput}`
           : `Expected: ${tc.expectedOutput}\nGot:      ${lastLine}${logsOutput}`,
@@ -482,12 +495,24 @@ ${code}
     } catch (e) {
       try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (_) {}
       const msg = e.message || String(e);
+      if (tc.isHidden) {
+        return {
+          testCaseIndex: index,
+          passed: false,
+          isHidden: true,
+          input: '[Hidden]',
+          expectedOutput: '[Hidden]',
+          actualOutput: '[Hidden]',
+          output: '✗ Execution Error (Hidden Test Case)',
+          executionTime: 0,
+        };
+      }
       return {
         testCaseIndex: index,
         passed: false,
-        isHidden: Boolean(tc.isHidden),
-        input: tc.isHidden ? '[Hidden]' : tc.input,
-        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        isHidden: false,
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
         actualOutput: 'Error',
         error: msg.startsWith('Error') ? msg : `Error: ${msg}`,
         output: msg.startsWith('Error') ? msg : `Error: ${msg}`,
@@ -527,23 +552,48 @@ function evaluateHTML(code, testCases) {
       }
 
       const executionTime = Date.now() - startTime;
+      if (tc.isHidden) {
+        return {
+          testCaseIndex: index,
+          passed,
+          isHidden: true,
+          input: '[Hidden]',
+          expectedOutput: '[Hidden]',
+          actualOutput: '[Hidden]',
+          output: passed ? '✓ Passed (Hidden Test Case)' : '✗ Failed (Hidden Test Case)',
+          executionTime,
+        };
+      }
+
       return {
         testCaseIndex: index,
         passed,
-        isHidden: Boolean(tc.isHidden),
-        input: tc.isHidden ? '[Hidden]' : tc.input,
-        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        isHidden: false,
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
         actualOutput: passed ? tc.expectedOutput : 'Structure mismatch',
         output: passed ? `✅ HTML structure matches expected output` : `❌ HTML does not contain expected structure`,
         executionTime,
       };
     } catch (e) {
+      if (tc.isHidden) {
+        return {
+          testCaseIndex: index,
+          passed: false,
+          isHidden: true,
+          input: '[Hidden]',
+          expectedOutput: '[Hidden]',
+          actualOutput: '[Hidden]',
+          output: '✗ Execution Error (Hidden Test Case)',
+          executionTime: 0,
+        };
+      }
       return {
         testCaseIndex: index,
         passed: false,
-        isHidden: Boolean(tc.isHidden),
-        input: tc.isHidden ? '[Hidden]' : tc.input,
-        expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
+        isHidden: false,
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
         actualOutput: 'Error',
         error: e.message || String(e),
         output: `Error: ${e.message || String(e)}`,
@@ -554,18 +604,8 @@ function evaluateHTML(code, testCases) {
 }
 
 // ─── Main Evaluator ───────────────────────────────────────────────────────────
-const evaluateCode = (code, testCases, language, category, starterCode = '') => {
-  if (language === 'python') return evaluatePython(code, testCases, category, starterCode);
-  if (language === 'javascript') return evaluateJS(code, testCases, category, starterCode);
-  if (language === 'html') return evaluateHTML(code, testCases);
-
-  // Unsupported language — reject instead of mocking results
-  return testCases.map((_, index) => ({
-    testCaseIndex: index,
-    passed: false,
-    output: `Unsupported language: ${language}. Please use JavaScript or Python.`,
-    executionTime: 0,
-  }));
+const evaluateCode = async (code, testCases, language, category, starterCode = '') => {
+  return await CodeRunner.run(code, language, testCases, { starterCode, category });
 };
 
 // ─── Run (test without saving) ────────────────────────────────────────────────
@@ -583,7 +623,7 @@ exports.runCode = async (req, res, next) => {
 
     // Only run visible test cases
     const visibleTests = challenge.testCases.filter(tc => !tc.isHidden);
-    const testResults = evaluateCode(code, visibleTests, language, challenge.category, challenge.starterCode?.[language] || '');
+    const testResults = await evaluateCode(code, visibleTests, language, challenge.category, challenge.starterCode?.[language] || '');
     const allPassed = testResults.every(r => r.passed);
     const passedCount = testResults.filter(r => r.passed).length;
     const totalCount = testResults.length;
@@ -596,7 +636,12 @@ exports.runCode = async (req, res, next) => {
       allPassed,
       isRun: true
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err.status === 503 || err.statusCode === 503 || err.code === 'CONCURRENCY_LIMIT_REACHED') {
+      return res.status(503).json({ success: false, error: err.message });
+    }
+    next(err);
+  }
 };
 
 // ─── Submit (full evaluation + save) ─────────────────────────────────────────
@@ -622,13 +667,30 @@ exports.submitSolution = async (req, res, next) => {
       return error(res, 'Please write actual code logic before submitting.', 400);
     }
 
-    const alreadySolved = await Submission.findOne({ userId: req.userId, challengeId, status: 'passed' });
-
-    const testResults = evaluateCode(code, challenge.testCases, language, challenge.category, challenge.starterCode?.[language] || '');
+    let isFirstSolve = false;
+    const testResults = await evaluateCode(code, challenge.testCases, language, challenge.category, challenge.starterCode?.[language] || '');
     const allPassed = testResults.every(r => r.passed);
     const passedCount = testResults.filter(r => r.passed).length;
     const totalCount = testResults.length;
     const status = allPassed ? 'passed' : 'failed';
+
+    if (allPassed) {
+      const existingSubmission = await Submission.findOne({ userId: req.userId, challengeId, status: 'passed' });
+      if (!existingSubmission) {
+        try {
+          await SolvedChallenge.create({ userId: req.userId, challengeId });
+          isFirstSolve = true;
+        } catch (err) {
+          if (err.code === 11000) {
+            isFirstSolve = false;
+          } else {
+            throw err;
+          }
+        }
+      }
+    }
+
+    const xpEarned = isFirstSolve ? challenge.xpReward : 0;
 
     const submission = await Submission.create({
       userId: req.userId,
@@ -637,13 +699,12 @@ exports.submitSolution = async (req, res, next) => {
       language,
       status,
       testResults,
-      xpEarned: allPassed && !alreadySolved ? challenge.xpReward : 0,
+      xpEarned,
     });
 
     let xpResult = null;
-    if (allPassed && !alreadySolved) {
+    if (isFirstSolve) {
       xpResult = await awardXP(req.userId, challenge.xpReward, 'challenge', challengeId, `Solved: ${challenge.title}`);
-      // Use atomic $inc to prevent race conditions under concurrent submissions
       await Challenge.findByIdAndUpdate(challengeId, { $inc: { completionCount: 1, attemptCount: 1 } });
       await User.findByIdAndUpdate(req.userId, { $inc: { challengesSolved: 1 } });
       emitChallengeCompleted(req.userId, challengeId, challenge.xpReward);
@@ -660,7 +721,12 @@ exports.submitSolution = async (req, res, next) => {
       xpResult,
       allPassed
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err.status === 503 || err.statusCode === 503 || err.code === 'CONCURRENCY_LIMIT_REACHED') {
+      return res.status(503).json({ success: false, error: err.message });
+    }
+    next(err);
+  }
 };
 
 exports.getSubmissions = async (req, res, next) => {

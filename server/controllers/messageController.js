@@ -58,8 +58,13 @@ exports.getConversations = async (req, res, next) => {
       { $unwind: '$user' },
       {
         $project: {
-          'user.password': 0,
-          'user.email': 0
+          _id: 1,
+          lastMessage: 1,
+          'user._id': 1,
+          'user.username': 1,
+          'user.avatar': 1,
+          'user.level': 1,
+          'user.role': 1,
         }
       },
       {

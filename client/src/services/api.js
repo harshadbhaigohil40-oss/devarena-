@@ -1,12 +1,15 @@
 import axios from 'axios';
 
+// ARCHITECTURAL ROADMAP NOTE:
+// Moving the access token from localStorage to memory (with refresh-cookie bootstrapping)
+// is the recommended follow-up hardening step to eliminate localStorage token exposure.
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) {
     const trimmed = envUrl.trim().replace(/\/+$/, '');
     return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
   }
-  return import.meta.env.DEV ? '/api' : 'https://devarena-ymqe.onrender.com/api';
+  return '/api';
 };
 
 const api = axios.create({

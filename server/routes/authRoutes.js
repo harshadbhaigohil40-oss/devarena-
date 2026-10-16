@@ -12,7 +12,7 @@ router.post('/register', authLimiter, validate(registerSchema), register);
 router.post('/login', authLimiter, validate(loginSchema), login);
 router.post('/google', authLimiter, googleLogin);
 router.post('/refresh', refresh);
-router.post('/logout', logout);
+router.post('/logout', auth, logout);
 router.post('/verify-email', authLimiter, verifyEmail);
 router.post('/forgot-password', authLimiter, forgotPassword);
 router.post('/reset-password', authLimiter, validate(resetPasswordSchema), resetPassword);

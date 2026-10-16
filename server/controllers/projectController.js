@@ -1,54 +1,55 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
+const XPEvent = require('../models/XPEvent');
 const { awardXP } = require('../services/xpService');
 const { success, error, paginated } = require('../utils/responseHelper');
 const { XP_REWARDS } = require('../../shared/xpConfig');
+const { escapeRegex, clampPagination } = require('../utils/queryHelper');
+const { isValidHttpUrl } = require('../utils/urlHelper');
 
 exports.listProjects = async (req, res, next) => {
   try {
-    const { search, tag, page = 1, limit = 12, userId } = req.query;
+    const { search, tag, userId } = req.query;
+    const { page, limit, skip } = clampPagination(req.query, 12, 100);
     const filter = {};
 
     if (userId) filter.userId = userId;
     if (tag) filter.tags = tag;
-    if (search) filter.title = { $regex: search, $options: 'i' };
+    if (search && typeof search === 'string') {
+      filter.title = { $regex: escapeRegex(search), $options: 'i' };
+    }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
     const projects = await Project.find(filter)
       .populate('userId', 'username avatar level')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limit);
 
     const total = await Project.countDocuments(filter);
-    paginated(res, projects, total, parseInt(page), parseInt(limit));
+    paginated(res, projects, total, page, limit);
   } catch (err) { next(err); }
 };
 
 exports.getProject = async (req, res, next) => {
   try {
-    const project = await Project.findById(req.params.id)
-      .populate('userId', 'username avatar level bio');
-    if (!project) return error(res, 'Project not found.', 404);
+    // Atomically increment views without read-modify-write
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate('userId', 'username avatar level bio');
 
-    // Increment views
-    project.views += 1;
-    await project.save();
+    if (!project) return error(res, 'Project not found.', 404);
 
     success(res, { project });
   } catch (err) { next(err); }
 };
 
-function isValidHttpUrl(str) {
+function validateUrl(str) {
   if (!str || typeof str !== 'string') return true;
   const trimmed = str.trim();
   if (trimmed === '') return true;
-  try {
-    const parsed = new URL(trimmed);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch (_) {
-    return false;
-  }
+  return isValidHttpUrl(trimmed);
 }
 
 exports.createProject = async (req, res, next) => {
@@ -62,13 +63,13 @@ exports.createProject = async (req, res, next) => {
       return error(res, 'Project description is required.', 400);
     }
 
-    if (liveUrl && !isValidHttpUrl(liveUrl)) {
+    if (liveUrl && !validateUrl(liveUrl)) {
       return error(res, 'Invalid liveUrl: only http: and https: protocols are permitted.', 400);
     }
-    if (repoUrl && !isValidHttpUrl(repoUrl)) {
+    if (repoUrl && !validateUrl(repoUrl)) {
       return error(res, 'Invalid repoUrl: only http: and https: protocols are permitted.', 400);
     }
-    if (thumbnailUrl && !isValidHttpUrl(thumbnailUrl)) {
+    if (thumbnailUrl && !validateUrl(thumbnailUrl)) {
       return error(res, 'Invalid thumbnailUrl: only http: and https: protocols are permitted.', 400);
     }
 
@@ -83,8 +84,13 @@ exports.createProject = async (req, res, next) => {
       userId: req.userId,
     });
 
-    // Award XP
-    await awardXP(req.userId, XP_REWARDS.project.create, 'project', project._id, `Created project: ${project.title}`);
+    // Cap project-creation XP: award only for the first N projects per user
+    // (configured in shared/xpConfig.js) and not on re-create after delete.
+    const maxRewardedProjects = XP_REWARDS.project?.maxRewardedProjects ?? 5;
+    const rewardedCount = await XPEvent.countDocuments({ userId: req.userId, source: 'project' });
+    if (rewardedCount < maxRewardedProjects) {
+      await awardXP(req.userId, XP_REWARDS.project.create, 'project', project._id, `Created project: ${project.title}`);
+    }
 
     // Update user project count
     await User.findByIdAndUpdate(req.userId, { $inc: { projectCount: 1 } });
@@ -100,13 +106,13 @@ exports.updateProject = async (req, res, next) => {
 
     const { title, description, liveUrl, repoUrl, techStack, tags, thumbnailUrl } = req.body;
 
-    if (liveUrl !== undefined && !isValidHttpUrl(liveUrl)) {
+    if (liveUrl !== undefined && !validateUrl(liveUrl)) {
       return error(res, 'Invalid liveUrl: only http: and https: protocols are permitted.', 400);
     }
-    if (repoUrl !== undefined && !isValidHttpUrl(repoUrl)) {
+    if (repoUrl !== undefined && !validateUrl(repoUrl)) {
       return error(res, 'Invalid repoUrl: only http: and https: protocols are permitted.', 400);
     }
-    if (thumbnailUrl !== undefined && !isValidHttpUrl(thumbnailUrl)) {
+    if (thumbnailUrl !== undefined && !validateUrl(thumbnailUrl)) {
       return error(res, 'Invalid thumbnailUrl: only http: and https: protocols are permitted.', 400);
     }
 
@@ -141,19 +147,43 @@ exports.deleteProject = async (req, res, next) => {
 
 exports.likeProject = async (req, res, next) => {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project) return error(res, 'Project not found.', 404);
+    const projectId = req.params.id;
+    const userId = req.userId;
 
-    const isLiked = project.likedBy.includes(req.userId);
-    if (isLiked) {
-      project.likedBy.pull(req.userId);
-      project.likes -= 1;
+    const existing = await Project.findOne({ _id: projectId, likedBy: userId });
+    let updated;
+    let liked;
+
+    if (existing) {
+      // Atomically remove like
+      updated = await Project.findOneAndUpdate(
+        { _id: projectId, likedBy: userId },
+        {
+          $pull: { likedBy: userId },
+          $inc: { likes: -1 },
+        },
+        { new: true }
+      );
+      liked = false;
     } else {
-      project.likedBy.push(req.userId);
-      project.likes += 1;
+      // Atomically add like
+      updated = await Project.findOneAndUpdate(
+        { _id: projectId, likedBy: { $ne: userId } },
+        {
+          $addToSet: { likedBy: userId },
+          $inc: { likes: 1 },
+        },
+        { new: true }
+      );
+      liked = true;
     }
-    await project.save();
 
-    success(res, { likes: project.likes, liked: !isLiked });
+    if (!updated) {
+      const fallback = await Project.findById(projectId);
+      if (!fallback) return error(res, 'Project not found.', 404);
+      return success(res, { likes: fallback.likes, liked: fallback.likedBy.includes(userId) });
+    }
+
+    success(res, { likes: updated.likes, liked });
   } catch (err) { next(err); }
 };

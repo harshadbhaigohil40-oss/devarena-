@@ -22,13 +22,17 @@ An enterprise-grade, high-performance web platform that turns algorithmic proble
 
 ### 🔗 Quick Links
 [🌐 **Explore Live Demo**](https://devarena-client.vercel.app/) &nbsp;•&nbsp;
-[🐛 **Report an Issue**](https://github.com/harshadbhaigohil40-oss/devarena-/issues) &nbsp;•&nbsp;
-[💡 **Request Feature**](https://github.com/harshadbhaigohil40-oss/devarena-/issues) &nbsp;•&nbsp;
-[⭐️ **Star on GitHub**](https://github.com/harshadbhaigohil40-oss/devarena-)
+[🐛 **Report an Issue**](https://github.com/devarena-io/devarena/issues) &nbsp;•&nbsp;
+[💡 **Request Feature**](https://github.com/devarena-io/devarena/issues) &nbsp;•&nbsp;
+[⭐️ **Star on GitHub**](https://github.com/devarena-io/devarena)
 
 ---
 
 </div>
+
+> [!IMPORTANT]
+> **Code Execution Security Architecture**: In-process or host-level code execution (even with `child_process.spawn`, `ulimit`, and AST/regex pattern filtering) is **NOT** a security boundary for untrusted code execution. For production multi-tenant environments, configuring `RUNNER_URL` to route execution through an isolated sandbox service (such as Judge0 or Piston container microVMs) is **strictly required**.
+
 
 ## 📖 Table of Contents
 
@@ -160,8 +164,8 @@ Ensure you have the following software installed:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/harshadbhaigohil40-oss/devarena-.git
-cd devarena-
+git clone https://github.com/devarena-io/devarena.git
+cd devarena
 ```
 
 ### Step 2: Install Monorepo Dependencies

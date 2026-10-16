@@ -50,4 +50,22 @@ const aiLimiter = rateLimit({
   message: { error: 'AI rate limit reached, please wait a moment.' },
 });
 
-module.exports = { apiLimiter, authLimiter, aiLimiter };
+const runLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 runs per minute per user
+  keyGenerator: (req) => (req.userId ? req.userId.toString() : req.ip),
+  message: { success: false, error: 'Too many run requests. Maximum 10 runs per minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const submitLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // 5 submits per minute per user (stricter limit)
+  keyGenerator: (req) => (req.userId ? req.userId.toString() : req.ip),
+  message: { success: false, error: 'Too many submission requests. Maximum 5 submissions per minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { apiLimiter, authLimiter, aiLimiter, runLimiter, submitLimiter };

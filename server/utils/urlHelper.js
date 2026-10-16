@@ -16,4 +16,16 @@ function normalizeOrigin(originStr) {
   }
 }
 
-module.exports = { normalizeOrigin };
+function isValidHttpUrl(str) {
+  if (!str || typeof str !== 'string') return false;
+  const trimmed = str.trim();
+  if (trimmed === '') return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+module.exports = { normalizeOrigin, isValidHttpUrl };

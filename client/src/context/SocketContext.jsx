@@ -8,25 +8,27 @@ const SocketContext = createContext(null);
 
 export function SocketProvider({ children }) {
   const [socket, setSocket] = useState(null);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     if (!user) return;
+
+    const currentToken = token || localStorage.getItem('devarena_token');
+    if (!currentToken) return;
 
     const getSocketUrl = () => {
       const envUrl = import.meta.env.VITE_API_BASE_URL;
       if (envUrl) {
         return envUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
       }
-      return import.meta.env.DEV ? 'http://localhost:5000' : 'https://devarena-ymqe.onrender.com';
+      return import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin;
     };
 
     const newSocket = io(getSocketUrl(), {
       transports: ['websocket', 'polling'],
-    });
-
-    newSocket.on('connect', () => {
-      newSocket.emit('join', user._id);
+      auth: {
+        token: currentToken,
+      },
     });
 
     newSocket.on('xp:gained', ({ amount, source }) => {
@@ -59,7 +61,7 @@ export function SocketProvider({ children }) {
     return () => {
       newSocket.disconnect();
     };
-  }, [user]);
+  }, [user, token]);
 
   return (
     <SocketContext.Provider value={{ socket }}>

@@ -1,31 +1,47 @@
 const User = require('../models/User');
 const Badge = require('../models/Badge');
+const UserBadge = require('../models/UserBadge');
 const Submission = require('../models/Submission');
 const Project = require('../models/Project');
+const XPEvent = require('../models/XPEvent');
+const { levelFromXP } = require('../../shared/xpConfig');
 const { emitBadgeUnlocked } = require('./socketService');
+
+// In-memory cache for Badge definitions
+let cachedBadges = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedBadges() {
+  const now = Date.now();
+  if (cachedBadges && (now - cacheTimestamp < CACHE_TTL_MS)) {
+    return cachedBadges;
+  }
+  cachedBadges = await Badge.find().lean();
+  cacheTimestamp = now;
+  return cachedBadges;
+}
 
 const evaluateBadges = async (userId) => {
   const user = await User.findById(userId);
   if (!user) return [];
 
-  const allBadges = await Badge.find();
-  const earnedBadgeIds = user.recentBadges.map(b => b.badgeId?.toString());
-  // Get full earned badges list from XP events
-  const XPEvent = require('../models/XPEvent');
-  const badgeEvents = await XPEvent.find({ userId, source: 'badge' });
-  const allEarnedIds = new Set([
-    ...earnedBadgeIds,
-    ...badgeEvents.map(e => e.sourceId?.toString()),
-  ]);
+  const allBadges = await getCachedBadges();
+
+  // Query already earned badges from UserBadge model
+  const userBadges = await UserBadge.find({ userId }).select('badgeId').lean();
+  const earnedBadgeIds = new Set(userBadges.map(ub => ub.badgeId.toString()));
 
   const newBadges = [];
 
   // Get user stats
-  const challengeCount = await Submission.countDocuments({ userId, status: 'passed' });
-  const projectCount = await Project.countDocuments({ userId });
+  const [challengeCount, projectCount] = await Promise.all([
+    Submission.countDocuments({ userId, status: 'passed' }),
+    Project.countDocuments({ userId }),
+  ]);
 
   for (const badge of allBadges) {
-    if (allEarnedIds.has(badge._id.toString())) continue;
+    if (earnedBadgeIds.has(badge._id.toString())) continue;
 
     let earned = false;
 
@@ -48,57 +64,83 @@ const evaluateBadges = async (userId) => {
     }
 
     if (earned) {
-      newBadges.push(badge);
-
-      // Add to recent badges (keep max 5)
-      user.recentBadges.unshift({
-        badgeId: badge._id,
-        name: badge.name,
-        icon: badge.icon,
-        earnedAt: new Date(),
-      });
-      if (user.recentBadges.length > 5) {
-        user.recentBadges = user.recentBadges.slice(0, 5);
+      try {
+        // Enforce uniqueness via UserBadge compound index (userId, badgeId)
+        await UserBadge.create({
+          userId,
+          badgeId: badge._id,
+        });
+      } catch (err) {
+        if (err.code === 11000) {
+          // Already awarded concurrently, skip
+          continue;
+        }
+        throw err;
       }
 
-      // Emit real-time notification
-      emitBadgeUnlocked(userId, badge);
+      newBadges.push(badge);
 
-      // Log XP bonus
+      // Recompute level after badge XP bonuses
       if (badge.xpBonus > 0) {
-        await require('../models/XPEvent').create({
+        const updated = await User.findByIdAndUpdate(
+          userId,
+          { $inc: { xp: badge.xpBonus } },
+          { new: true }
+        );
+        const newLevel = levelFromXP(updated.xp);
+        if (newLevel !== updated.level) {
+          await User.findByIdAndUpdate(userId, { level: newLevel });
+        }
+
+        await XPEvent.create({
           userId,
           amount: badge.xpBonus,
           source: 'badge',
           sourceId: badge._id,
           description: `Badge unlocked: ${badge.name}`,
         });
-        user.xp += badge.xpBonus;
       }
-    }
-  }
 
-  if (newBadges.length > 0) {
-    await user.save();
+      // Update recentBadges display cache (keep max 5)
+      await User.findByIdAndUpdate(userId, {
+        $push: {
+          recentBadges: {
+            $each: [{
+              badgeId: badge._id,
+              name: badge.name,
+              icon: badge.icon,
+              earnedAt: new Date(),
+            }],
+            $position: 0,
+            $slice: 5,
+          },
+        },
+      });
+
+      // Emit real-time notification
+      emitBadgeUnlocked(userId, badge);
+    }
   }
 
   return newBadges;
 };
 
 const getUserBadges = async (userId) => {
-  const user = await User.findById(userId);
-  if (!user) return [];
+  const userBadges = await UserBadge.find({ userId })
+    .populate('badgeId')
+    .sort({ earnedAt: -1 })
+    .lean();
 
-  const XPEvent = require('../models/XPEvent');
-  const badgeEvents = await XPEvent.find({ userId, source: 'badge' }).sort({ createdAt: -1 });
-  const badgeIds = badgeEvents.map(e => e.sourceId).filter(Boolean);
-
-  // Also include recent badges
-  const recentIds = user.recentBadges.map(b => b.badgeId).filter(Boolean);
-  const allIds = [...new Set([...badgeIds, ...recentIds])];
-
-  const badges = await Badge.find({ _id: { $in: allIds } });
-  return badges;
+  return userBadges
+    .filter(ub => ub.badgeId)
+    .map(ub => ({
+      ...ub.badgeId,
+      earnedAt: ub.earnedAt,
+    }));
 };
 
-module.exports = { evaluateBadges, getUserBadges };
+module.exports = {
+  evaluateBadges,
+  getUserBadges,
+  getCachedBadges,
+};

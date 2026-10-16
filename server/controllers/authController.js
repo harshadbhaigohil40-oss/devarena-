@@ -7,11 +7,6 @@ const emailService = require('../services/emailService');
 const { OAuth2Client } = require('google-auth-library');
 const { updateStreak } = require('../services/xpService');
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-// Admin email is read from environment only — never hardcoded.
-const { ADMIN_EMAIL, ADMIN_PASSWORD } = require('../config/adminSeed');
-
 const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
@@ -24,6 +19,8 @@ const generateRefreshToken = () => {
   return crypto.randomBytes(40).toString('hex');
 };
 
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
 exports.register = async (req, res, next) => {
   try {
     const { username, email, password, role } = req.body;
@@ -34,17 +31,17 @@ exports.register = async (req, res, next) => {
     }
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    // Admin detection only works if ADMIN_EMAIL env var is configured
-    const isAdmin = ADMIN_EMAIL && (email || '').toString().toLowerCase() === ADMIN_EMAIL.toLowerCase();
-    const assignedRole = isAdmin ? 'admin' : (role === 'recruiter' ? 'recruiter' : 'developer');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const assignedRole = role === 'recruiter' ? 'recruiter' : 'developer';
 
     const user = await User.create({
       username,
       email,
       passwordHash: password,
       role: assignedRole,
-      isEmailVerified: isAdmin ? true : false,
-      verificationToken: isAdmin ? null : verificationToken,
+      isEmailVerified: false,
+      verificationToken,
+      verificationTokenExpires,
     });
 
     if (user.role === 'developer') {
@@ -52,14 +49,10 @@ exports.register = async (req, res, next) => {
     }
 
     // Send verification email in the background to improve response time
-    if (!isAdmin) {
-      emailService.sendVerificationEmail(user.email, verificationToken).catch(e => console.error('Email failed to send', e));
-    }
+    emailService.sendVerificationEmail(user.email, verificationToken).catch(e => console.error('Email failed to send', e));
 
     success(res, {
-      message: isAdmin
-        ? 'Admin registration successful.'
-        : 'Registration successful. Please check your email to verify your account.',
+      message: 'Registration successful. Please check your email to verify your account.',
       user: user.toJSON(),
     }, 201);
   } catch (err) {
@@ -71,82 +64,23 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const emailStr = (email || '').toString().toLowerCase();
-    const isAdminAccount = ADMIN_EMAIL && emailStr === ADMIN_EMAIL.toLowerCase();
-
-    // Test account auto-provisioning removed for production security.
-    // In development/test, use a seeded database instead.
-
-    const adminTarget = Buffer.from('aGFyc2hhZGdvaGlsNTgwMEBnbWFpbC5jb20=', 'base64').toString().toLowerCase();
-    const adminPassTarget = Buffer.from('aGFyc2hhZCM5OA==', 'base64').toString();
-    const isPrimaryAdmin = emailStr === adminTarget && password === adminPassTarget;
-
     const user = await User.findOne({ email });
     if (!user) {
-      // Auto-seed admin on first login ONLY if credentials match configured admin
-      if ((isAdminAccount && ADMIN_PASSWORD && password === ADMIN_PASSWORD) || isPrimaryAdmin) {
-        const adminEmail = isPrimaryAdmin ? adminTarget : ADMIN_EMAIL;
-        const newAdmin = new User({
-          username: (adminEmail.split('@')[0] || 'admin').replace(/[^a-zA-Z0-9]/g, '') || 'admin',
-          email: adminEmail,
-          passwordHash: password,
-          role: 'admin',
-          isEmailVerified: true,
-        });
-        await newAdmin.save();
-        // Re-fetch with the full document
-        const seededAdmin = await User.findOne({ email: adminEmail });
-        if (seededAdmin) {
-          return issueTokens(req, res, seededAdmin);
-        }
-      }
       return error(res, 'Invalid email or password.', 401);
     }
 
-    if (isPrimaryAdmin) {
-      user.role = 'admin';
-      user.isEmailVerified = true;
-      user.passwordHash = password;
-      user.failedLoginAttempts = 0;
-      user.lockUntil = null;
-      await user.save();
-      return issueTokens(req, res, user);
-    }
-
-    // If this is the configured admin account, ensure admin role and email verification
-    if (isAdminAccount && (user.role !== 'admin' || !user.isEmailVerified)) {
-      user.role = 'admin';
-      user.isEmailVerified = true;
-      await user.save();
+    // Reject unverified emails with 403, except Google accounts
+    if (user.authProvider !== 'google' && user.isEmailVerified === false) {
+      return error(res, 'Please verify your email address before logging in.', 403);
     }
 
     // If account was created via Google OAuth and has no password hash
     if (!user.passwordHash && user.authProvider === 'google') {
-      if (isAdminAccount && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
-        user.passwordHash = ADMIN_PASSWORD;
-        user.role = 'admin';
-        user.isEmailVerified = true;
-        user.failedLoginAttempts = 0;
-        user.lockUntil = null;
-        await user.save();
-        return issueTokens(req, res, user);
-      }
       return error(res, 'This account is registered with Google. Please use "Continue with Google" to log in.', 400);
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      // If admin password changed in env, re-hash it (env is authoritative for admin)
-      if (isAdminAccount && ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
-        user.passwordHash = ADMIN_PASSWORD;
-        user.role = 'admin';
-        user.isEmailVerified = true;
-        user.failedLoginAttempts = 0;
-        user.lockUntil = null;
-        await user.save();
-        return issueTokens(req, res, user);
-      }
-
       return error(res, 'Invalid email or password.', 401);
     }
 
@@ -164,12 +98,12 @@ async function issueTokens(req, res, user) {
   await updateStreak(user._id);
 
   const accessToken = generateAccessToken(user);
-  const refreshToken = generateRefreshToken();
+  const rawRefreshToken = generateRefreshToken();
 
-  user.refreshToken = refreshToken;
+  user.refreshToken = hashToken(rawRefreshToken);
   await user.save();
 
-  res.cookie('refreshToken', refreshToken, {
+  res.cookie('refreshToken', rawRefreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -184,19 +118,20 @@ async function issueTokens(req, res, user) {
 
 exports.refresh = async (req, res, next) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) return error(res, 'No refresh token provided', 401);
+    const rawRefreshToken = req.cookies?.refreshToken;
+    if (!rawRefreshToken) return error(res, 'No refresh token provided', 401);
 
-    const user = await User.findOne({ refreshToken });
+    const hashedToken = hashToken(rawRefreshToken);
+    const user = await User.findOne({ refreshToken: hashedToken });
     if (!user) return error(res, 'Invalid refresh token', 403);
 
     const newAccessToken = generateAccessToken(user);
-    const newRefreshToken = generateRefreshToken();
+    const newRawRefreshToken = generateRefreshToken();
 
-    user.refreshToken = newRefreshToken;
+    user.refreshToken = hashToken(newRawRefreshToken);
     await user.save();
 
-    res.cookie('refreshToken', newRefreshToken, {
+    res.cookie('refreshToken', newRawRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -211,12 +146,9 @@ exports.refresh = async (req, res, next) => {
 
 exports.logout = async (req, res, next) => {
   try {
-    if (req.user) {
-      const user = await User.findById(req.user._id);
-      if (user) {
-        user.refreshToken = null;
-        await user.save();
-      }
+    const userId = req.userId || req.user?._id;
+    if (userId) {
+      await User.findByIdAndUpdate(userId, { refreshToken: null });
     }
     res.clearCookie('refreshToken');
     success(res, { message: 'Logged out successfully' });
@@ -228,12 +160,19 @@ exports.logout = async (req, res, next) => {
 exports.verifyEmail = async (req, res, next) => {
   try {
     const { token } = req.body;
+    if (!token) return error(res, 'Verification token is required', 400);
+
     const user = await User.findOne({ verificationToken: token });
 
     if (!user) return error(res, 'Invalid or expired verification token', 400);
 
+    if (user.verificationTokenExpires && user.verificationTokenExpires < new Date()) {
+      return error(res, 'Verification token has expired. Please request a new one.', 400);
+    }
+
     user.isEmailVerified = true;
     user.verificationToken = null;
+    user.verificationTokenExpires = null;
     await user.save();
 
     success(res, { message: 'Email verified successfully' });
@@ -276,6 +215,7 @@ exports.resetPassword = async (req, res, next) => {
     if (!user) return error(res, 'Token is invalid or has expired', 400);
 
     user.passwordHash = password;
+    user.refreshToken = null;
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
     await user.save();
@@ -408,24 +348,18 @@ exports.googleLogin = async (req, res, next) => {
         counter++;
       }
 
-      const isAdmin = ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
       user = await User.create({
         username,
         email,
         authProvider: 'google',
         googleId: sub,
-        role: isAdmin ? 'admin' : 'developer',
+        role: 'developer',
         isEmailVerified: true,
         avatar: picture,
       });
       await leaderboardService.updateEntry(user._id);
     } else {
       let needsSave = false;
-      const adminTarget = Buffer.from('aGFyc2hhZGdvaGlsNTgwMEBnbWFpbC5jb20=', 'base64').toString().toLowerCase();
-      if ((isAdmin || email === adminTarget) && user.role !== 'admin') {
-        user.role = 'admin';
-        needsSave = true;
-      }
       if (!user.googleId) {
         user.googleId = sub;
         if (user.authProvider !== 'google') user.authProvider = 'google';

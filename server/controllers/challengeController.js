@@ -1,6 +1,7 @@
 const Challenge = require('../models/Challenge');
 const Submission = require('../models/Submission');
 const { success, error, paginated } = require('../utils/responseHelper');
+const { clampPagination } = require('../utils/queryHelper');
 
 const nodeTagMap = {
   // Algorithm Mastery
@@ -39,7 +40,7 @@ const nodeTagMap = {
 
 exports.listChallenges = async (req, res, next) => {
   try {
-    const { difficulty, category, search, node, tag, page = 1, limit = 12 } = req.query;
+    const { difficulty, category, search, node, tag } = req.query;
     const filter = {};
 
     if (difficulty) filter.difficulty = difficulty;
@@ -77,7 +78,7 @@ exports.listChallenges = async (req, res, next) => {
       }
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const { page, limit, skip } = clampPagination(req.query, 12, 100);
     
     let pipeline = [];
     
@@ -87,7 +88,7 @@ exports.listChallenges = async (req, res, next) => {
     
     pipeline.push({ $sort: { _id: -1 } });
     pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: parseInt(limit) });
+    pipeline.push({ $limit: limit });
     pipeline.push({ $project: { solution: 0, testCases: 0 } });
 
     if (req.user) {
@@ -125,7 +126,7 @@ exports.listChallenges = async (req, res, next) => {
     const challenges = await Challenge.aggregate(pipeline);
     const total = await Challenge.countDocuments(filter);
 
-    paginated(res, challenges, total, parseInt(page), parseInt(limit));
+    paginated(res, challenges, total, page, limit);
   } catch (err) { next(err); }
 };
 
@@ -134,28 +135,27 @@ exports.getChallenge = async (req, res, next) => {
     const challenge = await Challenge.findOne({ slug: req.params.slug }).lean();
     if (!challenge) return error(res, 'Challenge not found.', 404);
 
-    // Get next challenge for navigation
-    const nextChallenge = await Challenge.findOne({ _id: { $gt: challenge._id } })
-      .sort({ _id: 1 })
-      .select('slug title')
-      .lean();
+    // Parallelize navigation and random queries, scoped to the same category
+    const [nextChallenge, prevChallenge, randomChallenge] = await Promise.all([
+      Challenge.findOne({ _id: { $gt: challenge._id }, category: challenge.category })
+        .sort({ _id: 1 })
+        .select('slug title')
+        .lean(),
+      Challenge.findOne({ _id: { $lt: challenge._id }, category: challenge.category })
+        .sort({ _id: -1 })
+        .select('slug title')
+        .lean(),
+      Challenge.aggregate([
+        { $match: { _id: { $ne: challenge._id }, category: challenge.category } },
+        { $sample: { size: 1 } },
+        { $project: { slug: 1 } },
+      ]),
+    ]);
+
     challenge.nextChallengeSlug = nextChallenge ? nextChallenge.slug : null;
     challenge.nextChallengeTitle = nextChallenge ? nextChallenge.title : null;
-
-    // Get prev challenge for navigation
-    const prevChallenge = await Challenge.findOne({ _id: { $lt: challenge._id } })
-      .sort({ _id: -1 })
-      .select('slug title')
-      .lean();
     challenge.prevChallengeSlug = prevChallenge ? prevChallenge.slug : null;
     challenge.prevChallengeTitle = prevChallenge ? prevChallenge.title : null;
-
-    // Get a random challenge for shuffle feature
-    const randomChallenge = await Challenge.aggregate([
-      { $match: { _id: { $ne: challenge._id } } },
-      { $sample: { size: 1 } },
-      { $project: { slug: 1 } }
-    ]);
     challenge.randomChallengeSlug = randomChallenge.length > 0 ? randomChallenge[0].slug : null;
 
     // Hide solution from non-admin users

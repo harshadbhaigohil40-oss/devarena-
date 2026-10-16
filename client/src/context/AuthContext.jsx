@@ -4,6 +4,13 @@ import { authService } from '../services';
 
 const AuthContext = createContext(null);
 
+/**
+ * ARCHITECTURAL ROADMAP NOTE (Phase 5 Hardening):
+ * Storing the access token in localStorage exposes it to potential exfiltration if an XSS
+ * flaw exists. The recommended follow-up architecture is to store the access token strictly
+ * in memory (React State / closure), bootstrapping the session on page refresh via the httpOnly
+ * refreshToken cookie (POST /api/auth/refresh).
+ */
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('devarena_token'));
   const [user, setUser] = useState(() => {
@@ -80,6 +87,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    authService.logout().catch(() => {});
     localStorage.removeItem('devarena_token');
     localStorage.removeItem('devarena_user');
     setToken(null);
@@ -97,7 +105,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, updateUser, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, token, loading, login, loginWithGoogle, register, logout, updateUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

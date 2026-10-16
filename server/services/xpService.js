@@ -5,19 +5,32 @@ const { emitXPGained, emitLevelUp } = require('./socketService');
 const badgeService = require('./badgeService');
 const leaderboardService = require('./leaderboardService');
 
+/**
+ * Awards XP atomically using findByIdAndUpdate with $inc to eliminate
+ * read-modify-write race conditions under concurrent requests.
+ */
 const awardXP = async (userId, amount, source, sourceId = null, description = '') => {
-  const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
+  const currentUser = await User.findById(userId).select('streak level xp');
+  if (!currentUser) throw new Error('User not found');
 
   // Apply streak multiplier
-  const multiplier = getStreakMultiplier(user.streak);
+  const multiplier = getStreakMultiplier(currentUser.streak || 0);
   const finalAmount = Math.floor(amount * multiplier);
+  const previousLevel = currentUser.level || 1;
 
-  // Update user XP
-  const previousLevel = user.level;
-  user.xp += finalAmount;
-  user.level = levelFromXP(user.xp);
-  await user.save();
+  // Atomic update of user XP
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $inc: { xp: finalAmount } },
+    { new: true }
+  );
+
+  // Recompute level based on total XP
+  const newLevel = levelFromXP(updatedUser.xp);
+  if (newLevel !== updatedUser.level) {
+    updatedUser.level = newLevel;
+    await User.findByIdAndUpdate(userId, { level: newLevel });
+  }
 
   // Log XP event
   await XPEvent.create({
@@ -29,20 +42,25 @@ const awardXP = async (userId, amount, source, sourceId = null, description = ''
   });
 
   // Emit real-time XP notification
-  emitXPGained(userId, finalAmount, user.xp, source);
+  emitXPGained(userId, finalAmount, updatedUser.xp, source);
 
   // Check for level up
-  if (user.level > previousLevel) {
-    emitLevelUp(userId, user.level, { xpBonus: 50 * user.level });
+  if (newLevel > previousLevel) {
+    emitLevelUp(userId, newLevel, { xpBonus: 50 * newLevel });
   }
 
   // Check for new badges
   await badgeService.evaluateBadges(userId);
 
-  // Update leaderboard
-  await leaderboardService.updateEntry(userId);
+  // Update leaderboard entry (per-user update without recalculating all ranks)
+  await leaderboardService.updateEntry(userId, finalAmount);
 
-  return { xpEarned: finalAmount, totalXp: user.xp, level: user.level, leveledUp: user.level > previousLevel };
+  return {
+    xpEarned: finalAmount,
+    totalXp: updatedUser.xp,
+    level: newLevel,
+    leveledUp: newLevel > previousLevel,
+  };
 };
 
 const updateStreak = async (userId) => {
@@ -53,6 +71,7 @@ const updateStreak = async (userId) => {
   today.setHours(0, 0, 0, 0);
 
   let diffDays = 0;
+  let newStreak = user.streak || 0;
   if (user.lastActiveDate) {
     const lastActive = new Date(user.lastActiveDate);
     lastActive.setHours(0, 0, 0, 0);
@@ -60,23 +79,25 @@ const updateStreak = async (userId) => {
     diffDays = Math.floor((today - lastActive) / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) {
-      user.streak += 1;
+      newStreak += 1;
     } else if (diffDays > 1) {
-      user.streak = 1;
+      newStreak = 1;
     }
   } else {
-    user.streak = 1;
+    newStreak = 1;
   }
 
-  user.lastActiveDate = today;
-  await user.save();
+  await User.findByIdAndUpdate(userId, {
+    streak: newStreak,
+    lastActiveDate: today,
+  });
 
   // Award daily login XP
   if (diffDays === 1 || diffDays > 1 || !user.lastActiveDate) {
     await module.exports.awardXP(userId, XP_REWARDS.daily_login, 'daily_login', null, 'Daily login bonus');
   }
 
-  return user.streak;
+  return newStreak;
 };
 
 module.exports = { awardXP, updateStreak };
