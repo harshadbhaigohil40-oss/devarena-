@@ -7,7 +7,15 @@ import { useAuth } from '../../context/AuthContext';
 import { useThemeStore } from '../theme/useThemeStore';
 import toast from 'react-hot-toast';
 import ChatMarkdown from '@/components/ui/ChatMarkdown';
-import Editor from '@monaco-editor/react';
+import Editor, { loader } from '@monaco-editor/react';
+import SimpleCodeEditor from './components/SimpleCodeEditor';
+
+// Configure Monaco loader CDN path
+loader.config({
+  paths: {
+    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs'
+  }
+});
 
 const LANG_LABELS = { javascript: 'JavaScript', python: 'Python', html: 'HTML' };
 const LANG_ICONS  = { javascript: '🟨', python: '🐍', html: '🌐' };
@@ -27,15 +35,30 @@ export default function ChallengeDetail() {
 
   // Monaco Editor Resizing & Customization States
   const editorRef = useRef(null);
+  const textareaRef = useRef(null);
   const layoutContainerRef = useRef(null);
   const dragStartY = useRef(0);
   const dragStartHeight = useRef(0);
 
+  const [editorMode, setEditorMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('devarena_editor_mode');
+      if (saved === 'simple' || saved === 'monaco') return saved;
+    }
+    return 'monaco';
+  });
+
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+  const [monacoLoaded, setMonacoLoaded] = useState(false);
+  const [monacoLoadingTimeout, setMonacoLoadingTimeout] = useState(false);
+
   const getDefaultHeight = () => {
     if (typeof window === 'undefined') return 460;
-    if (window.innerWidth < 480) return 330;
-    if (window.innerWidth < 768) return 390;
-    return 460;
+    if (window.innerWidth < 480) return 320;
+    if (window.innerWidth < 768) return 380;
+    return 480;
   };
 
   const [editorHeight, setEditorHeight] = useState(() => {
@@ -75,6 +98,58 @@ export default function ChallengeDetail() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDraggingHeight, setIsDraggingHeight] = useState(false);
   const [isDraggingSplit, setIsDraggingSplit] = useState(false);
+
+  // Dynamic clamped editor height for mobile responsiveness
+  const effectiveHeightNum = isFullscreen
+    ? (typeof window !== 'undefined' ? window.innerHeight : 600)
+    : isMobile
+      ? Math.min(editorHeight, Math.max(260, Math.floor((typeof window !== 'undefined' ? window.innerHeight : 600) * 0.52)))
+      : editorHeight;
+
+  const effectiveHeight = isFullscreen ? '100%' : `${effectiveHeightNum}px`;
+
+  // Window resize listener to keep mobile state responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      editorRef.current?.layout?.();
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Monaco Loader with auto fallback for offline / blocked CDN / slow mobile connection
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId = null;
+
+    if (editorMode === 'monaco') {
+      timeoutId = setTimeout(() => {
+        if (!cancelled && !monacoLoaded) {
+          setMonacoLoadingTimeout(true);
+        }
+      }, 4000);
+
+      loader.init()
+        .then(() => {
+          if (!cancelled) {
+            setMonacoLoaded(true);
+          }
+        })
+        .catch((err) => {
+          console.warn('Monaco failed to load from CDN, switching to Fast Editor:', err);
+          if (!cancelled) {
+            setEditorMode('simple');
+            toast('Loaded fast lightweight editor', { icon: '⚡' });
+          }
+        });
+    }
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [editorMode, monacoLoaded]);
 
   const { data: challenge, isLoading: loading } = useQuery({
     queryKey: ['challenge', slug],
@@ -137,25 +212,28 @@ export default function ChallengeDetail() {
 
   // Vertical Dragging (Height)
   const startHeightDrag = (e) => {
-    e.preventDefault();
+    const isTouch = e.type === 'touchstart';
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
     setIsDraggingHeight(true);
-    const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? 0;
     dragStartY.current = clientY;
-    dragStartHeight.current = editorHeight;
+    dragStartHeight.current = effectiveHeightNum;
+    if (!isTouch && e.cancelable) e.preventDefault();
   };
 
   useEffect(() => {
     if (!isDraggingHeight) return;
 
     const onMove = (e) => {
-      const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY);
+      const isTouch = Boolean(e.touches);
+      const clientY = isTouch ? e.touches[0]?.clientY : e.clientY;
       if (clientY === undefined) return;
+      if (isTouch && e.cancelable) e.preventDefault();
       const delta = clientY - dragStartY.current;
       const minH = 220;
       const maxH = Math.max(minH, window.innerHeight - 140);
       const newHeight = Math.max(minH, Math.min(maxH, dragStartHeight.current + delta));
       setEditorHeight(newHeight);
-      editorRef.current?.layout();
+      editorRef.current?.layout?.();
     };
 
     const onEnd = () => {
@@ -166,7 +244,7 @@ export default function ChallengeDetail() {
         } catch (err) {}
         return current;
       });
-      editorRef.current?.layout();
+      editorRef.current?.layout?.();
     };
 
     window.addEventListener('mousemove', onMove);
@@ -180,7 +258,35 @@ export default function ChallengeDetail() {
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onEnd);
     };
-  }, [isDraggingHeight]);
+  }, [isDraggingHeight, effectiveHeightNum]);
+
+  const handleInsertQuickKey = (insertText, cursorOffset) => {
+    if (editorMode === 'monaco' && editorRef.current) {
+      const editor = editorRef.current;
+      const selection = editor.getSelection();
+      editor.executeEdits('quick-key', [{ range: selection, text: insertText, forceMoveMarkers: true }]);
+      if (cursorOffset) {
+        const pos = editor.getPosition();
+        editor.setPosition({
+          lineNumber: pos.lineNumber,
+          column: pos.column - (insertText.length - cursorOffset),
+        });
+      }
+      editor.focus();
+    } else if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const currentVal = textarea.value;
+      const newVal = currentVal.substring(0, start) + insertText + currentVal.substring(end);
+      handleEditorChange(newVal);
+      const newPos = start + (cursorOffset || insertText.length);
+      setTimeout(() => {
+        textarea.setSelectionRange(newPos, newPos);
+        textarea.focus();
+      }, 0);
+    }
+  };
 
   // Horizontal Dragging (Split ratio on desktop)
   const startSplitDrag = (e) => {
@@ -839,6 +945,24 @@ export default function ChallengeDetail() {
               </div>
 
               <div className="challenge-editor-toolbar-right">
+                {/* Editor Mode Switcher: VS Code Monaco vs Fast Native */}
+                <button
+                  type="button"
+                  className="editor-ctrl-btn"
+                  onClick={() => {
+                    const nextMode = editorMode === 'monaco' ? 'simple' : 'monaco';
+                    setEditorMode(nextMode);
+                    try { localStorage.setItem('devarena_editor_mode', nextMode); } catch (e) {}
+                    if (nextMode === 'monaco') {
+                      setTimeout(() => editorRef.current?.layout?.(), 80);
+                    }
+                  }}
+                  title={editorMode === 'monaco' ? 'Switch to Fast Lightweight Editor (recommended on mobile/low connection)' : 'Switch to VS Code Monaco Editor'}
+                  style={{ padding: '0 8px', width: 'auto', gap: '4px', fontSize: '0.75rem', fontWeight: 600 }}
+                >
+                  {editorMode === 'monaco' ? '⚡ Fast' : '🖥️ Monaco'}
+                </button>
+
                 {/* Font Size Scaling Controls */}
                 <div className="editor-ctrl-group" title="Adjust code font size">
                   <button 
@@ -888,36 +1012,99 @@ export default function ChallengeDetail() {
               </div>
             </div>
 
-            {/* Monaco Editor Container */}
-            <div className="challenge-editor-wrapper" style={{ height: isFullscreen ? '100%' : `${editorHeight}px` }}>
-              <Editor
-                height="100%"
-                language={language}
-                theme={theme === 'light' ? 'light' : 'vs-dark'}
-                value={activeCode}
-                onChange={handleEditorChange}
-                onMount={(editor) => {
-                  editorRef.current = editor;
-                }}
-                options={{
-                  minimap: { enabled: isFullscreen },
-                  fontSize: editorFontSize,
-                  fontFamily: "'Fira Code', 'Cascadia Code', monospace",
-                  lineHeight: 1.6,
-                  padding: { top: 12, bottom: 12 },
-                  scrollBeyondLastLine: false,
-                  smoothScrolling: true,
-                  cursorBlinking: 'smooth',
-                  bracketPairColorization: { enabled: true },
-                  suggest: { showKeywords: true },
-                  tabSize: language === 'python' ? 4 : 2,
-                  wordWrap: 'on',
-                  automaticLayout: true,
-                  lineNumbersMinChars: 3,
-                  glyphMargin: false,
-                  folding: true,
-                }}
-              />
+            {/* Quick Keys Helper Bar (Mobile-friendly symbol buttons) */}
+            <div className="challenge-editor-quick-keys" title="Quick symbol insertion bar">
+              {[
+                { label: 'Tab', insert: language === 'python' ? '    ' : '  ' },
+                { label: '{ }', insert: '{}', cursorOffset: 1 },
+                { label: '( )', insert: '()', cursorOffset: 1 },
+                { label: '[ ]', insert: '[]', cursorOffset: 1 },
+                { label: ';', insert: ';' },
+                { label: '=', insert: ' = ' },
+                { label: '=>', insert: ' => ' },
+                { label: ':', insert: ': ' },
+                { label: '"', insert: '""', cursorOffset: 1 },
+                { label: "'", insert: "''", cursorOffset: 1 },
+                { label: '<', insert: '<' },
+                { label: '>', insert: '>' },
+                { label: '.', insert: '.' },
+                { label: '+', insert: ' + ' },
+                { label: '-', insert: ' - ' },
+              ].map((key, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="quick-key-btn"
+                  onClick={() => handleInsertQuickKey(key.insert, key.cursorOffset)}
+                  aria-label={`Insert ${key.label}`}
+                >
+                  {key.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Code Editor Container (Monaco or Fast Native) */}
+            <div className="challenge-editor-wrapper" style={{ height: effectiveHeight }}>
+              {editorMode === 'monaco' ? (
+                <Editor
+                  height="100%"
+                  language={language}
+                  theme={theme === 'light' ? 'light' : 'vs-dark'}
+                  value={activeCode}
+                  onChange={handleEditorChange}
+                  onMount={(editor) => {
+                    editorRef.current = editor;
+                    setMonacoLoaded(true);
+                  }}
+                  loading={
+                    <div className="challenge-editor-loading">
+                      <div className="editor-loading-spinner" />
+                      <div className="editor-loading-title">Initializing Code Editor...</div>
+                      <div className="editor-loading-subtitle">Loading syntax engine and runtime assets</div>
+                      {(monacoLoadingTimeout || isMobile) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditorMode('simple');
+                            try { localStorage.setItem('devarena_editor_mode', 'simple'); } catch (e) {}
+                          }}
+                          className="btn btn-secondary btn-sm"
+                          style={{ marginTop: '0.85rem', fontWeight: 600, fontSize: '0.78rem' }}
+                        >
+                          ⚡ Switch to Fast Lightweight Editor
+                        </button>
+                      )}
+                    </div>
+                  }
+                  options={{
+                    minimap: { enabled: isFullscreen && !isMobile },
+                    fontSize: editorFontSize,
+                    fontFamily: "'Fira Code', 'Cascadia Code', monospace",
+                    lineHeight: 1.6,
+                    padding: { top: 12, bottom: 12 },
+                    scrollBeyondLastLine: false,
+                    smoothScrolling: true,
+                    cursorBlinking: 'smooth',
+                    bracketPairColorization: { enabled: true },
+                    suggest: { showKeywords: true },
+                    tabSize: language === 'python' ? 4 : 2,
+                    wordWrap: 'on',
+                    automaticLayout: true,
+                    lineNumbersMinChars: 3,
+                    glyphMargin: false,
+                    folding: !isMobile,
+                  }}
+                />
+              ) : (
+                <SimpleCodeEditor
+                  value={activeCode}
+                  onChange={handleEditorChange}
+                  fontSize={editorFontSize}
+                  language={language}
+                  theme={theme === 'light' ? 'light' : 'dark'}
+                  textareaRef={textareaRef}
+                />
+              )}
             </div>
 
             {/* Draggable Bottom Height Resizer Handle */}
@@ -931,7 +1118,9 @@ export default function ChallengeDetail() {
               >
                 <div className="resize-handle-bar">
                   <span className="resize-handle-icon">⠿</span>
-                  <span className="resize-handle-text">Drag to resize ({editorHeight}px)</span>
+                  <span className="resize-handle-text">
+                    Drag to resize ({effectiveHeightNum}px) • Double-click to reset
+                  </span>
                 </div>
               </div>
             )}
