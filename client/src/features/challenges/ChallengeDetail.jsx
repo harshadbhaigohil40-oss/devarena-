@@ -389,8 +389,9 @@ export default function ChallengeDetail() {
     }
   };
 
-  // ── Run (visible tests only, no auth needed) ───────────────────────────────
+  // ── Run (visible tests only) ───────────────────────────────
   const handleRun = async () => {
+    if (!user) return toast.error('Please sign in to run code.');
     if (!activeCode.trim()) return toast.error('Please write some code first.');
     setRunning(true);
     setResult(null);
