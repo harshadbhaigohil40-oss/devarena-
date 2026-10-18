@@ -260,34 +260,6 @@ export default function ChallengeDetail() {
     };
   }, [isDraggingHeight, effectiveHeightNum]);
 
-  const handleInsertQuickKey = (insertText, cursorOffset) => {
-    if (editorMode === 'monaco' && editorRef.current) {
-      const editor = editorRef.current;
-      const selection = editor.getSelection();
-      editor.executeEdits('quick-key', [{ range: selection, text: insertText, forceMoveMarkers: true }]);
-      if (cursorOffset) {
-        const pos = editor.getPosition();
-        editor.setPosition({
-          lineNumber: pos.lineNumber,
-          column: pos.column - (insertText.length - cursorOffset),
-        });
-      }
-      editor.focus();
-    } else if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const currentVal = textarea.value;
-      const newVal = currentVal.substring(0, start) + insertText + currentVal.substring(end);
-      handleEditorChange(newVal);
-      const newPos = start + (cursorOffset || insertText.length);
-      setTimeout(() => {
-        textarea.setSelectionRange(newPos, newPos);
-        textarea.focus();
-      }, 0);
-    }
-  };
-
   // Horizontal Dragging (Split ratio on desktop)
   const startSplitDrag = (e) => {
     e.preventDefault();
@@ -1011,37 +983,6 @@ export default function ChallengeDetail() {
                   )}
                 </button>
               </div>
-            </div>
-
-            {/* Quick Keys Helper Bar (Mobile-friendly symbol buttons) */}
-            <div className="challenge-editor-quick-keys" title="Quick symbol insertion bar">
-              {[
-                { label: 'Tab', insert: language === 'python' ? '    ' : '  ' },
-                { label: '{ }', insert: '{}', cursorOffset: 1 },
-                { label: '( )', insert: '()', cursorOffset: 1 },
-                { label: '[ ]', insert: '[]', cursorOffset: 1 },
-                { label: ';', insert: ';' },
-                { label: '=', insert: ' = ' },
-                { label: '=>', insert: ' => ' },
-                { label: ':', insert: ': ' },
-                { label: '"', insert: '""', cursorOffset: 1 },
-                { label: "'", insert: "''", cursorOffset: 1 },
-                { label: '<', insert: '<' },
-                { label: '>', insert: '>' },
-                { label: '.', insert: '.' },
-                { label: '+', insert: ' + ' },
-                { label: '-', insert: ' - ' },
-              ].map((key, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className="quick-key-btn"
-                  onClick={() => handleInsertQuickKey(key.insert, key.cursorOffset)}
-                  aria-label={`Insert ${key.label}`}
-                >
-                  {key.label}
-                </button>
-              ))}
             </div>
 
             {/* Code Editor Container (Monaco or Fast Native) */}

@@ -2221,56 +2221,6 @@ select.input {
   }
 }
 
-/* ── Mobile Quick Keys Bar ── */
-.challenge-editor-quick-keys {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.75rem;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-primary);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.challenge-editor-quick-keys::-webkit-scrollbar {
-  display: none;
-}
-
-.quick-key-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 30px;
-  padding: 0 0.5rem;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-sm, 6px);
-  color: var(--text-primary);
-  font-family: var(--font-mono, monospace);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  user-select: none;
-  touch-action: manipulation;
-  transition: all 0.15s ease;
-}
-
-.quick-key-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--accent-primary);
-}
-
-.quick-key-btn:active {
-  background: var(--accent-primary);
-  color: #fff;
-  transform: scale(0.95);
-}
-
 /* ── Lightweight / Simple Code Editor ── */
 .simple-editor-container {
   display: flex;
