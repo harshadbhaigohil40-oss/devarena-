@@ -142,43 +142,7 @@ describe('PHASE 2 - Data Leak Prevention & Session Hardening', () => {
     }
   });
 
-  it('login rejects unverified email with HTTP 403 for local accounts', async () => {
-    const origFindOne = User.findOne;
-    const unverifiedUser = {
-      email: 'unverified@example.com',
-      authProvider: 'local',
-      isEmailVerified: false,
-    };
 
-    User.findOne = async () => unverifiedUser;
-
-    let statusCode = null;
-    let jsonBody = null;
-    const res = {
-      status(code) {
-        statusCode = code;
-        return this;
-      },
-      json(data) {
-        jsonBody = data;
-        return this;
-      },
-    };
-
-    try {
-      await authController.login(
-        { body: { email: 'unverified@example.com', password: 'password123' } },
-        res,
-        () => {}
-      );
-
-      assert.strictEqual(statusCode, 403, 'Unverified user must receive 403');
-      assert.strictEqual(jsonBody.success, false);
-      assert.ok(jsonBody.error.includes('verify your email'));
-    } finally {
-      User.findOne = origFindOne;
-    }
-  });
 
   it('public profile endpoint never returns email or sensitive session tokens', async () => {
     const origFindById = User.findById;

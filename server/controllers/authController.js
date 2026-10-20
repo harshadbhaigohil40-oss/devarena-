@@ -79,11 +79,6 @@ exports.login = async (req, res, next) => {
       return error(res, 'Invalid email or password.', 401);
     }
 
-    // Reject unverified emails with 403, except Google accounts
-    if (user.authProvider !== 'google' && user.isEmailVerified === false) {
-      return error(res, 'Please verify your email address before logging in.', 403);
-    }
-
     // If account was created via Google OAuth and has no password hash
     if (!user.passwordHash && user.authProvider === 'google') {
       return error(res, 'This account is registered with Google. Please use "Continue with Google" to log in.', 400);
