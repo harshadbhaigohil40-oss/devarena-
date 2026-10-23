@@ -927,7 +927,7 @@ print('__RESULTS_START__' + _json.dumps(_results) + '__RESULTS_END__')
         let child;
         if (isLinux) {
           // Semicolon-separated ulimit sequence so /bin/sh (dash) parses without "too many arguments"
-          const ulimitCmd = 'ulimit -v 262144; ulimit -u 64; ulimit -n 32; ulimit -f 0; exec python3 -S -I -W ignore "$1" 2>/dev/null || exec python -S -I -W ignore "$1"';
+          const ulimitCmd = 'ulimit -v 262144; ulimit -u 64; ulimit -n 32; ulimit -f 0; exec python3 -S -I -W ignore "$1" || exec python -S -I -W ignore "$1"';
           child = spawn('sh', ['-c', ulimitCmd, 'sh', filePath], {
             stdio: ['pipe', 'pipe', 'pipe'],
             env: cleanEnv,
@@ -1012,8 +1012,8 @@ print('__RESULTS_START__' + _json.dumps(_results) + '__RESULTS_END__')
               input: tc.isHidden ? '[Hidden]' : tc.input,
               expectedOutput: tc.isHidden ? '[Hidden]' : tc.expectedOutput,
               actualOutput: '[Hidden]',
-              output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : (cleanErr || 'Execution error'),
-              error: tc.isHidden ? undefined : (cleanErr || 'Execution error'),
+              output: tc.isHidden ? '✗ Execution Error (Hidden Test Case)' : (cleanErr || 'Execution error in solution.py'),
+              error: tc.isHidden ? undefined : (cleanErr || 'Execution error in solution.py'),
               executionTime: 0,
             }))
           );
