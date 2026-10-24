@@ -15,6 +15,7 @@ import RoleRoute from '@/components/routing/RoleRoute';
 const Landing = React.lazy(() => import('@/pages/Landing'));
 const Login = React.lazy(() => import('@/features/auth/Login'));
 const Register = React.lazy(() => import('@/features/auth/Register'));
+const VerifyEmail = React.lazy(() => import('@/features/auth/VerifyEmail'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const Profile = React.lazy(() => import('@/pages/Profile'));
 const SettingsPage = React.lazy(() => import('@/features/settings/SettingsPage'));
@@ -62,6 +63,7 @@ export default function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/pricing" element={<Suspense fallback={<PageSkeleton />}><Pricing /></Suspense>} />
             </Route>
 

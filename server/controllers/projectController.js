@@ -136,10 +136,14 @@ exports.updateProject = async (req, res, next) => {
 
 exports.deleteProject = async (req, res, next) => {
   try {
-    const project = await Project.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+    const query = req.user?.role === 'admin'
+      ? { _id: req.params.id }
+      : { _id: req.params.id, userId: req.userId };
+
+    const project = await Project.findOneAndDelete(query);
     if (!project) return error(res, 'Project not found or unauthorized.', 404);
 
-    await User.findByIdAndUpdate(req.userId, { $inc: { projectCount: -1 } });
+    await User.findByIdAndUpdate(project.userId, { $inc: { projectCount: -1 } });
 
     success(res, { message: 'Project deleted.' });
   } catch (err) { next(err); }

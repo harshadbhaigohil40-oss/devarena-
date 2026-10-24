@@ -44,7 +44,7 @@ const server = http.createServer(app);
 // Ensures req.ip evaluates accurately for rate limiting while resisting spoofed headers.
 app.set('trust proxy', 1);
 
-const { isAllowedOrigin } = require('./utils/urlHelper');
+const { isAllowedOrigin, normalizeOrigin } = require('./utils/urlHelper');
 
 // Initialize Socket.io
 initSocket(server);

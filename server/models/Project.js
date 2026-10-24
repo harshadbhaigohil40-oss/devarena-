@@ -16,14 +16,14 @@ const urlValidator = {
 const projectSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  thumbnailUrl: { type: String, default: '', validate: urlValidator },
-  liveUrl: { type: String, default: '', validate: urlValidator },
-  repoUrl: { type: String, default: '', validate: urlValidator },
+  title: { type: String, required: true, maxlength: 100, trim: true },
+  description: { type: String, required: true, maxlength: 2000, trim: true },
+  thumbnailUrl: { type: String, default: '', validate: urlValidator, maxlength: 500 },
+  liveUrl: { type: String, default: '', validate: urlValidator, maxlength: 500 },
+  repoUrl: { type: String, default: '', validate: urlValidator, maxlength: 500 },
 
-  techStack: [String],
-  tags: [String],
+  techStack: [{ type: String, maxlength: 50 }],
+  tags: [{ type: String, maxlength: 50 }],
 
   likes: { type: Number, default: 0 },
   likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

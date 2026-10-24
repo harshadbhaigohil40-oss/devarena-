@@ -103,6 +103,11 @@ export default function ChatMarkdown({ children, className = '' }) {
             );
           },
           a({ href, children }) {
+            // Strictly reject javascript:, data:, vbscript: or other dangerous pseudo-protocols
+            const isSafe = typeof href === 'string' && (/^https?:\/\//i.test(href) || /^mailto:/i.test(href));
+            if (!isSafe) {
+              return <span className="chat-link-unsafe">{children}</span>;
+            }
             return (
               <a href={href} target="_blank" rel="noopener noreferrer" className="chat-link">
                 {children}

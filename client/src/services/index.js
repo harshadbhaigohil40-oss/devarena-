@@ -5,6 +5,7 @@ export { setAccessToken, getAccessToken, onTokenChange };
 export const authService = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  verifyEmail: (token) => api.post('/auth/verify-email', { token }),
   googleLogin: (data) => {
     const payload = typeof data === 'string' ? { credential: data } : data;
     return api.post('/auth/google', payload);

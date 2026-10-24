@@ -121,9 +121,13 @@ Provide your analysis STRICTLY in the following JSON format, do not use markdown
 const generateRoadmap = async (currentSkills, targetRole) => {
   try {
     const model = getModel();
+    const skillsText = Array.isArray(currentSkills)
+      ? currentSkills.map(s => String(s).trim()).filter(Boolean).join(', ')
+      : String(currentSkills || '').trim();
+
     const prompt = `You are a Senior Career Mentor for developers.
 Generate a structured learning roadmap for a developer wanting to become a ${targetRole}.
-Their current skills: ${currentSkills.join(', ')}.
+Their current skills: ${skillsText || 'None specified'}.
 
 Provide your roadmap STRICTLY in the following JSON format, do not use markdown blocks:
 {
@@ -142,12 +146,20 @@ Provide your roadmap STRICTLY in the following JSON format, do not use markdown 
     const text = result.response.text();
     
     // Extract JSON block using regex to ignore conversational prefixes/suffixes
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const cleanedText = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("No JSON found in Gemini response");
     }
     
-    return JSON.parse(jsonMatch[0]);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+      const sanitized = jsonMatch[0].replace(/,\s*([\]}])/g, '$1');
+      parsed = JSON.parse(sanitized);
+    }
+    return parsed;
   } catch (error) {
     logger.error({ err: error }, 'Gemini API error');
     throw new Error('Failed to generate roadmap. Please try again later.');

@@ -71,7 +71,8 @@ exports.sendVerificationEmail = async (email, token) => {
       return false;
     }
 
-    const url = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
+    const safeToken = encodeURIComponent(token || '');
+    const url = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email?token=${safeToken}`;
 
     const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM || '"DEVARENA" <noreply@devarena.com>',
@@ -105,7 +106,8 @@ exports.sendPasswordResetEmail = async (email, token) => {
       return false;
     }
 
-    const url = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+    const safeToken = encodeURIComponent(token || '');
+    const url = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${safeToken}`;
 
     const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM || '"DEVARENA" <noreply@devarena.com>',

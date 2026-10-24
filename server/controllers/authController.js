@@ -79,6 +79,16 @@ exports.login = async (req, res, next) => {
       return error(res, 'Invalid email or password.', 401);
     }
 
+    // Check account lockout
+    if (user.lockUntil && user.lockUntil.getTime() > Date.now()) {
+      const remainingMinutes = Math.max(1, Math.ceil((user.lockUntil.getTime() - Date.now()) / (60 * 1000)));
+      return error(
+        res,
+        `Account is temporarily locked due to multiple failed login attempts. Please try again in ${remainingMinutes} minute(s).`,
+        423
+      );
+    }
+
     // If account was created via Google OAuth and has no password hash
     if (!user.passwordHash && user.authProvider === 'google') {
       return error(res, 'This account is registered with Google. Please use "Continue with Google" to log in.', 400);
@@ -86,7 +96,21 @@ exports.login = async (req, res, next) => {
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      const attempts = (user.failedLoginAttempts || 0) + 1;
+      const updates = { failedLoginAttempts: attempts };
+      if (attempts >= 5) {
+        updates.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15-minute lockout
+        updates.failedLoginAttempts = 0;
+      }
+      await User.findByIdAndUpdate(user._id, updates);
       return error(res, 'Invalid email or password.', 401);
+    }
+
+    // Reset failed login attempts on successful login
+    if (user.failedLoginAttempts > 0 || user.lockUntil) {
+      user.failedLoginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
     }
 
     return issueTokens(req, res, user);
@@ -164,7 +188,7 @@ exports.logout = async (req, res, next) => {
 
 exports.verifyEmail = async (req, res, next) => {
   try {
-    const { token } = req.body;
+    const token = req.body?.token || req.query?.token;
     if (!token) return error(res, 'Verification token is required', 400);
 
     const hashedToken = hashToken(token);
@@ -371,6 +395,9 @@ exports.googleLogin = async (req, res, next) => {
       });
       await leaderboardService.updateEntry(user._id);
     } else {
+      if (user.lockUntil && user.lockUntil.getTime() > Date.now()) {
+        return error(res, 'Account is temporarily locked. Please try again later.', 423);
+      }
       let needsSave = false;
       if (!user.googleId) {
         user.googleId = sub;

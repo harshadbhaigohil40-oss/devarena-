@@ -45,4 +45,8 @@ const isAvailable = () => modelWrapper !== null;
 
 const getKeyManager = () => keyManager;
 
-module.exports = { initGemini, getModel, isAvailable, getKeyManager, GeminiKeyManager };
+const setModelWrapper = (wrapper) => {
+  modelWrapper = wrapper;
+};
+
+module.exports = { initGemini, getModel, isAvailable, getKeyManager, setModelWrapper, GeminiKeyManager };

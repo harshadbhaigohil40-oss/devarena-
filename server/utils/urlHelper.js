@@ -32,8 +32,8 @@ function isValidHttpUrl(str) {
  * Determines whether an incoming origin is permitted for CORS.
  * Permits:
  * 1. Explicitly configured origins in CLIENT_URL (comma-delimited)
- * 2. Localhost and 127.0.0.1 on any port (for local development & testing)
- * 3. Any Vercel deployment domain (*.vercel.app)
+ * 2. Localhost and 127.0.0.1 on any port (in development & test environments)
+ * 3. Official DevArena Vercel deployment domains (devarena-*.vercel.app)
  */
 function isAllowedOrigin(originStr) {
   if (!originStr) return true;
@@ -49,13 +49,15 @@ function isAllowedOrigin(originStr) {
 
   if (allowedOrigins.has(normalized)) return true;
 
-  // Local development host & port variations
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:[0-9]+)?$/.test(normalized)) {
-    return true;
+  // Local development host & port variations (non-production only, unless in CLIENT_URL)
+  if (process.env.NODE_ENV !== 'production') {
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:[0-9]+)?$/.test(normalized)) {
+      return true;
+    }
   }
 
-  // Vercel deployment domains (production, preview, staging)
-  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(normalized)) {
+  // Scoped Vercel deployment domains for DevArena (production, preview, staging)
+  if (/^https:\/\/(devarena|devarena-[a-z0-9-]+)\.vercel\.app$/.test(normalized)) {
     return true;
   }
 

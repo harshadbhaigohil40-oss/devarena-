@@ -29,7 +29,8 @@ const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 300,
   skip: isBypassRateLimit,
-  message: { error: 'Too many requests, please try again later.' },
+  statusCode: 429,
+  message: { success: false, error: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -38,7 +39,8 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
   skip: isBypassRateLimit,
-  message: { error: 'Too many auth attempts, please try again later.' },
+  statusCode: 429,
+  message: { success: false, error: 'Too many auth attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -47,13 +49,17 @@ const aiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 20,
   skip: isBypassRateLimit,
-  message: { error: 'AI rate limit reached, please wait a moment.' },
+  statusCode: 429,
+  message: { success: false, error: 'AI rate limit reached, please wait a moment.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 const runLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 10, // 10 runs per minute per user
   keyGenerator: (req) => (req.userId ? req.userId.toString() : req.ip),
+  statusCode: 429,
   message: { success: false, error: 'Too many run requests. Maximum 10 runs per minute.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -63,6 +69,7 @@ const submitLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 5, // 5 submits per minute per user (stricter limit)
   keyGenerator: (req) => (req.userId ? req.userId.toString() : req.ip),
+  statusCode: 429,
   message: { success: false, error: 'Too many submission requests. Maximum 5 submissions per minute.' },
   standardHeaders: true,
   legacyHeaders: false,

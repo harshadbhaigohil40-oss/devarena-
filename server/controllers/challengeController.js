@@ -173,10 +173,52 @@ exports.getChallenge = async (req, res, next) => {
 
 exports.createChallenge = async (req, res, next) => {
   try {
+    const {
+      title,
+      slug,
+      description,
+      difficulty,
+      category,
+      tags,
+      tier,
+      section,
+      topic,
+      pattern,
+      xpReward,
+      starterCode,
+      testCases,
+      solution,
+      hints,
+      prerequisiteChallenges,
+    } = req.body;
+
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      return error(res, 'Challenge title is required.', 400);
+    }
+    if (!description || typeof description !== 'string' || !description.trim()) {
+      return error(res, 'Challenge description is required.', 400);
+    }
+
     const challenge = await Challenge.create({
-      ...req.body,
+      title: title.trim(),
+      slug: slug ? String(slug).trim() : undefined,
+      description: description.trim(),
+      difficulty: difficulty || 'intermediate',
+      category: category || 'algorithms',
+      tags: Array.isArray(tags) ? tags : [],
+      tier,
+      section,
+      topic,
+      pattern,
+      xpReward: typeof xpReward === 'number' ? xpReward : 100,
+      starterCode: starterCode || {},
+      testCases: Array.isArray(testCases) ? testCases : [],
+      solution: solution || '',
+      hints: Array.isArray(hints) ? hints : [],
+      prerequisiteChallenges: Array.isArray(prerequisiteChallenges) ? prerequisiteChallenges : [],
       createdBy: req.userId,
     });
+
     success(res, { challenge }, 201);
   } catch (err) { next(err); }
 };

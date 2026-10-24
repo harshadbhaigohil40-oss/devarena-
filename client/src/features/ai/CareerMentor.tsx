@@ -17,12 +17,13 @@ export function CareerMentor() {
 
     setIsGenerating(true);
     try {
-      const skillsArray = currentSkills.split(',').map(s => s.trim());
+      const skillsArray = currentSkills.split(',').map(s => s.trim()).filter(Boolean);
       const response = await aiService.generateRoadmap({ currentSkills: skillsArray, targetRole });
       setRoadmap(response.data.data.roadmap);
       toast.success('Roadmap generated successfully!');
-    } catch (error) {
-      toast.error('Failed to generate roadmap. Please try again.');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to generate roadmap. Please try again.';
+      toast.error(message);
     } finally {
       setIsGenerating(false);
     }
