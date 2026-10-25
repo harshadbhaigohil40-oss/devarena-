@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { userService } from '@/services';
 import { useThemeStore } from '../features/theme/useThemeStore';
 import toast from 'react-hot-toast';
 
@@ -23,21 +25,48 @@ const DSA_MODULES = [
 
 export default function DSA() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { theme } = useThemeStore();
   const isLight = theme === 'light';
 
-  // Mock progression: 0, 1, 2 completed. 3 is current. 4+ locked.
-  const currentModuleIndex = 3; 
+  // Dynamic user progression based on challenges solved
+  const [solvedCount, setSolvedCount] = useState(user?.challengesSolved || 0);
+
+  useEffect(() => {
+    if (user?._id) {
+      userService.getStats(user._id)
+        .then(res => {
+          const solved = res.data?.data?.challengesSolved ?? user?.challengesSolved ?? 0;
+          setSolvedCount(solved);
+        })
+        .catch(err => {
+          console.warn('Could not refresh DSA stats from server:', err);
+        });
+    }
+  }, [user?._id, user?.challengesSolved]);
+
+  // Progression index:
+  // 0 challenges: Module 0 (Arrays) is current & unlocked.
+  // 1 challenge: Module 0 completed, Module 1 is current & unlocked.
+  // If solvedCount >= DSA_MODULES.length, all modules are completed.
+  const isAllCompleted = solvedCount >= DSA_MODULES.length;
+  const currentModuleIndex = isAllCompleted ? DSA_MODULES.length : Math.max(0, solvedCount);
 
   const handleModuleClick = (mod, index) => {
     if (index > currentModuleIndex) {
-      toast.error(`Module Locked! Complete "${DSA_MODULES[currentModuleIndex].title}" first.`);
+      const activeMod = DSA_MODULES[currentModuleIndex]?.title || 'the current module';
+      toast.error(`Module Locked! Solve more challenges or complete "${activeMod}" first.`);
       return;
     }
     toast.success(`Entering ${mod.title} module...`);
     const searchTerm = mod.title.replace(/[&]/g, '').trim();
     setTimeout(() => navigate(`/challenges?search=${encodeURIComponent(searchTerm)}`), 400);
   };
+
+  const progressPercentage = Math.min(
+    100,
+    (Math.min(currentModuleIndex, DSA_MODULES.length - 1) / (DSA_MODULES.length - 1)) * 100
+  );
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container">
@@ -52,6 +81,7 @@ export default function DSA() {
             : 'linear-gradient(135deg, rgba(232, 67, 147, 0.1) 0%, rgba(232, 67, 147, 0.02) 100%)',
           border: isLight ? '1px solid #FBCFE8' : '1px solid rgba(232, 67, 147, 0.2)',
           overflow: 'hidden',
+          position: 'relative'
         }}
       >
         {/* Glow */}
@@ -88,6 +118,30 @@ export default function DSA() {
           }}>
             Master data structures from basics to advanced concepts through a structured learning progression.
           </p>
+
+          {/* Dynamic Progress Badges */}
+          <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <span style={{ 
+              fontSize: '0.825rem', 
+              padding: '0.35rem 0.85rem', 
+              borderRadius: '20px', 
+              background: isLight ? 'rgba(232, 67, 147, 0.15)' : 'rgba(232, 67, 147, 0.25)',
+              color: isLight ? '#9D174D' : '#FCE7F3',
+              fontWeight: 600
+            }}>
+              🎯 Challenges Solved: {solvedCount}
+            </span>
+            <span style={{ 
+              fontSize: '0.825rem', 
+              padding: '0.35rem 0.85rem', 
+              borderRadius: '20px', 
+              background: isLight ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.25)',
+              color: isLight ? '#065F46' : '#A7F3D0',
+              fontWeight: 600
+            }}>
+              🔓 Unlocked: {Math.min(DSA_MODULES.length, currentModuleIndex + 1)} / {DSA_MODULES.length} Modules
+            </span>
+          </div>
         </div>
       </div>
 
@@ -111,8 +165,8 @@ export default function DSA() {
         <motion.div 
           className="dsa-timeline-line"
           initial={{ height: 0 }}
-          animate={{ height: `${(currentModuleIndex / (DSA_MODULES.length - 1)) * 100}%` }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          animate={{ height: `${progressPercentage}%` }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
           style={{
             position: 'absolute',
             top: '2rem',
@@ -127,7 +181,7 @@ export default function DSA() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative', zIndex: 2 }}>
           {DSA_MODULES.map((mod, index) => {
             const isCompleted = index < currentModuleIndex;
-            const isCurrent = index === currentModuleIndex;
+            const isCurrent = !isAllCompleted && index === currentModuleIndex;
             const isLocked = index > currentModuleIndex;
 
             let cardBg = isLight ? '#FFFFFF' : 'var(--bg-secondary)';
@@ -153,7 +207,7 @@ export default function DSA() {
                 key={mod.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.05 }}
                 onClick={() => handleModuleClick(mod, index)}
                 whileHover={!isLocked ? { scale: 1.02, x: 5 } : {}}
                 whileTap={!isLocked ? { scale: 0.98 } : {}}
@@ -199,6 +253,11 @@ export default function DSA() {
                       {isCurrent && (
                         <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem', background: '#E84393', color: 'white', borderRadius: '10px', fontWeight: 600 }}>
                           IN PROGRESS
+                        </span>
+                      )}
+                      {isCompleted && (
+                        <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem', background: 'rgba(16, 185, 129, 0.2)', color: 'var(--color-success, #10b981)', borderRadius: '10px', fontWeight: 600 }}>
+                          COMPLETED
                         </span>
                       )}
                     </h3>

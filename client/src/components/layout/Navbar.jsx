@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeStore } from '../../features/theme/useThemeStore';
 import { motion } from 'framer-motion';
@@ -11,6 +12,8 @@ export default function Navbar({ onMenuClick }) {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useThemeStore();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { socket } = useSocket();
   const isPublic = ['/', '/login', '/register', '/pricing'].includes(location.pathname);
   const isLanding = location.pathname === '/';
 
@@ -19,6 +22,29 @@ export default function Navbar({ onMenuClick }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [publicMenuOpen, setPublicMenuOpen] = useState(false);
   const notifRef = useRef(null);
+
+  // Listen for real-time notifications via socket
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewNotif = (newNotif) => {
+      setNotifications(prev => [newNotif, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    };
+    socket.on('notification:new', handleNewNotif);
+    return () => {
+      socket.off('notification:new', handleNewNotif);
+    };
+  }, [socket]);
+
+  const handleNotificationClick = async (n) => {
+    if (!n.isRead) {
+      await handleMarkAsRead(n._id);
+    }
+    if (n.link) {
+      setShowNotifications(false);
+      navigate(n.link);
+    }
+  };
 
   // Close menus on route change
   useEffect(() => {
@@ -178,11 +204,11 @@ export default function Navbar({ onMenuClick }) {
                       notifications.map(n => (
                         <div 
                           key={n._id} 
-                          onClick={() => !n.isRead && handleMarkAsRead(n._id)}
+                          onClick={() => handleNotificationClick(n)}
                           style={{ 
                             padding: '0.875rem 1rem', borderBottom: '1px solid var(--border-secondary)', 
                             background: n.isRead ? 'transparent' : 'rgba(108, 92, 231, 0.08)',
-                            cursor: n.isRead ? 'default' : 'pointer',
+                            cursor: 'pointer',
                             transition: 'background 0.2s',
                             wordBreak: 'break-word'
                           }}

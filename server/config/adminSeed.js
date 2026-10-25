@@ -43,6 +43,15 @@ const ensureAdminUser = async () => {
 
       let needsSave = false;
 
+      if (typeof adminUser.comparePassword === 'function') {
+        const isMatch = await adminUser.comparePassword(ADMIN_PASSWORD);
+        if (!isMatch) {
+          adminUser.passwordHash = ADMIN_PASSWORD;
+          adminUser.authProvider = 'local';
+          needsSave = true;
+        }
+      }
+
       if (!adminUser.isEmailVerified) {
         adminUser.isEmailVerified = true;
         needsSave = true;

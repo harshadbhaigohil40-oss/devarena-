@@ -50,7 +50,19 @@
     "source": "ai_generator",
     "importedAt": "2026-09-13T16:35:35.972Z",
     "status": "pending",
-    "approved": false
+    "approved": false,
+    "qualityScore": 85,
+    "qualityBadge": "Good",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 7,
+      "testCases": 20,
+      "starterCode": 8,
+      "tags": 5,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "Kth Smallest Element in a BST",
@@ -100,7 +112,19 @@
     "source": "ai_generator",
     "importedAt": "2026-09-13T16:35:35.972Z",
     "status": "pending",
-    "approved": false
+    "approved": false,
+    "qualityScore": 82,
+    "qualityBadge": "Good",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 7,
+      "difficulty": 7,
+      "testCases": 20,
+      "starterCode": 8,
+      "tags": 5,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "Merge K Sorted Linked Lists",
@@ -154,7 +178,19 @@
     "source": "ai_generator",
     "importedAt": "2026-09-13T16:35:35.972Z",
     "status": "pending",
-    "approved": false
+    "approved": false,
+    "qualityScore": 85,
+    "qualityBadge": "Good",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 7,
+      "testCases": 20,
+      "starterCode": 8,
+      "tags": 5,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "LRU Cache",
@@ -202,7 +238,19 @@
     "source": "ai_generator",
     "importedAt": "2026-09-13T16:35:35.972Z",
     "status": "pending",
-    "approved": false
+    "approved": false,
+    "qualityScore": 81,
+    "qualityBadge": "Good",
+    "qualityBreakdown": {
+      "title": 11,
+      "slug": 10,
+      "difficulty": 7,
+      "testCases": 20,
+      "starterCode": 8,
+      "tags": 5,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "Course Schedule (Topological Sort)",
@@ -256,6 +304,18 @@
     "source": "ai_generator",
     "importedAt": "2026-09-13T16:35:35.972Z",
     "status": "pending",
-    "approved": false
+    "approved": false,
+    "qualityScore": 85,
+    "qualityBadge": "Good",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 7,
+      "testCases": 20,
+      "starterCode": 8,
+      "tags": 5,
+      "relevance": 10,
+      "duplicate": 10
+    }
   }
 ]

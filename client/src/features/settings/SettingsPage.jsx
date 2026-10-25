@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { userService } from '../../services';
 import { useThemeStore } from '../theme/useThemeStore';
 import toast from 'react-hot-toast';
 
@@ -8,6 +9,28 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const { theme, setTheme } = useThemeStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    bio: user?.bio || '',
+    location: user?.location || '',
+    githubUrl: user?.githubUrl || '',
+    linkedinUrl: user?.linkedinUrl || '',
+    portfolioUrl: user?.portfolioUrl || ''
+  });
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await userService.updateProfile(profileForm);
+      toast.success('Profile updated successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const availableThemes = [
     { id: 'light', name: 'Light', color: '#ffffff', accent: '#6c5ce7' },
@@ -30,14 +53,87 @@ export default function SettingsPage() {
       {/* General Settings */}
       <div className="card mb-xl">
         <h3 className="mb-md">Profile Information</h3>
-        <div className="input-group mb-sm">
-          <label>Username</label>
-          <input className="input" value={user?.username || ''} disabled />
-        </div>
-        <div className="input-group mb-sm">
-          <label>Email Address</label>
-          <input className="input" value={user?.email || ''} disabled />
-        </div>
+        <form onSubmit={handleProfileSave} className="flex-col gap-md">
+          <div className="grid grid-2" style={{ gap: '1rem' }}>
+            <div className="input-group">
+              <label>Username</label>
+              <input className="input" value={user?.username || ''} disabled style={{ opacity: 0.7 }} />
+            </div>
+            <div className="input-group">
+              <label>Email Address</label>
+              <input className="input" value={user?.email || ''} disabled style={{ opacity: 0.7 }} />
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="settings-bio">Bio</label>
+            <textarea
+              id="settings-bio"
+              className="input"
+              rows={3}
+              placeholder="Tell others about yourself..."
+              value={profileForm.bio}
+              onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+              maxLength={500}
+            />
+          </div>
+
+          <div className="grid grid-2" style={{ gap: '1rem' }}>
+            <div className="input-group">
+              <label htmlFor="settings-location">Location</label>
+              <input
+                id="settings-location"
+                type="text"
+                className="input"
+                placeholder="e.g. San Francisco, CA"
+                value={profileForm.location}
+                onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="settings-github">GitHub Profile URL</label>
+              <input
+                id="settings-github"
+                type="url"
+                className="input"
+                placeholder="https://github.com/username"
+                value={profileForm.githubUrl}
+                onChange={(e) => setProfileForm({ ...profileForm, githubUrl: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-2" style={{ gap: '1rem' }}>
+            <div className="input-group">
+              <label htmlFor="settings-linkedin">LinkedIn URL</label>
+              <input
+                id="settings-linkedin"
+                type="url"
+                className="input"
+                placeholder="https://linkedin.com/in/username"
+                value={profileForm.linkedinUrl}
+                onChange={(e) => setProfileForm({ ...profileForm, linkedinUrl: e.target.value })}
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="settings-portfolio">Portfolio Website</label>
+              <input
+                id="settings-portfolio"
+                type="url"
+                className="input"
+                placeholder="https://mywebsite.com"
+                value={profileForm.portfolioUrl}
+                onChange={(e) => setProfileForm({ ...profileForm, portfolioUrl: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+            <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              {isSaving ? 'Saving Changes...' : 'Save Profile Changes'}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Theme Settings */}

@@ -34,7 +34,19 @@
     "hints": [
       "You'll need a helper function to deeply compare two objects/arrays to determine if a change truly occurred for a subscribed path.",
       "Consider how to correctly apply updates to a nested object structure, ensuring you don't mutate previous states for comparison."
-    ]
+    ],
+    "qualityScore": 100,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "Optimized Redux Cart Selectors",
@@ -71,7 +83,19 @@
     "hints": [
       "Ensure your reducer logic for the cart items and discounts correctly produces a new state object/array reference when changes occur (immutability).",
       "For a memoized selector to recompute, at least one of its input dependencies must have changed *identity* (shallow comparison)."
-    ]
+    ],
+    "qualityScore": 100,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "Debounced Input Resolver",
@@ -108,7 +132,19 @@
     "hints": [
       "Iterate through the `inputSequence` and keep track of the most recent input that is currently 'pending' to be debounced. When a new input arrives, decide if it cancels the previous pending one or if the previous one should now trigger.",
       "The `triggeredAt` timestamp for a debounced input will be its own `timestamp + debounceDelay`."
-    ]
+    ],
+    "qualityScore": 100,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "Error Boundary Tracer",
@@ -145,7 +181,19 @@
     "hints": [
       "First, find the path from the root component down to the `errorOrigin` component.",
       "Then, traverse this path upwards, starting from the *parent* of the `errorOrigin` component, to find the first ancestor with `hasErrorBoundary: true`."
-    ]
+    ],
+    "qualityScore": 100,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 10,
+      "duplicate": 10
+    }
   },
   {
     "title": "Dynamic Module Resolver",
@@ -182,6 +230,18 @@
     "hints": [
       "This problem can be solved using a Depth-First Search (DFS) approach. Maintain a `visited` set to track modules that have been successfully loaded and processed.",
       "During the DFS, if a module is not in the `successfulModules` list, or if any of its dependencies fail to load, the entire loading path for that module fails. Build the `loadedOrder` array as you 'finish' processing a module (after all its dependencies are added)."
-    ]
+    ],
+    "qualityScore": 100,
+    "qualityBadge": "Excellent",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 15,
+      "tags": 10,
+      "relevance": 10,
+      "duplicate": 10
+    }
   }
 ]

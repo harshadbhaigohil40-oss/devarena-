@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { useChatStore } from '../store/useChatStore';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 
@@ -55,6 +56,19 @@ export function SocketProvider({ children }) {
         style: { background: '#1a1a2e', color: '#a855f7', border: '1px solid #a855f7' },
       });
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    });
+
+    // Real-time Chat messaging listeners
+    newSocket.on('receive:message', (message) => {
+      useChatStore.getState().addMessage(message);
+    });
+
+    newSocket.on('message:sent', (message) => {
+      useChatStore.getState().addMessage(message);
+    });
+
+    newSocket.on('message:error', ({ error }) => {
+      toast.error(error || 'Message delivery failed');
     });
 
     setSocket(newSocket);

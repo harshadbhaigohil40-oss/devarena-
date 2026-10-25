@@ -2,6 +2,7 @@ const User = require('../models/User');
 const XPEvent = require('../models/XPEvent');
 const { levelFromXP, XP_REWARDS, getStreakMultiplier } = require('../../shared/xpConfig');
 const { emitXPGained, emitLevelUp } = require('./socketService');
+const notificationService = require('./notificationService');
 const badgeService = require('./badgeService');
 const leaderboardService = require('./leaderboardService');
 
@@ -47,6 +48,13 @@ const awardXP = async (userId, amount, source, sourceId = null, description = ''
   // Check for level up
   if (newLevel > previousLevel) {
     emitLevelUp(userId, newLevel, { xpBonus: 50 * newLevel });
+    await notificationService.createNotification({
+      userId,
+      title: '🏆 Level Up!',
+      message: `Congratulations! You reached Level ${newLevel}!`,
+      type: 'success',
+      link: '/dashboard',
+    });
   }
 
   // Check for new badges

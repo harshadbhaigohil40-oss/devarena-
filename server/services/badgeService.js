@@ -6,6 +6,7 @@ const Project = require('../models/Project');
 const XPEvent = require('../models/XPEvent');
 const { levelFromXP } = require('../../shared/xpConfig');
 const { emitBadgeUnlocked } = require('./socketService');
+const notificationService = require('./notificationService');
 
 // In-memory cache for Badge definitions
 let cachedBadges = null;
@@ -117,7 +118,14 @@ const evaluateBadges = async (userId) => {
         },
       });
 
-      // Emit real-time notification
+      // Create notification and emit real-time event
+      await notificationService.createNotification({
+        userId,
+        title: '🏅 Badge Unlocked!',
+        message: `You earned the "${badge.name}" badge! ${badge.description || ''}`.trim(),
+        type: 'success',
+        link: `/profile/${userId}`,
+      });
       emitBadgeUnlocked(userId, badge);
     }
   }

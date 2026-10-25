@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { recruiterService } from '@/services';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import { formatNumber } from '@/utils/helpers';
+import ChatModal from '@/features/chat/ChatModal';
 import toast from 'react-hot-toast';
 
 export default function RecruiterDashboard() {
@@ -11,6 +12,7 @@ export default function RecruiterDashboard() {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ skill: '', minLevel: '', location: '' });
+  const [activeChatCandidate, setActiveChatCandidate] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -129,7 +131,17 @@ export default function RecruiterDashboard() {
             </div>
             <div className="flex justify-between items-center border-t border-primary pt-sm mt-sm" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
               <span className="text-xs font-bold text-gradient">{formatNumber(candidate.xp)} XP</span>
-              <Link to={`/profile/${candidate._id}`} className="btn btn-sm btn-ghost">View Profile</Link>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveChatCandidate(candidate)}
+                  className="btn btn-sm btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  💬 Message
+                </button>
+                <Link to={`/profile/${candidate._id}`} className="btn btn-sm btn-ghost">View Profile</Link>
+              </div>
             </div>
           </motion.div>
         ))}
@@ -141,6 +153,15 @@ export default function RecruiterDashboard() {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {activeChatCandidate && (
+          <ChatModal 
+            user={activeChatCandidate} 
+            onClose={() => setActiveChatCandidate(null)} 
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

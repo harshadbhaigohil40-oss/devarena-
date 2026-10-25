@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import React, { Suspense } from 'react';
@@ -16,6 +16,8 @@ const Landing = React.lazy(() => import('@/pages/Landing'));
 const Login = React.lazy(() => import('@/features/auth/Login'));
 const Register = React.lazy(() => import('@/features/auth/Register'));
 const VerifyEmail = React.lazy(() => import('@/features/auth/VerifyEmail'));
+const ForgotPassword = React.lazy(() => import('@/features/auth/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('@/features/auth/ResetPassword'));
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
 const Profile = React.lazy(() => import('@/pages/Profile'));
 const SettingsPage = React.lazy(() => import('@/features/settings/SettingsPage'));
@@ -64,6 +66,8 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/pricing" element={<Suspense fallback={<PageSkeleton />}><Pricing /></Suspense>} />
             </Route>
 
@@ -92,6 +96,7 @@ export default function App() {
 
                 {/* Admin Only Routes */}
                 <Route element={<RoleRoute allowedRoles={['admin']} />}>
+                  <Route path="/admin" element={<Navigate to="/admin/challenges" replace />} />
                   <Route path="/admin/challenges" element={<Suspense fallback={<PageSkeleton />}><PageTransition><AdminChallenges /></PageTransition></Suspense>} />
                 </Route>
               </Route>

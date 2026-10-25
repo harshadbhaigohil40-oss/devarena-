@@ -6,6 +6,7 @@ const { success, error, paginated } = require('../utils/responseHelper');
 const { XP_REWARDS } = require('../../shared/xpConfig');
 const { escapeRegex, clampPagination } = require('../utils/queryHelper');
 const { isValidHttpUrl } = require('../utils/urlHelper');
+const notificationService = require('../services/notificationService');
 
 exports.listProjects = async (req, res, next) => {
   try {
@@ -186,6 +187,18 @@ exports.likeProject = async (req, res, next) => {
       const fallback = await Project.findById(projectId);
       if (!fallback) return error(res, 'Project not found.', 404);
       return success(res, { likes: fallback.likes, liked: fallback.likedBy.includes(userId) });
+    }
+
+    if (liked && updated.userId && String(updated.userId) !== String(userId)) {
+      const liker = await User.findById(userId).select('username');
+      const likerName = liker?.username || 'A developer';
+      await notificationService.createNotification({
+        userId: updated.userId,
+        title: '❤️ Project Liked',
+        message: `${likerName} liked your project "${updated.title}"`,
+        type: 'info',
+        link: '/projects',
+      });
     }
 
     success(res, { likes: updated.likes, liked });

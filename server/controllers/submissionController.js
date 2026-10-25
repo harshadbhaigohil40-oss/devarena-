@@ -4,6 +4,7 @@ const User = require('../models/User');
 const SolvedChallenge = require('../models/SolvedChallenge');
 const xpService = require('../services/xpService');
 const { emitChallengeCompleted } = require('../services/socketService');
+const notificationService = require('../services/notificationService');
 const { success, error } = require('../utils/responseHelper');
 const { CodeRunner, detectJSBannedPatterns, detectPyBannedImports } = require('../services/codeRunner');
 const logger = require('../utils/logger');
@@ -146,6 +147,13 @@ exports.submitSolution = async (req, res, next) => {
         await Challenge.findByIdAndUpdate(challengeId, { $inc: { completionCount: 1, attemptCount: 1 } });
         await User.findByIdAndUpdate(req.userId, { $inc: { challengesSolved: 1 } });
         emitChallengeCompleted(req.userId, challengeId, challenge.xpReward);
+        await notificationService.createNotification({
+          userId: req.userId,
+          title: '⚡ Challenge Solved!',
+          message: `You completed "${challenge.title}" and earned ${challenge.xpReward} XP!`,
+          type: 'success',
+          link: `/challenges/${challenge.slug}`,
+        });
       } catch (awardError) {
         logger.error({ err: awardError, userId: req.userId, challengeId }, 'Failed to award XP on first solve; rolling back SolvedChallenge');
         if (solvedChallengeDoc) {

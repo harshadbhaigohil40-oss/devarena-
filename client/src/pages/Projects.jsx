@@ -24,7 +24,7 @@ export default function Projects() {
     const matchTitle = p.title?.toLowerCase().includes(q);
     const matchDesc = p.description?.toLowerCase().includes(q);
     const matchTech = Array.isArray(p.techStack) ? p.techStack.some(t => t.toLowerCase().includes(q)) : false;
-    const matchAuthor = p.author?.username?.toLowerCase().includes(q);
+    const matchAuthor = (p.userId?.username || p.author?.username || "").toLowerCase().includes(q);
     return matchTitle || matchDesc || matchTech || matchAuthor;
   });
 
@@ -326,6 +326,13 @@ export default function Projects() {
                   <div className="hover-glow-bg" style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: `radial-gradient(circle, rgba(108,92,231,0.15) 0%, transparent 50%)`, opacity: 0, transition: 'opacity 0.3s ease', zIndex: 0, pointerEvents: 'none' }} />
                   
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div className="level-badge" style={{ width: 24, height: 24, fontSize: '0.75rem' }}>{p.userId?.level || 1}</div>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{p.userId?.username || 'Developer'}</span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</span>
+                    </div>
                     <div className="flex justify-between items-start mb-md">
                       <h3 style={{ fontSize: '1.3rem', lineHeight: 1.3, marginBottom: '0.5rem', flex: 1, paddingRight: '1rem', wordBreak: 'break-word', color: 'var(--text-primary)' }}>{p.title}</h3>
                       {(user?._id === p.userId?._id || user?._id === p.userId) && (

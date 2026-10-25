@@ -1,0 +1,88 @@
+================================================================================
+DEVARENA - LINKEDIN POST & VIDEO PRESENTATION GUIDE
+================================================================================
+
+--------------------------------------------------------------------------------
+1. LINKEDIN POST CAPTION (Copy & Paste Ready)
+--------------------------------------------------------------------------------
+
+Most coding platforms focus strictly on standalone problem sets. When building DevArena, I wanted to approach technical preparation from an end-to-end perspective—connecting how developers practice, how recruiters evaluate talent, and how admins curate quality technical challenges.
+
+Here is a 3-minute walkthrough showing how the platform works across all three roles:
+
+👨‍💻 Developer Experience:
+• In-browser code execution across multiple languages with real-time test evaluation
+• Prerequisite-driven Skill Trees spanning Algorithms, Frontend, Backend, and System Design
+• Contextual hints and complexity breakdowns powered by Gemini AI without giving away full solutions
+• XP progression, milestone badges, global percentiles, and built-in developer utilities (JWT inspector, regex tester)
+
+💼 Recruiter Experience:
+• Dedicated talent search filtered by verified skills, ranking tiers, and solved challenges
+• Visual skill distribution analytics using responsive data dashboards
+• Direct candidate outreach workflows
+
+🛠️ Admin Experience:
+• Challenge lifecycle management, test-case authoring, and content curation
+• Quality review badges and difficulty tagging to maintain problem integrity
+
+💡 What building this taught me:
+Designing a multi-tenant platform with distinct permission boundaries requires careful role-based routing and clean state separation. On the backend, architecting sandboxed code execution reinforced the necessity of strict timeouts and isolated runtime environments when dealing with untrusted user code.
+
+I would love to get your thoughts on the workflow and architecture!
+
+🌐 Live Demo: https://devarena-client.vercel.app/
+📁 GitHub: https://github.com/harshadbhaigohil40-oss/devarena-
+
+#WebDevelopment #ReactJS #NodeJS #FullStack #SoftwareEngineering #SystemDesign
+
+
+--------------------------------------------------------------------------------
+2. VIDEO OPENING TITLE & TIMING GUIDE
+--------------------------------------------------------------------------------
+
+[0:00 - 0:05] Opening Title Card:
+---------------------------------
+DevArena
+Gamified Skill Building & Multi-Role Coding Platform
+Developer • Recruiter • Admin
+
+[Section Overlay Breakdown Across 3 Minutes]:
+• 0:05 - 1:25: Developer Experience
+  (Code Editor, Test Runner, Interactive Skill Trees & AI Mentoring)
+• 1:25 - 2:15: Recruiter Experience
+  (Candidate Talent Search, Skill Analytics & Candidate Messaging)
+• 2:15 - 2:45: Admin Experience
+  (Challenge Moderation, Quality Tagging & Content Management)
+• 2:45 - 3:00: Clean Closing Screen
+
+
+--------------------------------------------------------------------------------
+3. CLOSING SCREEN MESSAGE (2:45 - 3:00)
+--------------------------------------------------------------------------------
+
+DevArena
+Code. Compete. Level Up.
+
+Try the Live Demo:
+devarena-client.vercel.app
+
+Source Code & Docs:
+github.com/harshadbhaigohil40-oss/devarena-
+
+
+--------------------------------------------------------------------------------
+4. RELEVANT HASHTAGS
+--------------------------------------------------------------------------------
+
+#WebDevelopment #ReactJS #NodeJS #FullStack #SoftwareEngineering #SystemDesign
+
+
+--------------------------------------------------------------------------------
+5. FINAL CHECKLIST BEFORE PUBLISHING
+--------------------------------------------------------------------------------
+
+[ ] Verify Live Link: Open https://devarena-client.vercel.app/ in incognito mode.
+[ ] Check Audio: Voiceover clear, background music under -20 dB.
+[ ] Subtitles: Enable auto-captions or upload .srt file for mute playback.
+[ ] Thumbnail: Pick an engaging visual frame (Code Editor or Skill Tree).
+[ ] GitHub Repository: Verify visibility is public with clean documentation.

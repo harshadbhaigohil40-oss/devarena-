@@ -290,7 +290,8 @@
       "tags": 10,
       "relevance": 10,
       "duplicate": 10
-    }
+    },
+    "approved": true
   },
   {
     "title": "Extract CSS Variable Names",
@@ -402,7 +403,7 @@
       "html-css-layouts"
     ],
     "xpReward": 50,
-    "description": "## Validate Table Header Semantics\n\nFor accessibility and semantic correctness, the first row of an HTML table typically serves as the table header and should use `<th>` (table header) tags instead of `<td>` (table data) tags.\n\nGiven a simplified table structure as an array of arrays, where each inner array represents a row and each element is an object `{tag: string, content: string}`, determine if the *first row* (`index 0`) consists exclusively of `<th>` tags. An empty table or a table with no rows should be considered valid for this check.\n\n### Example\n`[[{\"tag\":\"th\",\"content\":\"Name\"}, {\"tag\":\"th\",\"content\":\"Age\"}], [{\"tag\":\"td\",\"content\":\"Alice\"}, {\"tag\":\"td\",\"content\":\"30\"}]]` → `true`\n`[[{\"tag\":\"td\",\"content\":\"Name\"}, {\"tag\":\"th\",\"content\":\"Age\"}], [{\"tag\":\"td\",\"content\":\"Alice\"}, {\"tag\":\"td\",\"content\":\"30\"}]]` → `false`",
+    "description": "## Validate Table Header Semantics\n\nFor accessibility and semantic correctness, the first row of an HTML table typically serves as the table header and should use `<th>` (table header) tags instead of `<td>` (table data) tags.\n\nGiven a simplified table structure as an array of arrays, where each inner array represents a row and each element is an object `{tag: string, content: string}`, determine if the *first row* (`index 0`) consists exclusively of `<th>` tags. \n\nAn empty table (`[]`) or a table where the first row itself is empty (`[[]]`) should be considered valid for this check.\n\n### Example\n`[[{\"tag\":\"th\",\"content\":\"Name\"}, {\"tag\":\"th\",\"content\":\"Age\"}], [{\"tag\":\"td\",\"content\":\"Alice\"}, {\"tag\":\"td\",\"content\":\"30\"}]]` → `true`\n`[[{\"tag\":\"td\",\"content\":\"Product\"}, {\"tag\":\"th\",\"content\":\"Price\"}], [{\"tag\":\"td\",\"content\":\"Laptop\"}, {\"tag\":\"td\",\"content\":\"1200\"}]]` → `false`\n`[[]]` → `true` (table with an empty first row)\n`[]` → `true` (empty table)",
     "starterCode": {
       "javascript": "function validateTableHeaderSemantics(tableData) {\n  // Your code here\n  // tableData will be an array of arrays of objects\n  // e.g., [[{tag: \"th\", content: \"Header\"}]]\n}",
       "python": "def validate_table_header_semantics(table_data):\n    # Your code here\n    # table_data will be a list of lists of dictionaries\n    # e.g., [[{'tag': \"th\", 'content': \"Header\"}]]\n    pass"
@@ -427,10 +428,35 @@
         "input": "[]",
         "expectedOutput": true,
         "isHidden": true
+      },
+      {
+        "input": "[[]]",
+        "expectedOutput": true,
+        "isHidden": true
+      },
+      {
+        "input": "[[{\"tag\":\"th\",\"content\":\"Single Header\"}]]",
+        "expectedOutput": true,
+        "isHidden": true
+      },
+      {
+        "input": "[[{\"tag\":\"td\",\"content\":\"Invalid Single\"}]]",
+        "expectedOutput": false,
+        "isHidden": true
+      },
+      {
+        "input": "[[{\"tag\":\"th\",\"content\":\"Col A\"}, {\"tag\":\"td\",\"content\":\"Col B\"}]]",
+        "expectedOutput": false,
+        "isHidden": true
+      },
+      {
+        "input": "[[{\"tag\":\"th\",\"content\":\"\"}, {\"tag\":\"th\",\"content\":\"Another\"}]]",
+        "expectedOutput": true,
+        "isHidden": true
       }
     ],
     "hints": [
-      "First, check if `tableData` is empty or has no rows. If so, it passes by default.",
+      "First, check if `tableData` is empty (`tableData.length === 0`) or if its first row is empty (`tableData[0] && tableData[0].length === 0`). If either is true, it passes by default.",
       "Access the first row (`tableData[0]`). Then, iterate through each cell in that row and check if all of their `tag` properties are exactly `\"th\"`."
     ],
     "qualityScore": 96,
@@ -444,7 +470,8 @@
       "tags": 10,
       "relevance": 6,
       "duplicate": 10
-    }
+    },
+    "approved": true
   },
   {
     "title": "Calculate Total Box Model Outer Dimensions",

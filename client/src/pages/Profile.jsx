@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 import { userService, badgeService } from '../services';
 import { formatNumber, progressToNextLevel, isValidHttpUrl } from '../utils/helpers';
+import ChatModal from '@/features/chat/ChatModal';
 
 export default function Profile() {
   const { id } = useParams();
+  const { user: currentUser } = useAuth();
+  const [activeChat, setActiveChat] = useState(false);
 
   const { data: profileData, isLoading: loading } = useQuery({
     queryKey: ['profile', id],
@@ -32,6 +37,7 @@ export default function Profile() {
   if (!profile) return <div className="page-container"><div className="empty-state"><h3>User not found</h3></div></div>;
 
   const progress = progressToNextLevel(profile.xp);
+  const isOtherUser = currentUser && String(currentUser._id) !== String(profile._id);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-container">
@@ -46,8 +52,22 @@ export default function Profile() {
             {profile.username?.charAt(0).toUpperCase()}
           </div>
           <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-            <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.75rem)', marginBottom: '0.25rem', wordBreak: 'break-word' }}>{profile.username}</h1>
-            <p className="text-muted" style={{ wordBreak: 'break-word' }}>{profile.bio || 'No bio yet'}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.75rem)', margin: 0, wordBreak: 'break-word' }}>
+                {profile.username}
+              </h1>
+              {isOtherUser && (
+                <button
+                  type="button"
+                  onClick={() => setActiveChat(true)}
+                  className="btn btn-sm btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  💬 Message
+                </button>
+              )}
+            </div>
+            <p className="text-muted" style={{ wordBreak: 'break-word', marginTop: '0.25rem' }}>{profile.bio || 'No bio yet'}</p>
             <div className="flex items-center gap-md mt-sm" style={{ flexWrap: 'wrap' }}>
               {profile.location && <span className="text-sm text-muted">📍 {profile.location}</span>}
               {isValidHttpUrl(profile.githubUrl) && (
@@ -83,12 +103,12 @@ export default function Profile() {
       <div className="grid grid-4 mb-lg">
         {[
           { icon: '⚡', value: formatNumber(profile.xp), label: 'Total XP' },
-          { icon: '⚔️', value: stats?.challengesSolved || 0, label: 'Challenges' },
           { icon: '🔥', value: profile.streak || 0, label: 'Day Streak' },
-          { icon: '🚀', value: profile.projectCount || 0, label: 'Projects' },
+          { icon: '🏆', value: stats?.challengesSolved || 0, label: 'Challenges' },
+          { icon: '🏅', value: badges.length, label: 'Badges' },
         ].map((s, i) => (
           <div key={i} className="stat-card">
-            <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{s.icon}</div>
+            <span style={{ fontSize: '1.5rem' }}>{s.icon}</span>
             <div className="stat-value">{s.value}</div>
             <div className="stat-label">{s.label}</div>
           </div>
@@ -96,38 +116,32 @@ export default function Profile() {
       </div>
 
       {/* Badges */}
-      {badges.length > 0 && (
-        <div className="mb-lg">
-          <h3 style={{ marginBottom: '1rem' }}>🏅 Badges ({badges.length})</h3>
-          <div className="flex flex-wrap gap-md">
-            {badges.map((b, i) => (
-              <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
-                className="card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
-                <span style={{ fontSize: '1.75rem' }}>{b.icon}</span>
-                <div>
-                  <p className="font-semibold text-sm">{b.name}</p>
-                  <span className={`badge badge-rarity-${b.rarity}`} style={{ textTransform: 'capitalize' }}>{b.rarity}</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Skills */}
-      {profile.topSkills?.length > 0 && (
-        <div>
-          <h3 style={{ marginBottom: '1rem' }}>🎯 Top Skills</h3>
+      <div className="card mb-lg">
+        <h3 className="mb-md">Earned Badges</h3>
+        {badges.length === 0 ? (
+          <p className="text-muted">No badges earned yet.</p>
+        ) : (
           <div className="grid grid-3">
-            {profile.topSkills.map((s, i) => (
-              <div key={i} className="card">
-                <p className="font-semibold">{s.name}</p>
-                <p className="text-sm text-muted">Level {s.level}</p>
+            {badges.map((badge) => (
+              <div key={badge._id} className="badge-card card" style={{ padding: '1rem' }}>
+                <span className="badge-icon" style={{ fontSize: '2rem' }}>{badge.icon}</span>
+                <span className="badge-name font-bold mt-xs">{badge.name}</span>
+                <span className="text-xs text-muted mt-xs">{badge.description}</span>
+                <span className="badge badge-warning text-xs mt-xs">+{badge.xpBonus} XP</span>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      <AnimatePresence>
+        {activeChat && (
+          <ChatModal 
+            user={profile} 
+            onClose={() => setActiveChat(false)} 
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -56,6 +56,18 @@
     "sourceUrl": "https://github.com/smv1999/CompetitiveProgrammingQuestionBank/blob/master/DSA%20450%20GFG/ActivitySelection.py",
     "importedAt": "2026-09-13T16:26:50.020Z",
     "status": "pending",
-    "approved": false
+    "approved": false,
+    "qualityScore": 87,
+    "qualityBadge": "Good",
+    "qualityBreakdown": {
+      "title": 15,
+      "slug": 10,
+      "difficulty": 10,
+      "testCases": 20,
+      "starterCode": 7,
+      "tags": 5,
+      "relevance": 10,
+      "duplicate": 10
+    }
   }
 ]

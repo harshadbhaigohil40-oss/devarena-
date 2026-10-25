@@ -1,6 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const logger = require('../utils/logger');
 
+const DEFAULT_MODEL_LIST = [
+  'gemini-flash-lite-latest',
+  'gemini-3.1-flash-lite',
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-flash-lite'
+];
+
 class GeminiKeyManager {
   /**
    * @param {string|string[]} keysInput Comma-separated keys or array of keys
@@ -10,6 +17,7 @@ class GeminiKeyManager {
     this.coolOffPeriodMs = coolOffPeriodMs;
     this.currentIndex = 0;
     this.keys = this._parseKeys(keysInput);
+    this.preferredModel = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest';
   }
 
   _parseKeys(keysInput) {
@@ -106,7 +114,7 @@ class GeminiKeyManager {
     const msg = (error.message || '').toLowerCase();
 
     // HTTP status codes that indicate key or service issues
-    if (status === 429 || status === 401 || status === 403 || status === 503 || status === 502 || status === 504) {
+    if (status === 429 || status === 401 || status === 403 || status === 503 || status === 502 || status === 504 || status === 404) {
       return true;
     }
 
@@ -208,51 +216,85 @@ class GeminiKeyManager {
   }
 
   /**
-   * Wrapper around model.generateContent with automatic retry and key rotation
+   * Wrapper around model.generateContent with automatic retry, key rotation, and model fallback
    */
   async generateContent(promptOrRequest, options = {}) {
     if (this.keys.length === 0) {
       throw new Error('No Gemini API keys configured.');
     }
 
-    const maxAttempts = this.keys.length;
+    const candidateModels = options.model
+      ? [options.model]
+      : Array.from(new Set([this.preferredModel, process.env.GEMINI_MODEL, ...DEFAULT_MODEL_LIST].filter(Boolean)));
+
     let lastError = null;
     const attemptedKeys = new Set();
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      // Find an available key that has not yet been attempted in this request
-      let keyObj = null;
-      for (let i = 0; i < this.keys.length; i++) {
-        const candidate = this.getNextAvailableKey();
-        if (candidate && !attemptedKeys.has(candidate)) {
-          keyObj = candidate;
+    for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
+      const modelName = candidateModels[mIdx];
+      const maxAttempts = this.keys.length;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        // Find an available key that has not yet been attempted in this request
+        let keyObj = null;
+        for (let i = 0; i < this.keys.length; i++) {
+          const candidate = this.getNextAvailableKey();
+          if (candidate && !attemptedKeys.has(candidate)) {
+            keyObj = candidate;
+            break;
+          }
+        }
+
+        if (!keyObj) {
+          keyObj = this.getNextAvailableKey();
+        }
+
+        if (!keyObj) {
+          const sorted = [...this.keys].sort((a, b) => a.failedUntil - b.failedUntil);
+          keyObj = sorted[0];
+        }
+
+        if (!keyObj) {
           break;
         }
-      }
 
-      if (!keyObj) {
-        // All healthy keys attempted or all keys quarantined
-        break;
-      }
+        attemptedKeys.add(keyObj);
+        keyObj.totalRequests = (keyObj.totalRequests || 0) + 1;
 
-      attemptedKeys.add(keyObj);
-      keyObj.totalRequests = (keyObj.totalRequests || 0) + 1;
+        try {
+          const model = keyObj.genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(promptOrRequest);
+          this.preferredModel = modelName;
+          return result;
+        } catch (error) {
+          lastError = error;
 
-      try {
-        const modelName = options.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-        const model = keyObj.genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(promptOrRequest);
-        return result;
-      } catch (error) {
-        lastError = error;
-
-        if (this.isRotatableError(error)) {
-          this.markKeyFailed(keyObj, error);
-          logger.info({ attempt: attempt + 1, maxAttempts }, '[GeminiKeyManager] Rotating to next available key...');
-        } else {
-          // Non-rotatable error (e.g. invalid prompt payload)
-          throw error;
+          if (this.isRotatableError(error)) {
+            this.markKeyFailed(keyObj, error);
+            logger.info({ attempt: attempt + 1, maxAttempts, model: modelName }, '[GeminiKeyManager] Rotating to next available key...');
+          } else {
+            throw error;
+          }
         }
+      }
+
+      // Check if failure was due to model-specific quota exhaustion or 404
+      const errMsg = (lastError?.message || '').toLowerCase();
+      const isModelIssue = lastError?.status === 404 ||
+        errMsg.includes('quota') ||
+        errMsg.includes('429') ||
+        errMsg.includes('limit: 20') ||
+        errMsg.includes('resource_exhausted');
+
+      if (isModelIssue && mIdx < candidateModels.length - 1) {
+        logger.warn({ failedModel: modelName, nextModel: candidateModels[mIdx + 1] }, '[GeminiKeyManager] Model quota or availability issue, falling back to next model...');
+        for (const k of this.keys) {
+          if (k.failureReason === 'rate_limit' || k.failureReason === 'model_overloaded') {
+            k.failedUntil = 0;
+          }
+        }
+      } else {
+        break;
       }
     }
 
