@@ -109,7 +109,17 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check
+// Health check — lightweight, unauthenticated endpoint for UptimeRobot monitoring
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: 'OK',
+    service: 'DevArena Backend',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Legacy API health check (kept for backward compatibility)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
